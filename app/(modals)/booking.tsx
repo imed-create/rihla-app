@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, ScrollView, Image, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import Animated, { FadeIn, FadeOut, SlideInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { TextInput } from 'react-native-gesture-handler';
-import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { defaultStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
 import { places } from '@/assets/data/places';
@@ -69,7 +68,7 @@ const Page = () => {
         {openCard == 0 && (
           <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.cardBody}>
             <View style={styles.searchSection}>
-              <Ionicons style={styles.searchIcon} name="ios-search" size={20} color="#000" />
+              <Ionicons style={styles.searchIcon} name="search-outline" size={20} color="#000" />
               <TextInput
                 style={styles.inputField}
                 placeholder="Search destinations"

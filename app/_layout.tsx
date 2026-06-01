@@ -1,33 +1,24 @@
+import 'react-native-gesture-handler';
 import { useFonts } from 'expo-font';
-import { SplashScreen, Stack, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
-import { Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/Colors';
-import ModalHeaderText from '@/components/ModalHeaderText';
-import { TouchableOpacity } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AppProvider, useApp } from '@/context/AppContext';
+import { useNotifications } from '@/hooks/useNotifications';
 
-const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-// Cache the Clerk JWT
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_cHJvcGVyLXNwYXJyb3ctMTIuY2xlcmsuYWNjb3VudHMuZGV2JA';
+
 const tokenCache = {
   async getToken(key: string) {
-    try {
-      return SecureStore.getItemAsync(key);
-    } catch (err) {
-      return null;
-    }
+    try { return SecureStore.getItemAsync(key); } catch { return null; }
   },
   async saveToken(key: string, value: string) {
-    try {
-      return SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
+    try { return SecureStore.setItemAsync(key, value); } catch {}
   },
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -35,82 +26,101 @@ export default function RootLayout() {
     mon: require('../assets/fonts/Montserrat-Regular.ttf'),
     'mon-sb': require('../assets/fonts/Montserrat-SemiBold.ttf'),
     'mon-b': require('../assets/fonts/Montserrat-Bold.ttf'),
+    Inter_400Regular: require('../assets/fonts/Montserrat-Regular.ttf'),
+    Inter_500Medium: require('../assets/fonts/Montserrat-SemiBold.ttf'),
+    Inter_600SemiBold: require('../assets/fonts/Montserrat-SemiBold.ttf'),
+    Inter_700Bold: require('../assets/fonts/Montserrat-Bold.ttf'),
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+  useEffect(() => { if (error) throw error; }, [error]);
+  useEffect(() => { if (loaded) SplashScreen.hideAsync(); }, [loaded]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
+  if (!loaded) return null;
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY!} tokenCache={tokenCache}>
-      <RootLayoutNav />
-    </ClerkProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY!} tokenCache={tokenCache}>
+        <AppProvider>
+          <RootLayoutNav />
+        </AppProvider>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }
 
 function RootLayoutNav() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded: clerkLoaded, isSignedIn: clerkSignedIn } = useAuth();
+  const { user, isLoaded: appLoaded } = useApp();
   const router = useRouter();
+  const segments = useSegments();
 
-  // Automatically open login if user is not authenticated
+  const isLoaded = clerkLoaded && appLoaded;
+  const isSignedIn = clerkSignedIn || !!user.email;
+
+  // Initialize notifications at the root level
+  useNotifications();
+
+  const [hasShownLogin, setHasShownLogin] = useState(false);
+
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push('/(modals)/login');
+    if (!isLoaded) return;
+
+    const inOnboarding = segments[0] === 'onboarding';
+    const inAuth = segments[0] === '(modals)';
+
+    if (!isSignedIn) {
+      // Push login modal on first launch, but let them close it to browse
+      if (!hasShownLogin && !inAuth) {
+        setHasShownLogin(true);
+        setTimeout(() => {
+          router.push('/(modals)/login');
+        }, 100);
+      }
+      return;
     }
-  }, [isLoaded]);
+
+    if (!user.role) {
+      if (!inOnboarding) router.replace('/onboarding/role-select');
+      return;
+    }
+
+    if (user.kycStatus === 'none') {
+      if (!inOnboarding) {
+        router.replace(`/onboarding/kyc-${user.role}` as any);
+      }
+      return;
+    }
+
+    if (user.kycStatus === 'submitted') {
+      if (!inOnboarding) router.replace('/onboarding/kyc-pending');
+      return;
+    }
+
+    if (user.kycStatus === 'approved') {
+      if (user.role === 'business') {
+        if (segments[0] !== '(business)' && !inAuth) router.replace('/(business)' as any);
+      } else if (user.role === 'partner') {
+        if (segments[0] !== '(partner)' && !inAuth) router.replace('/(partner)' as any);
+      } else {
+        // Traveler can stay on tabs
+      }
+    }
+  }, [isLoaded, isSignedIn, user.role, user.kycStatus, segments]);
 
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(business)" options={{ headerShown: false }} />
+      <Stack.Screen name="(partner)" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen
         name="(modals)/login"
-        options={{
-          presentation: 'modal',
-          title: 'Log in or sign up',
-          headerTitleStyle: {
-            fontFamily: 'mon-sb',
-          },
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close-outline" size={28} />
-            </TouchableOpacity>
-          ),
-        }}
+        options={{ headerShown: false, presentation: 'fullScreenModal' }}
       />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="listing/[id]" options={{ headerTitle: '' }} />
-      <Stack.Screen
-        name="(modals)/booking"
-        options={{
-          presentation: 'transparentModal',
-          animation: 'fade',
-          headerTransparent: true,
-          headerTitle: (props) => <ModalHeaderText />,
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{
-                backgroundColor: '#fff',
-                borderColor: Colors.grey,
-                borderRadius: 20,
-                borderWidth: 1,
-                padding: 4,
-              }}>
-              <Ionicons name="close-outline" size={22} />
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <Stack.Screen name="destination/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="booking/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="services/beach" options={{ headerShown: false }} />
+      <Stack.Screen name="services/desert" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -12,6 +12,7 @@ import Animated, {
   useScrollViewOffset,
 } from 'react-native-reanimated';
 import { defaultStyles } from '@/constants/Styles';
+import { useFavorites } from '@/store/useFavorites';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 300;
@@ -21,6 +22,9 @@ const DetailsPage = () => {
   const listing = (listingsData as any[]).find((item) => item.id === id);
   const navigation = useNavigation();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  
+  const { favoriteIds, toggleFavorite } = useFavorites();
+  const isFavorite = favoriteIds.includes(id as string);
 
   const shareListing = async () => {
     try {
@@ -46,8 +50,8 @@ const DetailsPage = () => {
           <TouchableOpacity style={styles.roundButton} onPress={shareListing}>
             <Ionicons name="share-outline" size={22} color={'#000'} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.roundButton}>
-            <Ionicons name="heart-outline" size={22} color={'#000'} />
+          <TouchableOpacity style={styles.roundButton} onPress={() => toggleFavorite(id as string)}>
+            <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={22} color={isFavorite ? Colors.primary : '#000'} />
           </TouchableOpacity>
         </View>
       ),
@@ -57,7 +61,7 @@ const DetailsPage = () => {
         </TouchableOpacity>
       ),
     });
-  }, []);
+  }, [isFavorite]);
 
   const scrollOffset = useScrollViewOffset(scrollRef);
 

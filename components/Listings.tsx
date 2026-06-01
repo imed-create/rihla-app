@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity } from 'react-native';
-import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
-import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
-import { useEffect, useRef, useState } from 'react';
 import { BottomSheetFlatList, BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
+import { Link } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { ListRenderItem, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import { defaultStyles } from '@/constants/Styles';
 
 interface Props {
   listings: any[];
@@ -14,48 +14,36 @@ interface Props {
 
 const Listings = ({ listings: items, refresh, category }: Props) => {
   const listRef = useRef<BottomSheetFlatListMethods>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  // Update the view to scroll the list back top
   useEffect(() => {
-    if (refresh) {
-      scrollListTop();
-    }
+    if (refresh) listRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, [refresh]);
 
-  const scrollListTop = () => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: true });
-  };
-
-  // Use for "updating" the views data after category changed
   useEffect(() => {
     setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-    }, 200);
+    setTimeout(() => setLoading(false), 200);
   }, [category]);
 
-  // Render one listing row for the FlatList
   const renderRow: ListRenderItem<any> = ({ item }) => (
     <Link href={`/listing/${item.id}`} asChild>
-      <TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.92}>
         <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
           <Animated.Image source={{ uri: item.medium_url }} style={styles.image} />
-          <TouchableOpacity style={{ position: 'absolute', right: 30, top: 30 }}>
-            <Ionicons name="heart-outline" size={24} color="#000" />
+          <TouchableOpacity style={styles.heartBtn}>
+            <Ionicons name="heart-outline" size={22} color="#222222" />
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ fontSize: 16, fontFamily: 'mon-sb' }}>{item.name}</Text>
-            <View style={{ flexDirection: 'row', gap: 4 }}>
-              <Ionicons name="star" size={16} />
-              <Text style={{ fontFamily: 'mon-sb' }}>{item.review_scores_rating / 20}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={15} color="#222222" />
+              <Text style={styles.rating}>{item.review_scores_rating / 20}</Text>
             </View>
           </View>
-          <Text style={{ fontFamily: 'mon' }}>{item.room_type}</Text>
-          <View style={{ flexDirection: 'row', gap: 4 }}>
-            <Text style={{ fontFamily: 'mon-sb' }}>€ {item.price}</Text>
-            <Text style={{ fontFamily: 'mon' }}>night</Text>
+          <Text style={styles.meta}>{item.room_type}</Text>
+          <View style={styles.priceRow}>
+            <Text style={styles.price}>EUR {item.price}</Text>
+            <Text style={styles.night}>night</Text>
           </View>
         </Animated.View>
       </TouchableOpacity>
@@ -76,21 +64,40 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
 
 const styles = StyleSheet.create({
   listing: {
-    padding: 16,
-    gap: 10,
-    marginVertical: 16,
+    padding: 10,
+    gap: 8,
+    marginVertical: 10,
+    marginHorizontal: 8,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
   },
-  image: {
-    width: '100%',
-    height: 300,
-    borderRadius: 10,
+  image: { width: '100%', height: 300, borderRadius: 18 },
+  heartBtn: {
+    position: 'absolute',
+    right: 24,
+    top: 24,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  info: {
-    textAlign: 'center',
-    fontFamily: 'mon-sb',
-    fontSize: 16,
-    marginTop: 4,
-  },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  name: { flex: 1, fontSize: 16, fontFamily: 'mon-sb', color: '#222222' },
+  ratingRow: { flexDirection: 'row', gap: 4, alignItems: 'center' },
+  rating: { fontFamily: 'mon-sb', color: '#222222' },
+  meta: { fontFamily: 'mon', color: '#717171' },
+  priceRow: { flexDirection: 'row', gap: 4 },
+  price: { fontFamily: 'mon-sb', color: '#222222' },
+  night: { fontFamily: 'mon', color: '#717171' },
+  info: { textAlign: 'center', fontFamily: 'mon-sb', fontSize: 16, marginTop: 4, color: '#222222' },
 });
 
 export default Listings;

@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 export const defaultStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FDFFFF',
+    backgroundColor: '#FFFFFF',
   },
   inputField: {
     height: 44,
@@ -17,7 +17,7 @@ export const defaultStyles = StyleSheet.create({
   btn: {
     backgroundColor: Colors.primary,
     height: 50,
-    borderRadius: 8,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -39,7 +39,7 @@ export const defaultStyles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderTopColor: Colors.grey,
+    borderTopColor: '#DDDDDD',
     borderTopWidth: StyleSheet.hairlineWidth,
   },
 });
