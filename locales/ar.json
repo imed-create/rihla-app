@@ -1,0 +1,101 @@
+{
+  "brand": {
+    "name": "سحيل",
+    "tagline": "تجارب فاخرة على الساحل والصحراء الجزائرية"
+  },
+  "common": {
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "done": "تم",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "search": "بحث",
+    "loading": "جاري التحميل…",
+    "verified": "موثّق",
+    "free": "مجاني",
+    "currency": "دج"
+  },
+  "tabs": {
+    "discover": "استكشاف",
+    "map": "الخريطة",
+    "wishlists": "المفضلة",
+    "trips": "رحلاتي",
+    "inbox": "الرسائل",
+    "profile": "الملف"
+  },
+  "discover": {
+    "searchPlaceholder": "ابحث عن وجهة في الجزائر",
+    "regions": "المناطق",
+    "all": "الكل",
+    "kicker": "استكشف الجزائر",
+    "heroTitle": "إقامات وخدمات محلية بعناية فائقة.",
+    "heroSub": "شاطئ، صحراء، جبال — تجربة واحدة متكاملة.",
+    "sectionTitle": "أماكن يحبها الضيوف",
+    "options": "{{count}} خيار"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "guestTitle": "سجّل الدخول إلى حسابك",
+    "guestSub": "اعرض حجوزاتك وأدر حسابك وافتح الميزات المميزة.",
+    "loginCta": "تسجيل الدخول أو إنشاء حساب",
+    "verifiedAccount": "حساب موثّق",
+    "active": "نشطة",
+    "completed": "مكتملة",
+    "totalTrips": "إجمالي الرحلات",
+    "personalInfo": "المعلومات الشخصية",
+    "fullName": "الاسم الكامل",
+    "phone": "الهاتف",
+    "nationality": "الجنسية",
+    "kycStatus": "حالة التحقق",
+    "kycVerified": "موثّق ✓",
+    "settings": "الإعدادات",
+    "signOut": "تسجيل الخروج",
+    "signOutConfirm": "هل تريد تسجيل الخروج؟",
+    "version": "سحيل v{{version}} · الجزائر 🇩🇿"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "account": "الحساب",
+    "editProfile": "تعديل الملف",
+    "editProfileSub": "الاسم، الصورة، بيانات الاتصال",
+    "preferences": "التفضيلات",
+    "language": "اللغة",
+    "languageSub": "لغة التطبيق",
+    "notifications": "الإشعارات",
+    "notificationsSub": "الحجوزات والعروض والرحلات",
+    "haptics": "اللمس الاهتزازي",
+    "hapticsSub": "عند النقر والتأكيد",
+    "currency": "العملة",
+    "currencySub": "الأسعار بالدينار الجزائري",
+    "currencyValue": "دج (DA)",
+    "privacy": "الخصوصية والدعم",
+    "help": "المساعدة والدعم",
+    "helpSub": "الأسئلة الشائعة والتواصل",
+    "terms": "شروط الاستخدام",
+    "privacyPolicy": "سياسة الخصوصية",
+    "about": "عن سحيل",
+    "aboutSub": "تجارب مميزة في الجزائر",
+    "testNotification": "إشعار تجريبي",
+    "testNotificationSub": "تحقق من التنبيهات على هذا الجهاز",
+    "notificationScheduled": "تم جدولة الإشعار",
+    "notificationScheduledBody": "ستصلك رسالة قريباً.",
+    "chooseLanguage": "اختر اللغة",
+    "languages": {
+      "en": "English",
+      "fr": "Français",
+      "ar": "العربية"
+    }
+  },
+  "roles": {
+    "traveler": "مسافر",
+    "business": "صاحب عمل",
+    "partner": "شريك خدمة"
+  },
+  "pro": {
+    "saheelPro": "سحيل برو",
+    "moreTools": "المزيد",
+    "moreFromMenu": "المزيد من القائمة",
+    "menuHint": "الأقسام الرئيسية في الشريط السفلي.",
+    "signOut": "خروج"
+  }
+}

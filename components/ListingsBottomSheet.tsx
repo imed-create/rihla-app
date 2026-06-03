@@ -4,9 +4,10 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import Listings from '@/components/Listings';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
+import type { AirbnbListing } from '@/types/airbnb-listing';
 
 interface Props {
-  listings: any[];
+  listings: AirbnbListing[];
   category: string;
 }
 

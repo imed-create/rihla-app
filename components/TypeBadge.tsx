@@ -9,7 +9,7 @@ interface Props {
 
 export default function TypeBadge({ type }: Props) {
   const typeDef = DESTINATION_TYPES.find((t) => t.id === type);
-  const color = categoryColors[type] || '#222222';
+  const color = categoryColors[type] || '#1a1a1a';
 
   return (
     <View style={styles.badge}>

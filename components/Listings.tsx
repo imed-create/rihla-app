@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import { ListRenderItem, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { defaultStyles } from '@/constants/Styles';
+import type { AirbnbListing } from '@/types/airbnb-listing';
 
 interface Props {
-  listings: any[];
+  listings: AirbnbListing[];
   refresh: number;
   category: string;
 }
@@ -25,18 +26,18 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
     setTimeout(() => setLoading(false), 200);
   }, [category]);
 
-  const renderRow: ListRenderItem<any> = ({ item }) => (
+  const renderRow: ListRenderItem<AirbnbListing> = ({ item }) => (
     <Link href={`/listing/${item.id}`} asChild>
       <TouchableOpacity activeOpacity={0.92}>
         <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
           <Animated.Image source={{ uri: item.medium_url }} style={styles.image} />
           <TouchableOpacity style={styles.heartBtn}>
-            <Ionicons name="heart-outline" size={22} color="#222222" />
+            <Ionicons name="heart-outline" size={22} color="#1a1a1a" />
           </TouchableOpacity>
           <View style={styles.titleRow}>
             <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
             <View style={styles.ratingRow}>
-              <Ionicons name="star" size={15} color="#222222" />
+              <Ionicons name="star" size={15} color="#1a1a1a" />
               <Text style={styles.rating}>{item.review_scores_rating / 20}</Text>
             </View>
           </View>
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: '#e2e8f0',
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -90,14 +91,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  name: { flex: 1, fontSize: 16, fontFamily: 'mon-sb', color: '#222222' },
+  name: { flex: 1, fontSize: 16, fontFamily: 'mon-sb', color: '#1a1a1a' },
   ratingRow: { flexDirection: 'row', gap: 4, alignItems: 'center' },
-  rating: { fontFamily: 'mon-sb', color: '#222222' },
-  meta: { fontFamily: 'mon', color: '#717171' },
+  rating: { fontFamily: 'mon-sb', color: '#1a1a1a' },
+  meta: { fontFamily: 'mon', color: '#888888' },
   priceRow: { flexDirection: 'row', gap: 4 },
-  price: { fontFamily: 'mon-sb', color: '#222222' },
-  night: { fontFamily: 'mon', color: '#717171' },
-  info: { textAlign: 'center', fontFamily: 'mon-sb', fontSize: 16, marginTop: 4, color: '#222222' },
+  price: { fontFamily: 'mon-sb', color: '#1a1a1a' },
+  night: { fontFamily: 'mon', color: '#888888' },
+  info: { textAlign: 'center', fontFamily: 'mon-sb', fontSize: 16, marginTop: 4, color: '#1a1a1a' },
 });
 
 export default Listings;

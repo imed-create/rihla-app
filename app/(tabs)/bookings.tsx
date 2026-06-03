@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router } from 'expo-router';
-import React, { useState } from 'react';
-import { FlatList, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BookingCard from '@/components/BookingCard';
+import EmptyState from '@/components/EmptyState';
+import { SAHEL } from '@/constants/Colors';
 import { useApp } from '@/context/AppContext';
 
 type TabType = 'active' | 'past';
@@ -11,7 +13,13 @@ type TabType = 'active' | 'past';
 export default function BookingsScreen() {
   const { activeBookings, pastBookings, cancelBooking } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('active');
+  const [refreshing, setRefreshing] = useState(false);
   const displayedBookings = activeTab === 'active' ? activeBookings : pastBookings;
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 700);
+  }, []);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -54,18 +62,21 @@ export default function BookingsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={SAHEL.accent} colors={[SAHEL.accent]} />
+          }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="calendar-outline" size={56} color="#DDDDDD" />
-              <Text style={styles.emptyText}>
-                {activeTab === 'active' ? 'No active bookings right now' : "You don't have any past bookings"}
-              </Text>
-              {activeTab === 'active' && (
-                <TouchableOpacity activeOpacity={0.85} onPress={() => router.push('/(tabs)' as any)} style={styles.exploreBtn}>
-                  <Text style={styles.exploreText}>Explore Services</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <EmptyState
+              icon="calendar-outline"
+              title={activeTab === 'active' ? 'No active bookings' : 'No past bookings'}
+              subtitle={
+                activeTab === 'active'
+                  ? 'Book a beach spot or order food to see trips here.'
+                  : 'Completed trips will appear in history.'
+              }
+              actionLabel={activeTab === 'active' ? 'Explore' : undefined}
+              onAction={activeTab === 'active' ? () => router.push('/(tabs)' as any) : undefined}
+            />
           }
           renderItem={({ item }) => <BookingCard booking={item} onCancel={(id) => cancelBooking(id)} />}
         />
@@ -75,16 +86,16 @@ export default function BookingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F7F7F7' },
+  root: { flex: 1, backgroundColor: '#fafbfc' },
   shell: { flex: 1, width: '100%', maxWidth: 900, alignSelf: 'center' },
   header: {
     paddingHorizontal: 24,
     paddingTop: Platform.OS === 'web' ? 22 : 16,
     paddingBottom: 14,
   },
-  eyebrow: { fontSize: 12, fontFamily: 'mon-b', color: '#FF385C', textTransform: 'uppercase', marginBottom: 6 },
-  title: { fontSize: 30, fontFamily: 'mon-b', color: '#222222', letterSpacing: -0.3 },
-  subtitle: { fontSize: 14, color: '#717171', fontFamily: 'mon', marginTop: 6 },
+  eyebrow: { fontSize: 12, fontFamily: 'mon-b', color: '#0a2540', textTransform: 'uppercase', marginBottom: 6 },
+  title: { fontSize: 30, fontFamily: 'mon-b', color: '#1a1a1a', letterSpacing: -0.3 },
+  subtitle: { fontSize: 14, color: '#888888', fontFamily: 'mon', marginTop: 6 },
   tabContainer: { paddingHorizontal: 20, marginVertical: 10 },
   tabBackground: { flexDirection: 'row', backgroundColor: '#EBEBEB', borderRadius: 999, padding: 3, height: 46 },
   tabButton: { flex: 1, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
@@ -97,11 +108,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   tabLabel: { fontSize: 13, fontFamily: 'mon' },
-  tabLabelActive: { color: '#222222', fontFamily: 'mon-sb' },
-  tabLabelIdle: { color: '#717171' },
+  tabLabelActive: { color: '#1a1a1a', fontFamily: 'mon-sb' },
+  tabLabelIdle: { color: '#888888' },
   listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 30 },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80, gap: 12 },
-  emptyText: { fontSize: 14, color: '#717171', fontFamily: 'mon-sb' },
-  exploreBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999, marginTop: 8, backgroundColor: '#FF385C' },
+  emptyText: { fontSize: 14, color: '#888888', fontFamily: 'mon-sb' },
+  exploreBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999, marginTop: 8, backgroundColor: '#0a2540' },
   exploreText: { color: '#FFFFFF', fontSize: 13, fontFamily: 'mon-b' },
 });

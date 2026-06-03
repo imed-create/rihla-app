@@ -34,8 +34,8 @@ export default function CategoryBar() {
               style={[
                 styles.chip,
                 isActive 
-                  ? { backgroundColor: '#222222', borderColor: '#222222' } 
-                  : { backgroundColor: '#FFFFFF', borderColor: '#DDDDDD' }
+                  ? { backgroundColor: '#1a1a1a', borderColor: '#1a1a1a' } 
+                  : { backgroundColor: '#FFFFFF', borderColor: '#e2e8f0' }
               ]}
             >
               <Text style={[styles.emoji, isActive && { color: activeColor }]}>{item.emoji}</Text>
@@ -88,6 +88,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   labelTextInactive: {
-    color: '#717171',
+    color: '#888888',
   },
 });

@@ -78,13 +78,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontFamily: "mon-sb",
-    color: "#222222",
+    color: "#1a1a1a",
     marginTop: 4,
   },
   tagline: {
     fontSize: 11,
     fontFamily: "mon",
-    color: "#717171",
+    color: "#888888",
     lineHeight: 15,
     marginTop: 2,
   },

@@ -8,5 +8,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["replit app", "node_modules"]
+  "exclude": ["template to use/**", "replit app/**", "node_modules"]
 }

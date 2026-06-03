@@ -5,7 +5,7 @@ type ZoneId = "family" | "vip" | "free";
 
 const ZONE_META: Record<ZoneId, { label: string; color: string; bg: string }> =
   {
-    family: { label: "Family Zone", color: "#0077B6", bg: "#E0F4FF" },
+    family: { label: "Family Zone", color: "#0a2540", bg: "#E0F4FF" },
     vip: { label: "VIP Zone", color: "#9A7B00", bg: "#FFF8DC" },
     free: { label: "Free Zone", color: "#047857", bg: "#D1FAE5" },
   };

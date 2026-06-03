@@ -44,7 +44,7 @@ export default function BookingCard({ booking, onCancel }: BookingCardProps) {
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: "#FFFFFF", borderColor: '#DDDDDD' },
+        { backgroundColor: "#FFFFFF", borderColor: '#e2e8f0' },
         pressed && { opacity: 0.95 },
       ]}
       onPress={handlePress}
@@ -57,7 +57,7 @@ export default function BookingCard({ booking, onCancel }: BookingCardProps) {
       {/* Center: content */}
       <View style={styles.content}>
         <View style={styles.topRow}>
-          <Text style={[styles.title, { color: '#222222' }]} numberOfLines={1}>
+          <Text style={[styles.title, { color: '#1a1a1a' }]} numberOfLines={1}>
             {booking.title}
           </Text>
           <View style={[styles.statusPill, { backgroundColor: statusColor + "15" }]}>
@@ -68,7 +68,7 @@ export default function BookingCard({ booking, onCancel }: BookingCardProps) {
           </View>
         </View>
 
-        <Text style={[styles.subtitle, { color: '#717171' }]} numberOfLines={1}>
+        <Text style={[styles.subtitle, { color: '#888888' }]} numberOfLines={1}>
           {booking.subtitle}
         </Text>
 
@@ -80,7 +80,7 @@ export default function BookingCard({ booking, onCancel }: BookingCardProps) {
         )}
 
         <View style={styles.bottomRow}>
-          <Text style={[styles.price, { color: booking.price === 0 ? '#717171' : '#222222' }]}>
+          <Text style={[styles.price, { color: booking.price === 0 ? '#888888' : '#1a1a1a' }]}>
             {booking.price === 0 ? "Free" : `${booking.price.toLocaleString()} DA`}
           </Text>
           <View style={styles.actions}>

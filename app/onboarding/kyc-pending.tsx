@@ -35,9 +35,9 @@ export default function KycPendingScreen() {
   }, [user.kycStatus, user.role]);
 
   const ROLE_META = {
-    traveler: { color: '#0096C7', icon: 'compass-outline', label: 'Traveler', bgColor: '#F0F9FF' },
-    business: { color: '#7C3AED', icon: 'storefront-outline', label: 'Business Owner', bgColor: '#F5F3FF' },
-    partner: { color: '#059669', icon: 'flash-outline', label: 'Service Partner', bgColor: '#ECFDF5' },
+    traveler: { color: '#00a896', icon: 'compass-outline', label: 'Traveler', bgColor: '#F0F9FF' },
+    business: { color: '#0a2540', icon: 'storefront-outline', label: 'Business Owner', bgColor: '#F5F3FF' },
+    partner: { color: '#f4a261', icon: 'flash-outline', label: 'Service Partner', bgColor: '#ECFDF5' },
   };
 
   const meta = ROLE_META[user.role ?? 'traveler'];

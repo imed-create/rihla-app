@@ -54,6 +54,11 @@ export default function PhotosScreen() {
 
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   const handleBook = async () => {
     if (!slot) return;
     setLoading(true);
@@ -80,7 +85,7 @@ export default function PhotosScreen() {
         colors={["#FF499E", "#C9184A"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <Ionicons name="camera-outline" size={40} color="#FFFFFF" />

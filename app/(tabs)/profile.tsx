@@ -1,6 +1,12 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,24 +14,27 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { router, Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { scheduleLocalNotification } from '@/hooks/useNotifications';
+import { useTranslation } from '@/context/I18nContext';
 
 export default function ProfileScreen() {
-  const { user, updateUser, signOut, activeBookings, pastBookings } = useApp();
+  const { user, signOut, activeBookings, pastBookings } = useApp();
   const { signOut: clerkSignOut, isSignedIn: clerkSignedIn } = useAuth();
+  const { t } = useTranslation();
 
   const isSignedIn = clerkSignedIn || !!user.email;
 
   const handleSignOut = async () => {
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('profile.signOut'), t('profile.signOutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Sign out',
+        text: t('profile.signOut'),
         style: 'destructive',
         onPress: async () => {
           try {
             await clerkSignOut();
-          } catch (e) {}
+          } catch {
+            /* noop */
+          }
           signOut();
           router.replace('/(modals)/login');
         },
@@ -33,153 +42,172 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const testNotification = async () => {
-    await scheduleLocalNotification(
-      'Booking Confirmed! ✈️',
-      'Your trip to Algiers has been successfully booked. Tap to view details.'
-    );
-    Alert.alert('Notification Scheduled', 'You should receive a push notification momentarily.');
-  };
-
   const pickAvatar = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-    // Avatar logic here
   };
 
   const avatarLetter = user?.kycData?.fullName
     ? user.kycData.fullName[0].toUpperCase()
-    : (user?.name ? user.name[0].toUpperCase() : 'T');
+    : user?.name
+      ? user.name[0].toUpperCase()
+      : 'S';
 
-  // ── GUEST VIEW ──
   if (!isSignedIn) {
     return (
       <SafeAreaView style={styles.root} edges={['top']}>
         <Stack.Screen options={{ headerShown: false }} />
-
-        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>{t('profile.title')}</Text>
         </View>
-
         <View style={styles.guestContainer}>
           <View style={styles.guestIconWrap}>
             <Ionicons name="person-outline" size={36} color="#94A3B8" />
           </View>
-          <Text style={styles.guestTitle}>Log in to your account</Text>
-          <Text style={styles.guestSub}>
-            View your bookings, manage your account, and unlock more features.
-          </Text>
+          <Text style={styles.guestTitle}>{t('profile.guestTitle')}</Text>
+          <Text style={styles.guestSub}>{t('profile.guestSub')}</Text>
           <TouchableOpacity
             style={styles.loginBtn}
             onPress={() => router.push('/(modals)/login')}
             activeOpacity={0.85}
           >
-            <Text style={styles.loginBtnText}>Log In or Sign Up</Text>
+            <Text style={styles.loginBtnText}>{t('profile.loginCta')}</Text>
           </TouchableOpacity>
-
-          {/* Divider */}
           <View style={styles.divider} />
-
-          {/* Settings even for guests */}
           <View style={styles.settingsSection}>
-            <SettingRow icon="help-circle-outline" label="Help & Support" color="#64748B" onPress={() => {}} />
-            <SettingRow icon="globe-outline" label="Language" color="#64748B" onPress={() => {}} />
+            <SettingRow
+              icon="settings-outline"
+              label={t('settings.title')}
+              color="#0a2540"
+              onPress={() => router.push('/(modals)/settings')}
+            />
+            <SettingRow
+              icon="help-circle-outline"
+              label={t('settings.help')}
+              color="#64748B"
+              onPress={() => router.push('/(modals)/settings')}
+            />
           </View>
         </View>
       </SafeAreaView>
     );
   }
 
-  // ── SIGNED IN VIEW ──
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>{t('profile.title')}</Text>
+        <TouchableOpacity
+          onPress={() => router.push('/(modals)/settings')}
+          style={styles.settingsBtn}
+        >
+          <Ionicons name="settings-outline" size={22} color="#1a1a1a" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Avatar + Name */}
         <View style={styles.profileTop}>
           <TouchableOpacity onPress={pickAvatar} style={styles.avatarWrap}>
-            {user.kycData.selfieUri
-              ? <Image source={{ uri: user.kycData.selfieUri }} style={styles.avatar} />
-              : (
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarLetter}>{avatarLetter}</Text>
-                </View>
-              )
-            }
+            {user.kycData.selfieUri ? (
+              <Image source={{ uri: user.kycData.selfieUri }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarLetter}>{avatarLetter}</Text>
+              </View>
+            )}
             <View style={styles.avatarEditBadge}>
               <Ionicons name="camera" size={11} color="#fff" />
             </View>
           </TouchableOpacity>
           <View style={styles.profileNameBlock}>
-            <Text style={styles.profileName}>{user.kycData.fullName || user.name || 'Traveler'}</Text>
+            <Text style={styles.profileName}>
+              {user.kycData.fullName || user.name || t('roles.traveler')}
+            </Text>
             <View style={styles.verifiedRow}>
-              <Ionicons name="checkmark-circle" size={14} color="#059669" />
-              <Text style={styles.verifiedText}>Verified account</Text>
+              <Ionicons name="checkmark-circle" size={14} color="#f4a261" />
+              <Text style={styles.verifiedText}>{t('profile.verifiedAccount')}</Text>
             </View>
           </View>
         </View>
 
-        {/* Stats row */}
         <View style={styles.statsRow}>
-          <StatCard label="Active" value={String(activeBookings.length)} icon="flash-outline" color="#0096C7" />
+          <StatCard label={t('profile.active')} value={String(activeBookings.length)} />
           <View style={styles.statDivider} />
-          <StatCard label="Completed" value={String(pastBookings.filter(b => b.status === 'completed').length)} icon="checkmark-circle-outline" color="#059669" />
+          <StatCard
+            label={t('profile.completed')}
+            value={String(pastBookings.filter((b) => b.status === 'completed').length)}
+          />
           <View style={styles.statDivider} />
-          <StatCard label="Total Trips" value={String(user.totalVisits)} icon="compass-outline" color="#F59E0B" />
+          <StatCard label={t('profile.totalTrips')} value={String(user.totalVisits)} />
         </View>
 
-        {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Personal info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal info</Text>
+          <Text style={styles.sectionTitle}>{t('profile.personalInfo')}</Text>
           <View style={styles.infoList}>
-            <InfoRow icon="person-outline" label="Full Name" value={user.kycData.fullName || '—'} />
-            <InfoRow icon="call-outline" label="Phone" value={user.kycData.phone || user.phone || '—'} />
-            <InfoRow icon="globe-outline" label="Nationality" value={user.kycData.nationality || '—'} />
-            <InfoRow icon="shield-checkmark-outline" label="KYC Status" value="Verified ✓" valueColor="#059669" />
+            <InfoRow label={t('profile.fullName')} value={user.kycData.fullName || '—'} />
+            <InfoRow label={t('profile.phone')} value={user.kycData.phone || user.phone || '—'} />
+            <InfoRow label={t('profile.nationality')} value={user.kycData.nationality || '—'} />
+            <InfoRow
+              label={t('profile.kycStatus')}
+              value={t('profile.kycVerified')}
+              valueColor="#f4a261"
+            />
           </View>
         </View>
 
         <View style={styles.divider} />
 
-        {/* Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
           <View style={styles.settingsSection}>
-            <SettingRow icon="notifications-outline" label="Test Notifications" color="#0096C7" onPress={testNotification} />
-            <SettingRow icon="language-outline" label="Language" color="#7C3AED" onPress={() => {}} />
-            <SettingRow icon="help-circle-outline" label="Help & Support" color="#059669" onPress={() => {}} />
+            <SettingRow
+              icon="settings-outline"
+              label={t('settings.title')}
+              color="#0a2540"
+              onPress={() => router.push('/(modals)/settings')}
+            />
+            <SettingRow
+              icon="language-outline"
+              label={t('settings.language')}
+              color="#0a2540"
+              onPress={() => router.push('/(modals)/settings')}
+            />
+            <SettingRow
+              icon="notifications-outline"
+              label={t('settings.notifications')}
+              color="#00a896"
+              onPress={() => router.push('/(modals)/settings')}
+            />
+            <SettingRow
+              icon="help-circle-outline"
+              label={t('settings.help')}
+              color="#f4a261"
+              onPress={() => router.push('/(modals)/settings')}
+            />
           </View>
         </View>
 
         <View style={styles.divider} />
 
-        {/* Sign out */}
         <TouchableOpacity style={styles.signOutRow} onPress={handleSignOut}>
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text style={styles.signOutText}>Log out</Text>
+          <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.versionText}>TourDZ v1.0 · Algeria 🇩🇿</Text>
+        <Text style={styles.versionText}>{t('profile.version', { version: '1.0' })}</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function StatCard({ label, value, icon, color }: any) {
+function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
@@ -188,7 +216,15 @@ function StatCard({ label, value, icon, color }: any) {
   );
 }
 
-function InfoRow({ icon, label, value, valueColor }: any) {
+function InfoRow({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+}) {
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -197,7 +233,17 @@ function InfoRow({ icon, label, value, valueColor }: any) {
   );
 }
 
-function SettingRow({ icon, label, color, onPress }: any) {
+function SettingRow({
+  icon,
+  label,
+  color,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  color: string;
+  onPress: () => void;
+}) {
   return (
     <TouchableOpacity style={styles.settingRow} onPress={onPress} activeOpacity={0.7}>
       <View style={[styles.settingIcon, { backgroundColor: color + '15' }]}>
@@ -211,21 +257,18 @@ function SettingRow({ icon, label, color, onPress }: any) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
-
-  // Header
   header: {
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: { fontFamily: 'mon-b', fontSize: 24, color: '#000000' },
-
-  // Guest view
-  guestContainer: {
-    padding: 24,
-    flex: 1,
-  },
+  settingsBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  guestContainer: { padding: 24, flex: 1 },
   guestIconWrap: {
     width: 72,
     height: 72,
@@ -238,7 +281,7 @@ const styles = StyleSheet.create({
   guestTitle: { fontSize: 22, fontFamily: 'mon-b', color: '#000000', marginBottom: 8 },
   guestSub: { fontSize: 14, fontFamily: 'mon', color: '#64748B', lineHeight: 20, marginBottom: 24 },
   loginBtn: {
-    backgroundColor: '#FF385C',
+    backgroundColor: '#0a2540',
     height: 52,
     borderRadius: 12,
     alignItems: 'center',
@@ -246,11 +289,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   loginBtnText: { fontSize: 16, fontFamily: 'mon-b', color: '#FFFFFF' },
-
-  // Scroll
   scroll: { paddingBottom: 48 },
-
-  // Profile top
   profileTop: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -287,9 +326,7 @@ const styles = StyleSheet.create({
   profileNameBlock: { flex: 1, gap: 4 },
   profileName: { fontSize: 18, fontFamily: 'mon-b', color: '#000000' },
   verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  verifiedText: { fontSize: 13, fontFamily: 'mon', color: '#059669' },
-
-  // Stats
+  verifiedText: { fontSize: 13, fontFamily: 'mon', color: '#f4a261' },
   statsRow: {
     flexDirection: 'row',
     paddingHorizontal: 24,
@@ -300,21 +337,15 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 32, backgroundColor: '#E2E8F0' },
   statValue: { fontSize: 20, fontFamily: 'mon-b', color: '#000000' },
   statLabel: { fontSize: 12, fontFamily: 'mon', color: '#64748B' },
-
-  // Divider
   divider: {
     height: 8,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#fafbfc',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: '#E2E8F0',
   },
-
-  // Section
   section: { paddingHorizontal: 24, paddingVertical: 20, gap: 16 },
   sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#000000' },
-
-  // Info rows
   infoList: { gap: 0 },
   infoRow: {
     flexDirection: 'row',
@@ -326,8 +357,6 @@ const styles = StyleSheet.create({
   },
   infoLabel: { fontSize: 14, fontFamily: 'mon', color: '#64748B' },
   infoValue: { fontSize: 14, fontFamily: 'mon-sb', color: '#0F172A' },
-
-  // Settings
   settingsSection: { gap: 0 },
   settingRow: {
     flexDirection: 'row',
@@ -339,8 +368,6 @@ const styles = StyleSheet.create({
   },
   settingIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   settingLabel: { flex: 1, fontSize: 15, fontFamily: 'mon-sb', color: '#0F172A' },
-
-  // Sign out
   signOutRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -349,8 +376,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   signOutText: { fontSize: 15, fontFamily: 'mon-sb', color: '#EF4444' },
-
-  // Version
   versionText: {
     textAlign: 'center',
     fontSize: 12,

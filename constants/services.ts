@@ -11,14 +11,40 @@ export interface Service {
   priceUnit: string;
 }
 
-export const SERVICES: Service[] = [
+function comingSoonRoute(title: string) {
+  return `/services/coming-soon?name=${encodeURIComponent(title)}`;
+}
+
+/** Routes with implemented screens */
+const LIVE_ROUTES = new Set([
+  '/services/beach/parking',
+  '/services/beach/spots',
+  '/services/beach/food',
+  '/services/beach/clothes',
+  '/services/beach/games',
+  '/services/beach/beach-items',
+  '/services/beach/massage',
+  '/services/beach/hotels',
+  '/services/beach/showers',
+  '/services/beach/events',
+  '/services/beach/powerbank',
+  '/services/beach/photos',
+  '/services/beach/guide',
+  '/services/desert/camel',
+  '/services/desert/camp',
+  '/services/desert/dune-buggy',
+  '/services/desert/stargazing',
+  '/services/desert/desert-guide',
+]);
+
+const RAW_SERVICES: Service[] = [
   // ───── BEACH SERVICES (13) ─────
   { id: 'parking', category: 'beach', title: 'Parking', tagline: 'Reserve your spot', icon: 'car-outline', iconFamily: 'Ionicons', color: '#023E58', route: '/services/beach/parking', basePrice: 200, priceUnit: 'DA/day' },
-  { id: 'spots', category: 'beach', title: 'Beach Spots', tagline: 'Umbrella & chairs', icon: 'umbrella-outline', iconFamily: 'Ionicons', color: '#0096C7', route: '/services/beach/spots', basePrice: 1500, priceUnit: 'DA/day' },
+  { id: 'spots', category: 'beach', title: 'Beach Spots', tagline: 'Umbrella & chairs', icon: 'umbrella-outline', iconFamily: 'Ionicons', color: '#00a896', route: '/services/beach/spots', basePrice: 1500, priceUnit: 'DA/day' },
   { id: 'food', category: 'beach', title: 'Food & Drinks', tagline: 'Order to your spot', icon: 'restaurant-outline', iconFamily: 'Ionicons', color: '#F4A261', route: '/services/beach/food', basePrice: 800, priceUnit: 'DA/meal' },
   { id: 'clothes', category: 'beach', title: 'Swim Shop', tagline: 'Swimwear & gear', icon: 'shirt-outline', iconFamily: 'Ionicons', color: '#FF6B6B', route: '/services/beach/clothes', basePrice: 1200, priceUnit: 'DA/item' },
   { id: 'games', category: 'beach', title: 'Games & Fun', tagline: 'Rentals & activities', icon: 'game-controller-outline', iconFamily: 'Ionicons', color: '#20C997', route: '/services/beach/games', basePrice: 500, priceUnit: 'DA/hour' },
-  { id: 'beach-items', category: 'beach', title: 'Water Rides', tagline: 'Jet-ski & pedalo', icon: 'water-outline', iconFamily: 'Ionicons', color: '#0077B6', route: '/services/beach/beach-items', basePrice: 3500, priceUnit: 'DA/session' },
+  { id: 'beach-items', category: 'beach', title: 'Water Rides', tagline: 'Jet-ski & pedalo', icon: 'water-outline', iconFamily: 'Ionicons', color: '#0a2540', route: '/services/beach/beach-items', basePrice: 3500, priceUnit: 'DA/session' },
   { id: 'massage', category: 'beach', title: 'Massage', tagline: 'Seaside relaxation', icon: 'hand-heart-outline', iconFamily: 'MaterialCommunityIcons', color: '#845EC2', route: '/services/beach/massage', basePrice: 2500, priceUnit: 'DA/session' },
   { id: 'hotels', category: 'beach', title: 'Stay & Rent', tagline: 'Nearby hotels', icon: 'bed-outline', iconFamily: 'Ionicons', color: '#1A6B3A', route: '/services/beach/hotels', basePrice: 9500, priceUnit: 'DA/night' },
   { id: 'showers', category: 'beach', title: 'Showers', tagline: 'Fresh & clean', icon: 'shower-head', iconFamily: 'MaterialCommunityIcons', color: '#48CAE4', route: '/services/beach/showers', basePrice: 100, priceUnit: 'DA/use' },
@@ -66,7 +92,7 @@ export const SERVICES: Service[] = [
   // ───── CITY SERVICES (10) ─────
   { id: 'restaurant', category: 'city', title: 'Restaurant', tagline: 'Book table at top eateries', icon: 'restaurant-outline', iconFamily: 'Ionicons', color: '#6C63FF', route: '/services/city/restaurant', basePrice: 1000, priceUnit: 'DA/table' },
   { id: 'nightlife', category: 'city', title: 'Nightlife', tagline: 'Cafes, music & lounges', icon: 'musical-notes-outline', iconFamily: 'Ionicons', color: '#4834D4', route: '/services/city/nightlife', basePrice: 2500, priceUnit: 'DA/ticket' },
-  { id: 'hammam', category: 'city', title: 'Hammam & Spa', tagline: 'Traditional bath & scrub', icon: 'water-outline', iconFamily: 'Ionicons', color: '#7C3AED', route: '/services/city/hammam', basePrice: 3000, priceUnit: 'DA/session' },
+  { id: 'hammam', category: 'city', title: 'Hammam & Spa', tagline: 'Traditional bath & scrub', icon: 'water-outline', iconFamily: 'Ionicons', color: '#0a2540', route: '/services/city/hammam', basePrice: 3000, priceUnit: 'DA/session' },
   { id: 'shopping-tour', category: 'city', title: 'Shopping Tour', tagline: 'Souk guide & personal shopper', icon: 'bag-handle-outline', iconFamily: 'Ionicons', color: '#6C63FF', route: '/services/city/shopping-tour', basePrice: 3000, priceUnit: 'DA/tour' },
   { id: 'city-tour', category: 'city', title: 'Private City Tour', tagline: 'Private driver & guide for a day', icon: 'car-outline', iconFamily: 'Ionicons', color: '#4834D4', route: '/services/city/city-tour', basePrice: 12000, priceUnit: 'DA/day' },
   { id: 'events', category: 'city', title: 'Concerts & Shows', tagline: 'Local events ticket booking', icon: 'ticket-outline', iconFamily: 'Ionicons', color: '#A855F7', route: '/services/city/events', basePrice: 2500, priceUnit: 'DA/ticket' },
@@ -75,6 +101,11 @@ export const SERVICES: Service[] = [
   { id: 'food-tour', category: 'city', title: 'Street Food Tour', tagline: 'Taste Algerias best bites', icon: 'restaurant-outline', iconFamily: 'Ionicons', color: '#6C63FF', route: '/services/city/food-tour', basePrice: 2000, priceUnit: 'DA/tour' },
   { id: 'culture-class', category: 'city', title: 'Darija Class', tagline: 'Language & culture intro', icon: 'book-outline', iconFamily: 'Ionicons', color: '#4834D4', route: '/services/city/culture-class', basePrice: 1500, priceUnit: 'DA/class' },
 ];
+
+export const SERVICES: Service[] = RAW_SERVICES.map((s) => ({
+  ...s,
+  route: LIVE_ROUTES.has(s.route) ? s.route : comingSoonRoute(s.title),
+}));
 
 export function getServicesByCategory(category: 'beach' | 'desert' | 'mountain' | 'historical' | 'city'): Service[] {
   return SERVICES.filter((s) => s.category === category);

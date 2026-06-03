@@ -10,7 +10,7 @@ import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 
 const PRODUCTS = [
-  { id: "1", name: "Men's Board Shorts", price: 1800, sizes: ["S", "M", "L", "XL"], color: "#0096C7" },
+  { id: "1", name: "Men's Board Shorts", price: 1800, sizes: ["S", "M", "L", "XL"], color: "#00a896" },
   { id: "2", name: "Women's Bikini Set", price: 2200, sizes: ["XS", "S", "M", "L"], color: "#FF6B6B" },
   { id: "3", name: "Rash Guard Top", price: 1500, sizes: ["S", "M", "L", "XL"], color: "#06D6A0" },
   { id: "4", name: "Kids Swimsuit", price: 1200, sizes: ["4-6", "7-9", "10-12"], color: "#FFD166" },
@@ -30,6 +30,11 @@ export default function ClothesScreen() {
 
   const product = PRODUCTS.find((p) => p.id === selected);
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
+
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
 
   const handleBuy = async () => {
     if (!product || !size) return;
@@ -57,7 +62,7 @@ export default function ClothesScreen() {
         colors={["#FF6B6B", "#EE5A5A"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <MaterialCommunityIcons name="tshirt-crew-outline" size={40} color="#FFFFFF" />

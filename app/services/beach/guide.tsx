@@ -11,7 +11,7 @@ const SECTIONS = [
     id: "rules",
     title: "Beach Rules",
     icon: "shield-checkmark-outline" as const,
-    color: "#0096C7",
+    color: "#00a896",
     items: [
       "No glass bottles on the sand",
       "Keep noise levels respectful after 22:00",
@@ -68,7 +68,7 @@ const SECTIONS = [
 const EMERGENCY = [
   { label: "Beach Emergency", number: "17", icon: "call" as const, color: "#EF4444" },
   { label: "First Aid", number: "+213 21 000 001", icon: "medical" as const, color: "#06D6A0" },
-  { label: "Security", number: "+213 21 000 002", icon: "shield" as const, color: "#0096C7" },
+  { label: "Security", number: "+213 21 000 002", icon: "shield" as const, color: "#00a896" },
 ];
 
 export default function GuideScreen() {
@@ -77,13 +77,18 @@ export default function GuideScreen() {
   const [expanded, setExpanded] = useState<string | null>("rules");
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
         colors={["#A8763E", "#8B5E32"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <Ionicons name="compass-outline" size={40} color="#FFFFFF" />
@@ -92,7 +97,7 @@ export default function GuideScreen() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 32, gap: 12 }} showsVerticalScrollIndicator={false}>
-        <View style={[styles.weatherCard, { backgroundColor: "#0096C7" }]}>
+        <View style={[styles.weatherCard, { backgroundColor: "#00a896" }]}>
           <View>
             <Text style={styles.weatherTitle}>Today's Conditions</Text>
             <Text style={styles.weatherSub}>Perfect beach weather</Text>

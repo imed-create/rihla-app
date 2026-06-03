@@ -1,288 +1,249 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
+  FlatList,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ConfirmButton from "@/components/ConfirmButton";
-import ZoneBadge from "@/components/ZoneBadge";
-import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+} from 'react-native';
+import Animated, { SlideInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SpotCell from '@/components/beach/SpotCell';
+import SpotHoldBanner from '@/components/beach/SpotHoldBanner';
+import ZoneTabs from '@/components/beach/ZoneTabs';
+import { showToast } from '@/components/Toast';
+import { SandSpot, SandZoneId, ZONE_CONFIG, makeZoneSpots } from '@/constants/beachLayout';
+import { sandIdToZoneType } from '@/types/beach';
+import { SAHEL } from '@/constants/Colors';
+import { useApp } from '@/context/AppContext';
+import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
+import { bookingHref } from '@/utils/router';
+import { safeGoBack } from '@/utils/safeNavigation';
+import { hapticHeavy, hapticSuccess } from '@/utils/haptics';
 
-const ZONES = [
-  {
-    id: "family" as const,
-    label: "Family Zone",
-    desc: "Quiet area for families with children. Supervised swimming.",
-    color: "#0077B6",
-    spots: 20,
-  },
-  {
-    id: "vip" as const,
-    label: "VIP Zone",
-    desc: "Premium sunbeds, private service & direct sea access.",
-    color: "#C9A84C",
-    spots: 10,
-  },
-  {
-    id: "free" as const,
-    label: "Free Zone",
-    desc: "Open area for everyone. Bring your own gear.",
-    color: "#06D6A0",
-    spots: 30,
-  },
-];
-
-const DURATIONS = [
-  { label: "2 hours", hours: 2 },
-  { label: "4 hours", hours: 4 },
-  { label: "Full Day", hours: 8 },
-];
-
-const PRICES: Record<string, Record<number, number>> = {
-  family: { 2: 400, 4: 700, 8: 1000 },
-  vip: { 2: 1200, 4: 2000, 8: 3000 },
-  free: { 2: 0, 4: 0, 8: 0 },
+const PRICES: Record<SandZoneId, number> = {
+  family: 1000,
+  vip: 3000,
+  free: 0,
 };
 
-const CHAIR_OPTIONS = [2, 4, 6];
-
 export default function SpotsScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
+  const { occupiedSpotIds } = useBeachOccupancy();
 
-  const [zone, setZone] = useState(ZONES[0]);
-  const [duration, setDuration] = useState(DURATIONS[0]);
-  const [chairs, setChairs] = useState(2);
+  const [zone, setZone] = useState<SandZoneId>('family');
+  const [spot, setSpot] = useState<SandSpot | null>(null);
+  const [holdExpiresAt, setHoldExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
-  const price = PRICES[zone.id][duration.hours];
-  const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
+  const spots = useMemo(() => makeZoneSpots(zone, ZONE_CONFIG[zone].spots), [zone]);
+  const occupied = useMemo(() => new Set(occupiedSpotIds), [occupiedSpotIds]);
+  const price = spot ? PRICES[zone] : 0;
+  const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
+
+  const handleSelect = useCallback(
+    (s: SandSpot) => {
+      if (occupied.has(s.id) && spot?.id !== s.id) return;
+      if (spot?.id === s.id) {
+        setSpot(null);
+        setHoldExpiresAt(null);
+        return;
+      }
+      setSpot(s);
+      setZone(s.zone);
+      if (s.zone !== 'free') {
+        setHoldExpiresAt(new Date(Date.now() + 20 * 60 * 1000).toISOString());
+      } else {
+        setHoldExpiresAt(null);
+      }
+    },
+    [occupied, spot]
+  );
 
   const handleBook = async () => {
+    if (!spot) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    const expiresAt =
-      zone.id !== "free"
-        ? new Date(Date.now() + 20 * 60 * 1000).toISOString()
-        : undefined;
-    addBooking({
-      type: "spots",
-      icon: "umbrella-outline",
-      iconFamily: "Ionicons",
-      color: zone.color,
-      title: `${zone.label} Spot`,
-      subtitle: `${chairs} chairs · ${duration.label}`,
+    hapticHeavy();
+    await new Promise((r) => setTimeout(r, 600));
+    const booking = addBooking({
+      type: 'spots',
+      icon: 'umbrella-outline',
+      iconFamily: 'Ionicons',
+      color: SAHEL.accent,
+      title: `${ZONE_CONFIG[zone].label} · ${spot.id}`,
+      subtitle: `${sandIdToZoneType(zone)} zone · Spot ${spot.id}`,
       price,
-      expiresAt,
-      details: { zone: zone.id, chairs, hours: duration.hours },
+      expiresAt: zone !== 'free' ? holdExpiresAt ?? undefined : undefined,
+      beachId: 'sidi-fredj',
+      details: { zone, spotId: spot.id, zoneLabel: ZONE_CONFIG[zone].label },
     });
     setLoading(false);
-    setSuccess(true);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setTimeout(() => router.push("/(tabs)/bookings"), 1500);
+    hapticSuccess();
+    showToast('Booking confirmed!', 'success');
+    router.push(bookingHref(booking.id));
   };
 
+  const renderSpot = useCallback(
+    ({ item }: { item: SandSpot }) => {
+      let state: 'available' | 'selected' | 'occupied' = 'available';
+      if (occupied.has(item.id) && spot?.id !== item.id) state = 'occupied';
+      else if (spot?.id === item.id) state = 'selected';
+      return (
+        <SpotCell
+          spot={item}
+          state={state}
+          isVip={zone === 'vip'}
+          onPress={handleSelect}
+        />
+      );
+    },
+    [occupied, spot, zone, handleSelect]
+  );
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.root}>
       <LinearGradient
-        colors={["#0096C7", "#0077B6"]}
-        style={[styles.header, { paddingTop: topPad + 16 }]}
+        colors={[SAHEL.primary, SAHEL.accent]}
+        style={[styles.header, { paddingTop: topPad + 12 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </Pressable>
-        <MaterialCommunityIcons name="umbrella-beach" size={40} color="#FFFFFF" />
         <Text style={styles.headerTitle}>Beach Spots</Text>
-        <Text style={styles.headerSub}>Choose your zone & reserve a spot</Text>
+        <Text style={styles.headerSub}>Tap to select · tap again to deselect</Text>
       </LinearGradient>
 
-      {success ? (
-        <View style={styles.successWrap}>
-          <Ionicons name="checkmark-circle" size={80} color="#06D6A0" />
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>
-            Spot Booked!
-          </Text>
-          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
-            {zone.id !== "free"
-              ? "Arrive within 20 minutes to keep your spot"
-              : "Your free spot is confirmed!"}
-          </Text>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: insets.bottom + 120 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>
-            SELECT ZONE
-          </Text>
-          {ZONES.map((z) => (
-            <Pressable
-              key={z.id}
-              style={[
-                styles.zoneCard,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: zone.id === z.id ? z.color : colors.border,
-                  borderWidth: zone.id === z.id ? 2 : 1,
-                },
-              ]}
-              onPress={() => setZone(z)}
-            >
-              <View style={styles.zoneRow}>
-                <ZoneBadge zone={z.id} />
-                <Text style={[styles.zoneSpots, { color: colors.mutedForeground }]}>
-                  {z.spots} spots
-                </Text>
-              </View>
-              <Text style={[styles.zoneDesc, { color: colors.mutedForeground }]}>
-                {z.desc}
-              </Text>
-              {zone.id === z.id && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color={z.color}
-                  style={styles.checkIcon}
-                />
-              )}
-            </Pressable>
-          ))}
-
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>
-            DURATION
-          </Text>
-          <View style={styles.row}>
-            {DURATIONS.map((d) => (
-              <Pressable
-                key={d.label}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor:
-                      duration.label === d.label ? "#0096C7" : colors.muted,
-                    borderColor:
-                      duration.label === d.label ? "#0096C7" : colors.border,
-                  },
-                ]}
-                onPress={() => setDuration(d)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    {
-                      color:
-                        duration.label === d.label ? "#FFF" : colors.foreground,
-                    },
-                  ]}
-                >
-                  {d.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>
-            NUMBER OF CHAIRS
-          </Text>
-          <View style={styles.row}>
-            {CHAIR_OPTIONS.map((c) => (
-              <Pressable
-                key={c}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: chairs === c ? "#0096C7" : colors.muted,
-                    borderColor: chairs === c ? "#0096C7" : colors.border,
-                  },
-                ]}
-                onPress={() => setChairs(c)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: chairs === c ? "#FFF" : colors.foreground },
-                  ]}
-                >
-                  {c} chairs
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.summaryTitle, { color: colors.foreground }]}>
-              Summary
-            </Text>
-            <View style={styles.summaryRow}>
-              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Zone</Text>
-              <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
-                {zone.label}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Duration</Text>
-              <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
-                {duration.label}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Total</Text>
-              <Text style={{ color: colors.primary, fontFamily: "Inter_700Bold", fontSize: 16 }}>
-                {price === 0 ? "FREE" : `${price} DZD`}
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
+      {spot && holdExpiresAt && zone !== 'free' && (
+        <SpotHoldBanner
+          spotId={spot.id}
+          expiresAt={holdExpiresAt}
+          onExpired={() => {
+            setSpot(null);
+            setHoldExpiresAt(null);
+          }}
+        />
       )}
 
-      {!success && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
-          <ConfirmButton
-            label="Book Spot"
-            onPress={handleBook}
-            loading={loading}
-            price={price > 0 ? price : undefined}
-          />
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 120 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <ZoneTabs active={zone} onChange={(z) => { setZone(z); setSpot(null); setHoldExpiresAt(null); }} />
+
+        <View style={styles.legend}>
+          <Legend label="Available" color={SAHEL.card} border={SAHEL.border} />
+          <Legend label="Selected" color={SAHEL.primary} border={SAHEL.primary} />
+          <Legend label="Taken" color={SAHEL.border} border={SAHEL.border} text="#bbb" />
         </View>
+
+        <FlatList
+          data={spots}
+          keyExtractor={(s) => s.id}
+          renderItem={renderSpot}
+          numColumns={4}
+          scrollEnabled={false}
+          columnWrapperStyle={styles.gridRow}
+        />
+      </ScrollView>
+
+      {spot && (
+        <Animated.View
+          entering={SlideInDown.springify().damping(18)}
+          style={[styles.bar, { paddingBottom: insets.bottom + 12 }]}
+        >
+          <View style={styles.barLeft}>
+            <Text style={styles.barSpot}>{spot.id}</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{ZONE_CONFIG[zone].label}</Text>
+            </View>
+          </View>
+          <Text style={styles.barPrice}>
+            {price === 0 ? 'FREE' : `${price.toLocaleString()} DZD`}
+          </Text>
+          <Pressable
+            style={[styles.bookBtn, loading && { opacity: 0.7 }]}
+            onPress={handleBook}
+            disabled={loading}
+          >
+            <Text style={styles.bookBtnText}>{loading ? '…' : 'Book Now'}</Text>
+          </Pressable>
+        </Animated.View>
       )}
     </View>
   );
 }
 
+function Legend({
+  label,
+  color,
+  border,
+  text,
+}: {
+  label: string;
+  color: string;
+  border: string;
+  text?: string;
+}) {
+  return (
+    <View style={styles.legendItem}>
+      <View style={[styles.legendSwatch, { backgroundColor: color, borderColor: border }]} />
+      <Text style={[styles.legendLabel, text ? { color: text } : null]}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 28, alignItems: "center", gap: 4 },
-  backBtn: { position: "absolute", left: 20, top: 16, width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontSize: 24, fontFamily: "Inter_700Bold", color: "#FFFFFF", marginTop: 8 },
-  headerSub: { fontSize: 13, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.7)" },
-  scroll: { flex: 1 },
-  label: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 1, marginTop: 4 },
-  zoneCard: { borderRadius: 16, padding: 16, gap: 8, position: "relative" },
-  zoneRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  zoneSpots: { fontSize: 12, fontFamily: "Inter_500Medium" },
-  zoneDesc: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18 },
-  checkIcon: { position: "absolute", top: 12, right: 12 },
-  row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
-  chipText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-  summaryCard: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 10, marginTop: 4 },
-  summaryTitle: { fontSize: 14, fontFamily: "Inter_700Bold", marginBottom: 4 },
-  summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  footer: { position: "absolute", bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#B8DFF0" },
-  successWrap: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 40 },
-  successTitle: { fontSize: 26, fontFamily: "Inter_700Bold", textAlign: "center" },
-  successSub: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
+  root: { flex: 1, backgroundColor: SAHEL.background },
+  header: { paddingHorizontal: 20, paddingBottom: 24, alignItems: 'center' },
+  backBtn: { position: 'absolute', left: 16, top: 16, padding: 8 },
+  headerTitle: { fontSize: 24, fontFamily: 'mon-b', color: '#fff', marginTop: 8 },
+  headerSub: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)', marginTop: 4 },
+  scroll: { padding: 16, gap: 8 },
+  legend: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 8 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendSwatch: { width: 14, height: 14, borderRadius: 4, borderWidth: 2 },
+  legendLabel: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  gridRow: { gap: 8, marginBottom: 8 },
+  bar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    backgroundColor: SAHEL.card,
+    borderTopWidth: 1,
+    borderTopColor: SAHEL.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  barLeft: { flex: 1, gap: 4 },
+  barSpot: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
+  badge: {
+    alignSelf: 'flex-start',
+    backgroundColor: SAHEL.muted,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgeText: { fontSize: 10, fontFamily: 'mon-sb', color: SAHEL.primary },
+  barPrice: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.primary },
+  bookBtn: {
+    backgroundColor: SAHEL.primary,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  bookBtnText: { color: '#fff', fontFamily: 'mon-b', fontSize: 14 },
 });

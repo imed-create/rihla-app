@@ -7,9 +7,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import * as Location from 'expo-location';
+import type { AirbnbListingFeature, AirbnbListingCollection } from '@/types/airbnb-listing';
 
 interface Props {
-  listings: any;
+  listings: AirbnbListingCollection;
 }
 
 const INITIAL_REGION = {
@@ -26,7 +27,7 @@ const ListingsMap = memo(({ listings }: Props) => {
   const [locating, setLocating] = useState(false);
 
   // When a marker is selected, navigate to the listing page
-  const onMarkerSelected = (event: any) => {
+  const onMarkerSelected = (event: AirbnbListingFeature) => {
     router.push(`/listing/${event.properties.id}`);
   };
 
@@ -61,7 +62,7 @@ const ListingsMap = memo(({ listings }: Props) => {
   };
 
   // Overwrite the renderCluster function to customize the cluster markers
-  const renderCluster = (cluster: any) => {
+  const renderCluster = (cluster: { id: string; geometry: { coordinates: [number, number] }; onPress: () => void; properties: { point_count?: number } }) => {
     const { id, geometry, onPress, properties } = cluster;
     const points = properties.point_count;
     
@@ -108,11 +109,11 @@ const ListingsMap = memo(({ listings }: Props) => {
         provider={PROVIDER_DEFAULT} // Default uses Apple Maps on iOS, Google on Android.
       >
         {/* Render all our marker as usual */}
-        {listings.features.map((item: any) => (
+        {listings.features.map((item: AirbnbListingFeature) => (
           <Marker
             coordinate={{
-              latitude: item.properties.latitude,
-              longitude: item.properties.longitude,
+              latitude: Number(item.properties.latitude),
+              longitude: Number(item.properties.longitude),
             }}
             key={item.properties.id}
             onPress={() => onMarkerSelected(item)}>

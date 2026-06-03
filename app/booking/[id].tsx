@@ -38,11 +38,16 @@ export default function BookingDetailScreen() {
 
   const [qrVisible, setQrVisible] = useState(false);
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   if (!booking) {
     return (
       <View style={[styles.root, { backgroundColor: "#F8FAFC", paddingTop: topPad + 40, paddingHorizontal: 20 }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
           <Feather name="arrow-left" size={24} color="#0F172A" />
         </TouchableOpacity>
         <View style={styles.notFound}>
@@ -84,7 +89,7 @@ export default function BookingDetailScreen() {
           style: "destructive",
           onPress: () => {
             cancelBooking(booking.id);
-            router.back();
+            handleBack();
           },
         },
       ]
@@ -104,7 +109,7 @@ export default function BookingDetailScreen() {
       >
         {/* ─── HEADER ─── */}
         <View style={[styles.header, { paddingTop: topPad + 12 }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <Feather name="arrow-left" size={22} color="#0F172A" />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: "#0F172A" }]}>Booking Details</Text>

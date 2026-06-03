@@ -1,0 +1,101 @@
+{
+  "brand": {
+    "name": "Saheel",
+    "tagline": "Expériences premium — côte & désert algérien"
+  },
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "done": "Terminé",
+    "back": "Retour",
+    "continue": "Continuer",
+    "search": "Rechercher",
+    "loading": "Chargement…",
+    "verified": "Vérifié",
+    "free": "Gratuit",
+    "currency": "DA"
+  },
+  "tabs": {
+    "discover": "Découvrir",
+    "map": "Carte",
+    "wishlists": "Favoris",
+    "trips": "Voyages",
+    "inbox": "Messages",
+    "profile": "Profil"
+  },
+  "discover": {
+    "searchPlaceholder": "Rechercher une destination en Algérie",
+    "regions": "Régions",
+    "all": "Tout",
+    "kicker": "Explorez l'Algérie",
+    "heroTitle": "Séjours et services locaux, sélectionnés avec soin.",
+    "heroSub": "Plage, Sahara, montagne — une expérience fluide.",
+    "sectionTitle": "Les coups de cœur des voyageurs",
+    "options": "{{count}} options"
+  },
+  "profile": {
+    "title": "Profil",
+    "guestTitle": "Connectez-vous",
+    "guestSub": "Consultez vos réservations et débloquez les fonctionnalités premium.",
+    "loginCta": "Connexion ou inscription",
+    "verifiedAccount": "Compte vérifié",
+    "active": "Actives",
+    "completed": "Terminées",
+    "totalTrips": "Voyages",
+    "personalInfo": "Informations personnelles",
+    "fullName": "Nom complet",
+    "phone": "Téléphone",
+    "nationality": "Nationalité",
+    "kycStatus": "Statut KYC",
+    "kycVerified": "Vérifié ✓",
+    "settings": "Paramètres",
+    "signOut": "Déconnexion",
+    "signOutConfirm": "Voulez-vous vraiment vous déconnecter ?",
+    "version": "Saheel v{{version}} · Algérie 🇩🇿"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "account": "Compte",
+    "editProfile": "Modifier le profil",
+    "editProfileSub": "Nom, photo, coordonnées",
+    "preferences": "Préférences",
+    "language": "Langue",
+    "languageSub": "Langue d'affichage",
+    "notifications": "Notifications push",
+    "notificationsSub": "Réservations, offres et voyages",
+    "haptics": "Retour haptique",
+    "hapticsSub": "Touches et confirmations",
+    "currency": "Devise",
+    "currencySub": "Prix en dinar algérien",
+    "currencyValue": "DZD (DA)",
+    "privacy": "Confidentialité & aide",
+    "help": "Aide & support",
+    "helpSub": "FAQ, contact, signaler un problème",
+    "terms": "Conditions d'utilisation",
+    "privacyPolicy": "Politique de confidentialité",
+    "about": "À propos de Saheel",
+    "aboutSub": "Expériences premium en Algérie",
+    "testNotification": "Notification test",
+    "testNotificationSub": "Vérifier les alertes sur cet appareil",
+    "notificationScheduled": "Notification programmée",
+    "notificationScheduledBody": "Vous devriez recevoir une alerte sous peu.",
+    "chooseLanguage": "Choisir la langue",
+    "languages": {
+      "en": "English",
+      "fr": "Français",
+      "ar": "العربية"
+    }
+  },
+  "roles": {
+    "traveler": "Voyageur",
+    "business": "Propriétaire",
+    "partner": "Partenaire service"
+  },
+  "pro": {
+    "saheelPro": "Saheel Pro",
+    "moreTools": "Plus d'outils",
+    "moreFromMenu": "Plus depuis le menu",
+    "menuHint": "Les sections principales restent dans la barre du bas.",
+    "signOut": "Déconnexion"
+  }
+}

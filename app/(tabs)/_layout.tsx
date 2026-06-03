@@ -5,17 +5,20 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useApp } from '@/context/AppContext';
 import { useFavorites } from '@/store/useFavorites';
+import { useTranslation } from '@/context/I18nContext';
+import { SAHEL } from '@/constants/Colors';
 
 export default function TabLayout() {
   const colors = useColors();
   const { activeBookings } = useApp();
   const { favoriteIds } = useFavorites();
+  const { t } = useTranslation();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#FF385C',
-        tabBarInactiveTintColor: '#9E9E9E',
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: SAHEL.mutedText,
         headerShown: false,
         tabBarLabelStyle: {
           fontFamily: 'mon-sb',
@@ -23,14 +26,14 @@ export default function TabLayout() {
           marginTop: -2,
         },
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.card,
           borderTopWidth: 0.5,
-          borderTopColor: '#E8E8E8',
+          borderTopColor: colors.border,
           height: 72,
           paddingBottom: 12,
           paddingTop: 8,
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
+          shadowColor: SAHEL.dark,
+          shadowOpacity: 0.08,
           shadowRadius: 20,
           shadowOffset: { width: 0, height: -4 },
           elevation: 16,
@@ -40,7 +43,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Discover',
+          title: t('tabs.discover'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'compass' : 'compass-outline'}
@@ -54,7 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="map"
         options={{
-          title: 'Map',
+          title: t('tabs.map'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'map' : 'map-outline'}
@@ -68,7 +71,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="wishlists"
         options={{
-          title: 'Saved',
+          title: t('tabs.wishlists'),
           tabBarIcon: ({ color, focused }) => (
             <View style={{ position: 'relative' }}>
               <Ionicons
@@ -77,7 +80,7 @@ export default function TabLayout() {
                 color={color}
               />
               {favoriteIds.length > 0 && (
-                <View style={[styles.badge, { backgroundColor: '#FF385C' }]}>
+                <View style={[styles.badge, { backgroundColor: colors.accent }]}>
                   <Text style={styles.badgeText}>
                     {favoriteIds.length > 9 ? '9+' : favoriteIds.length}
                   </Text>
@@ -91,7 +94,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Trips',
+          title: t('tabs.trips'),
           tabBarIcon: ({ color, focused }) => (
             <View style={{ position: 'relative' }}>
               <Ionicons
@@ -100,7 +103,7 @@ export default function TabLayout() {
                 color={color}
               />
               {activeBookings.length > 0 && (
-                <View style={[styles.badge, { backgroundColor: '#FF385C' }]}>
+                <View style={[styles.badge, { backgroundColor: colors.accent }]}>
                   <Text style={styles.badgeText}>
                     {activeBookings.length > 9 ? '9+' : activeBookings.length}
                   </Text>
@@ -114,7 +117,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="inbox"
         options={{
-          title: 'Inbox',
+          title: t('tabs.inbox'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'}
@@ -128,7 +131,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'person-circle' : 'person-circle-outline'}
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 3,
     borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    borderColor: SAHEL.card,
   },
   badgeText: {
     fontSize: 9,

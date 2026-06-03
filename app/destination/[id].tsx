@@ -50,7 +50,7 @@ export default function DestinationDetailScreen() {
   const infoItems = useMemo(() => {
     if (destination.type === 'beach') {
       return [
-        { icon: "water-outline", label: "Sea Temp", value: "24°C", color: "#0096C7" },
+        { icon: "water-outline", label: "Sea Temp", value: "24°C", color: "#00a896" },
         { icon: "sunny-outline", label: "Air Temp", value: "29°C", color: "#F4A261" },
         { icon: "cloud-outline", label: "Wind", value: "11 km/h", color: "#20C997" },
       ];
@@ -76,7 +76,7 @@ export default function DestinationDetailScreen() {
   }, [destination]);
 
   return (
-    <View style={[styles.root, { backgroundColor: "#F7F7F7" }]}>
+    <View style={[styles.root, { backgroundColor: "#fafbfc" }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
         showsVerticalScrollIndicator={false}

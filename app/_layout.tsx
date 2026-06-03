@@ -6,6 +6,8 @@ import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppProvider, useApp } from '@/context/AppContext';
+import { I18nProvider } from '@/context/I18nContext';
+import { ToastProvider } from '@/components/Toast';
 import { useNotifications } from '@/hooks/useNotifications';
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_cHJvcGVyLXNwYXJyb3ctMTIuY2xlcmsuYWNjb3VudHMuZGV2JA';
@@ -40,9 +42,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY!} tokenCache={tokenCache}>
-        <AppProvider>
-          <RootLayoutNav />
-        </AppProvider>
+        <I18nProvider>
+          <AppProvider>
+            <ToastProvider>
+              <RootLayoutNav />
+            </ToastProvider>
+          </AppProvider>
+        </I18nProvider>
       </ClerkProvider>
     </GestureHandlerRootView>
   );
@@ -116,6 +122,10 @@ function RootLayoutNav() {
       <Stack.Screen
         name="(modals)/login"
         options={{ headerShown: false, presentation: 'fullScreenModal' }}
+      />
+      <Stack.Screen
+        name="(modals)/settings"
+        options={{ headerShown: false, presentation: 'modal' }}
       />
       <Stack.Screen name="destination/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="booking/[id]" options={{ headerShown: false }} />

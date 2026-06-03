@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp, KycData } from '@/context/AppContext';
+import type { KycFieldProps } from '@/types/booking';
 
 const ASSET_TYPES = [
   { id: 'jet-ski', label: 'Jet Ski', icon: 'boat-outline' },
@@ -116,7 +117,7 @@ export default function KycPartnerScreen() {
                 style={[styles.assetCard, assetType === a.id && styles.assetCardActive]}
                 onPress={() => setAssetType(a.id)}
               >
-                <Ionicons name={a.icon as any} size={24} color={assetType === a.id ? '#059669' : '#94A3B8'} />
+                <Ionicons name={a.icon as keyof typeof Ionicons.glyphMap} size={24} color={assetType === a.id ? '#f4a261' : '#94A3B8'} />
                 <Text style={[styles.assetLabel, assetType === a.id && styles.assetLabelActive]}>
                   {a.label}
                 </Text>
@@ -157,7 +158,7 @@ export default function KycPartnerScreen() {
             ) : (
               <>
                 <View style={styles.uploadIcon}>
-                  <Ionicons name="image-outline" size={24} color="#059669" />
+                  <Ionicons name="image-outline" size={24} color="#f4a261" />
                 </View>
                 <Text style={styles.uploadTitle}>Upload a Photo</Text>
                 <Text style={styles.uploadSub}>Helps tourists choose your service with confidence</Text>
@@ -168,7 +169,7 @@ export default function KycPartnerScreen() {
 
         {/* Info */}
         <View style={styles.infoCard}>
-          <Ionicons name="flash-outline" size={18} color="#059669" />
+          <Ionicons name="flash-outline" size={18} color="#f4a261" />
           <Text style={styles.infoText}>
             Your listing will go live once approved. Earnings are paid weekly.
           </Text>
@@ -188,14 +189,14 @@ export default function KycPartnerScreen() {
   );
 }
 
-function Field({ label, required, placeholder, value, onChange, icon, keyboardType }: any) {
+function Field({ label, required, placeholder, value, onChange, icon, keyboardType }: KycFieldProps) {
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>
         {label}{required && <Text style={styles.required}> *</Text>}
       </Text>
       <View style={styles.fieldBox}>
-        <Ionicons name={icon} size={18} color="#64748B" style={{ marginRight: 10 }} />
+        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color="#64748B" style={{ marginRight: 10 }} />
         <TextInput
           style={styles.fieldInput}
           placeholder={placeholder}
@@ -272,9 +273,9 @@ const styles = StyleSheet.create({
     gap: 4,
     position: 'relative',
   },
-  assetCardActive: { borderColor: '#059669', backgroundColor: '#F0FDF4' },
+  assetCardActive: { borderColor: '#f4a261', backgroundColor: '#F0FDF4' },
   assetLabel: { fontSize: 10, fontFamily: 'mon', color: '#94A3B8', textAlign: 'center' },
-  assetLabelActive: { color: '#059669', fontFamily: 'mon-sb' },
+  assetLabelActive: { color: '#f4a261', fontFamily: 'mon-sb' },
   assetCheck: {
     position: 'absolute',
     top: 4,
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#059669',
+    backgroundColor: '#f4a261',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -299,9 +300,9 @@ const styles = StyleSheet.create({
     minWidth: 52,
     alignItems: 'center',
   },
-  countBtnActive: { borderColor: '#059669', backgroundColor: '#F0FDF4' },
+  countBtnActive: { borderColor: '#f4a261', backgroundColor: '#F0FDF4' },
   countText: { fontSize: 15, fontFamily: 'mon-sb', color: '#94A3B8' },
-  countTextActive: { color: '#059669' },
+  countTextActive: { color: '#f4a261' },
 
   // Upload
   uploadBox: {
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  uploadTitle: { fontSize: 14, fontFamily: 'mon-sb', color: '#059669' },
+  uploadTitle: { fontSize: 14, fontFamily: 'mon-sb', color: '#f4a261' },
   uploadSub: { fontSize: 12, fontFamily: 'mon', color: '#94A3B8', textAlign: 'center' },
   docPreview: { width: '100%', height: 160, borderRadius: 10 },
 
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E2E8F0',
   },
   submitBtn: {
-    backgroundColor: '#FF385C',
+    backgroundColor: '#0a2540',
     height: 52,
     borderRadius: 12,
     alignItems: 'center',

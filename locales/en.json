@@ -1,0 +1,101 @@
+{
+  "brand": {
+    "name": "Saheel",
+    "tagline": "Algeria's premium coast & desert experiences"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "done": "Done",
+    "back": "Back",
+    "continue": "Continue",
+    "search": "Search",
+    "loading": "Loading…",
+    "verified": "Verified",
+    "free": "Free",
+    "currency": "DA"
+  },
+  "tabs": {
+    "discover": "Discover",
+    "map": "Map",
+    "wishlists": "Wishlists",
+    "trips": "Trips",
+    "inbox": "Inbox",
+    "profile": "Profile"
+  },
+  "discover": {
+    "searchPlaceholder": "Search destinations in Algeria",
+    "regions": "Regions",
+    "all": "All",
+    "kicker": "Explore Algeria",
+    "heroTitle": "Find stays, places, and local services that feel handpicked.",
+    "heroSub": "Beach days, Sahara nights, mountain escapes — one polished flow.",
+    "sectionTitle": "Places guests are loving",
+    "options": "{{count}} options"
+  },
+  "profile": {
+    "title": "Profile",
+    "guestTitle": "Log in to your account",
+    "guestSub": "View bookings, manage your account, and unlock premium features.",
+    "loginCta": "Log in or sign up",
+    "verifiedAccount": "Verified account",
+    "active": "Active",
+    "completed": "Completed",
+    "totalTrips": "Total trips",
+    "personalInfo": "Personal info",
+    "fullName": "Full name",
+    "phone": "Phone",
+    "nationality": "Nationality",
+    "kycStatus": "KYC status",
+    "kycVerified": "Verified ✓",
+    "settings": "Settings",
+    "signOut": "Log out",
+    "signOutConfirm": "Are you sure you want to log out?",
+    "version": "Saheel v{{version}} · Algeria 🇩🇿"
+  },
+  "settings": {
+    "title": "Settings",
+    "account": "Account",
+    "editProfile": "Edit profile",
+    "editProfileSub": "Name, photo, contact details",
+    "preferences": "Preferences",
+    "language": "Language",
+    "languageSub": "App display language",
+    "notifications": "Push notifications",
+    "notificationsSub": "Bookings, offers, and trip updates",
+    "haptics": "Haptic feedback",
+    "hapticsSub": "Taps and confirmations",
+    "currency": "Currency",
+    "currencySub": "Prices shown in Algerian Dinar",
+    "currencyValue": "DZD (DA)",
+    "privacy": "Privacy & support",
+    "help": "Help & support",
+    "helpSub": "FAQ, contact, report an issue",
+    "terms": "Terms of service",
+    "privacyPolicy": "Privacy policy",
+    "about": "About Saheel",
+    "aboutSub": "Premium experiences across Algeria",
+    "testNotification": "Send test notification",
+    "testNotificationSub": "Verify alerts on this device",
+    "notificationScheduled": "Notification scheduled",
+    "notificationScheduledBody": "You should receive an alert shortly.",
+    "chooseLanguage": "Choose language",
+    "languages": {
+      "en": "English",
+      "fr": "Français",
+      "ar": "العربية"
+    }
+  },
+  "roles": {
+    "traveler": "Traveler",
+    "business": "Business owner",
+    "partner": "Service partner"
+  },
+  "pro": {
+    "saheelPro": "Saheel Pro",
+    "moreTools": "More tools",
+    "moreFromMenu": "More from menu",
+    "menuHint": "Main sections stay in the bottom tab bar.",
+    "signOut": "Sign out"
+  }
+}

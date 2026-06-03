@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp, KycData } from '@/context/AppContext';
+import type { KycFieldProps } from '@/types/booking';
 
 const BUSINESS_TYPES = [
   'Hotel / Riad', 'Beach Resort', 'Restaurant / Café', 'Travel Agency',
@@ -131,7 +132,7 @@ export default function KycBusinessScreen() {
                     onPress={() => { setBusinessType(t); setShowTypePicker(false); }}
                   >
                     <Text style={[styles.pickerOptionText, businessType === t && styles.pickerOptionTextActive]}>{t}</Text>
-                    {businessType === t && <Ionicons name="checkmark" size={16} color="#7C3AED" />}
+                    {businessType === t && <Ionicons name="checkmark" size={16} color="#0a2540" />}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -149,7 +150,7 @@ export default function KycBusinessScreen() {
             ) : (
               <>
                 <View style={styles.uploadIcon}>
-                  <Ionicons name="cloud-upload-outline" size={24} color="#7C3AED" />
+                  <Ionicons name="cloud-upload-outline" size={24} color="#0a2540" />
                 </View>
                 <Text style={styles.uploadTitle}>Upload Trade Register</Text>
                 <Text style={styles.uploadSub}>Photo of your official business registration document</Text>
@@ -160,7 +161,7 @@ export default function KycBusinessScreen() {
 
         {/* Info card */}
         <View style={styles.infoCard}>
-          <Ionicons name="shield-checkmark-outline" size={18} color="#7C3AED" />
+          <Ionicons name="shield-checkmark-outline" size={18} color="#0a2540" />
           <Text style={[styles.infoText, { color: '#5B21B6' }]}>
             Documents are reviewed within 24–48 hours by our team.
           </Text>
@@ -180,14 +181,14 @@ export default function KycBusinessScreen() {
   );
 }
 
-function Field({ label, required, placeholder, value, onChange, icon, keyboardType }: any) {
+function Field({ label, required, placeholder, value, onChange, icon, keyboardType }: KycFieldProps) {
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>
         {label}{required && <Text style={styles.required}> *</Text>}
       </Text>
       <View style={styles.fieldBox}>
-        <Ionicons name={icon} size={18} color="#64748B" style={{ marginRight: 10 }} />
+        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color="#64748B" style={{ marginRight: 10 }} />
         <TextInput
           style={styles.fieldInput}
           placeholder={placeholder}
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
   },
   pickerOptionActive: { backgroundColor: '#F5F3FF' },
   pickerOptionText: { fontSize: 14, fontFamily: 'mon', color: '#334155' },
-  pickerOptionTextActive: { color: '#7C3AED', fontFamily: 'mon-sb' },
+  pickerOptionTextActive: { color: '#0a2540', fontFamily: 'mon-sb' },
 
   uploadBox: {
     borderWidth: 1.5,
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  uploadTitle: { fontSize: 14, fontFamily: 'mon-sb', color: '#7C3AED' },
+  uploadTitle: { fontSize: 14, fontFamily: 'mon-sb', color: '#0a2540' },
   uploadSub: { fontSize: 12, fontFamily: 'mon', color: '#94A3B8', textAlign: 'center' },
   docPreview: { width: '100%', height: 160, borderRadius: 10 },
 
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E2E8F0',
   },
   submitBtn: {
-    backgroundColor: '#FF385C',
+    backgroundColor: '#0a2540',
     height: 52,
     borderRadius: 12,
     alignItems: 'center',

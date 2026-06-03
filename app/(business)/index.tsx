@@ -1,58 +1,74 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useApp } from '@/context/AppContext';
-import { useAuth } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
-
-const STAT_CARDS = [
-  { label: 'Total Listings', value: '0', icon: 'list-outline', color: '#7C3AED' },
-  { label: 'Active Bookings', value: '0', icon: 'calendar-outline', color: '#0096C7' },
-  { label: 'Revenue (DZD)', value: '0', icon: 'cash-outline', color: '#059669' },
-  { label: 'Avg. Rating', value: '—', icon: 'star-outline', color: '#F59E0B' },
-];
+import { useApp } from '@/context/AppContext';
+import ProTabShell from '@/components/pro/ProTabShell';
+import ProMenuShortcuts from '@/components/pro/ProMenuShortcuts';
+import { PRO_THEME } from '@/constants/proNavigation';
+import { SAHEL } from '@/constants/Colors';
+import { useTranslation } from '@/context/I18nContext';
+import {
+  activeFoodOrders,
+  businessBookingsToday,
+  businessRevenueDzd,
+  pendingBusinessBookings,
+} from '@/lib/dashboardStats';
 
 export default function BusinessDashboard() {
-  const { user, signOut } = useApp();
-  const { signOut: clerkSignOut } = useAuth();
+  const { user, bookings, orders } = useApp();
+  const theme = PRO_THEME.business;
+  const { t } = useTranslation();
+  const name = user.kycData.businessName || user.name || 'Business';
 
-  const handleSignOut = async () => {
-    try {
-      await clerkSignOut();
-    } catch (e) {}
-    signOut();
-    router.replace('/(modals)/login');
-  };
+  const stats = useMemo(() => {
+    const today = businessBookingsToday(bookings);
+    const revenue = businessRevenueDzd(bookings, ['confirmed', 'active', 'completed']);
+    const foodOrders = activeFoodOrders(orders);
+    const pending = pendingBusinessBookings(bookings);
+    return [
+      { label: "Today's Bookings", value: String(today.length), icon: 'calendar-outline' as const, color: SAHEL.accent },
+      { label: 'Revenue (DZD)', value: revenue.toLocaleString(), icon: 'cash-outline' as const, color: SAHEL.highlight },
+      { label: 'Active Orders', value: String(foodOrders.length), icon: 'restaurant-outline' as const, color: SAHEL.primary },
+      { label: 'Pending', value: String(pending.length), icon: 'time-outline' as const, color: '#94A3B8' },
+    ];
+  }, [bookings, orders]);
+
+  const settingsBtn = (
+    <Pressable onPress={() => router.push('/(modals)/settings' as any)} style={{ padding: 8 }}>
+      <Ionicons name="settings-outline" size={22} color={theme.accent} />
+    </Pressable>
+  );
 
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      {/* Header */}
-      <LinearGradient colors={['#7C3AED', '#4C1D95']} style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Welcome back 👋</Text>
-          <Text style={styles.name}>{user.kycData.businessName || user.name || 'Business Owner'}</Text>
-        </View>
-        <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
-          <Ionicons name="log-out-outline" size={22} color="#fff" />
-        </TouchableOpacity>
-      </LinearGradient>
-
+    <ProTabShell
+      role="business"
+      title={t('pro.saheelPro')}
+      subtitle={t('roles.business')}
+      headerRight={settingsBtn}
+    >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Status badge */}
-        <View style={styles.statusCard}>
-          <View style={[styles.statusDot, { backgroundColor: '#059669' }]} />
-          <Text style={styles.statusText}>Account Verified · Business Owner</Text>
-        </View>
+        <LinearGradient colors={theme.gradient} style={styles.hero}>
+          <Text style={styles.heroGreeting}>Welcome back</Text>
+          <Text style={styles.heroName}>{name}</Text>
+          <View style={styles.verifiedRow}>
+            <View style={styles.verifiedDot} />
+            <Text style={styles.verifiedText}>Verified · Business Owner</Text>
+          </View>
+        </LinearGradient>
 
-        {/* Stats */}
+        <Pressable style={styles.quickLink} onPress={() => router.push('/(business)/orders' as any)}>
+          <Ionicons name="fast-food-outline" size={20} color={SAHEL.accent} />
+          <Text style={styles.quickLinkText}>Live food orders →</Text>
+        </Pressable>
+
         <Text style={styles.sectionTitle}>Overview</Text>
         <View style={styles.statsGrid}>
-          {STAT_CARDS.map((s) => (
+          {stats.map((s) => (
             <View key={s.label} style={styles.statCard}>
               <View style={[styles.statIcon, { backgroundColor: s.color + '15' }]}>
-                <Ionicons name={s.icon as any} size={22} color={s.color} />
+                <Ionicons name={s.icon} size={22} color={s.color} />
               </View>
               <Text style={styles.statValue}>{s.value}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
@@ -60,60 +76,43 @@ export default function BusinessDashboard() {
           ))}
         </View>
 
-        {/* Quick actions */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionsGrid}>
-          <QuickAction icon="add-circle-outline" label="Add Listing" color="#7C3AED" onPress={() => {}} />
-          <QuickAction icon="megaphone-outline" label="Promotions" color="#0096C7" onPress={() => {}} />
-          <QuickAction icon="analytics-outline" label="Analytics" color="#059669" onPress={() => {}} />
-          <QuickAction icon="chatbubble-outline" label="Reviews" color="#F59E0B" onPress={() => {}} />
-        </View>
-
-        {/* Coming soon */}
-        <View style={styles.comingSoon}>
-          <Ionicons name="construct-outline" size={32} color="#C4B5FD" />
-          <Text style={styles.comingSoonTitle}>Business Tools Coming Soon</Text>
-          <Text style={styles.comingSoonSub}>
-            Listing management, booking calendar, revenue analytics, and customer reviews — all in one place.
-          </Text>
-        </View>
+        <ProMenuShortcuts role="business" />
       </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-function QuickAction({ icon, label, color, onPress }: any) {
-  return (
-    <TouchableOpacity style={styles.actionBtn} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.actionIcon, { backgroundColor: color + '15' }]}>
-        <Ionicons name={icon} size={26} color={color} />
-      </View>
-      <Text style={styles.actionLabel}>{label}</Text>
-    </TouchableOpacity>
+    </ProTabShell>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
-  header: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 28, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  greeting: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.75)' },
-  name: { fontSize: 22, fontFamily: 'mon-b', color: '#fff', marginTop: 2 },
-  signOutBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  scroll: { padding: 20, gap: 16, paddingBottom: 40 },
-  statusCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#E2E8F0' },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 13, fontFamily: 'mon-sb', color: '#334155' },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+  scroll: { padding: 20, gap: 16, paddingBottom: 32 },
+  hero: { borderRadius: 20, padding: 22, gap: 6 },
+  heroGreeting: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.8)' },
+  heroName: { fontSize: 24, fontFamily: 'mon-b', color: '#FFFFFF' },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  verifiedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: SAHEL.accent },
+  verifiedText: { fontSize: 12, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.9)' },
+  quickLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: SAHEL.card,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SAHEL.border,
+  },
+  quickLinkText: { fontFamily: 'mon-sb', fontSize: 14, color: SAHEL.primary },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  statCard: { width: '47%', backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 8, borderWidth: 1, borderColor: '#E2E8F0' },
+  statCard: {
+    width: '47%',
+    backgroundColor: SAHEL.card,
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: SAHEL.border,
+  },
   statIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 22, fontFamily: 'mon-b', color: '#0F172A' },
-  statLabel: { fontSize: 12, fontFamily: 'mon', color: '#64748B' },
-  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  actionBtn: { width: '47%', backgroundColor: '#fff', borderRadius: 16, padding: 16, alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#E2E8F0' },
-  actionIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { fontSize: 13, fontFamily: 'mon-sb', color: '#334155' },
-  comingSoon: { backgroundColor: '#F5F3FF', borderRadius: 20, padding: 28, alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#DDD6FE' },
-  comingSoonTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#5B21B6' },
-  comingSoonSub: { fontSize: 13, fontFamily: 'mon', color: '#7C3AED', textAlign: 'center', lineHeight: 19 },
+  statValue: { fontSize: 22, fontFamily: 'mon-b', color: SAHEL.dark },
+  statLabel: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
 });

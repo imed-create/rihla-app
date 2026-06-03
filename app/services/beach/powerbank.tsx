@@ -36,6 +36,11 @@ export default function PowerBankScreen() {
   const total = Math.round(bank.price * duration.multiplier) + tablePrice;
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   const handleRent = async () => {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
@@ -58,10 +63,10 @@ export default function PowerBankScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={["#06D6A0", "#059669"]}
+        colors={["#06D6A0", "#f4a261"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <Ionicons name="battery-charging-outline" size={40} color="#FFFFFF" />

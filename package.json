@@ -10,7 +10,10 @@
     "test": "jest --watchAll"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/template to use/"
+    ]
   },
   "dependencies": {
     "@clerk/clerk-expo": "^0.19.7",
@@ -28,6 +31,7 @@
     "expo-image-picker": "~17.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.12",
+    "expo-localization": "~17.0.9",
     "expo-location": "~19.0.8",
     "expo-notifications": "^0.32.17",
     "expo-router": "~6.0.24",

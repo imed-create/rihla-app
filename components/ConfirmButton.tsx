@@ -3,6 +3,7 @@ import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
+import { SAHEL } from "@/constants/Colors";
 
 interface ConfirmButtonProps {
   label: string;
@@ -28,7 +29,16 @@ export default function ConfirmButton({ label, onPress, loading, price }: Confir
 
   return (
     <AnimatedPressable
-      style={[styles.btn, animStyle, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
+      style={[
+        styles.btn,
+        animStyle,
+        {
+          backgroundColor: colors.primary,
+          shadowColor: colors.primary,
+          borderWidth: 1,
+          borderColor: SAHEL.primaryDark,
+        },
+      ]}
       onPressIn={() => {
         scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
       }}

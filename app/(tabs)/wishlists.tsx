@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,24 @@ import {
   FlatList,
   Image,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { useFavorites } from '@/store/useFavorites';
 import { DESTINATIONS } from '@/constants/destinations';
+import EmptyState from '@/components/EmptyState';
+import { SAHEL } from '@/constants/Colors';
 
 export default function WishlistsScreen() {
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 600);
+  }, []);
 
   const savedDestinations = useMemo(
     () => DESTINATIONS.filter((d) => favoriteIds.includes(d.id)),
@@ -46,23 +55,13 @@ export default function WishlistsScreen() {
           <Text style={styles.headerSub}>Your saved destinations</Text>
         </View>
 
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconCircle}>
-            <Ionicons name="heart-outline" size={40} color="#FF385C" />
-          </View>
-          <Text style={styles.emptyTitle}>Start saving places</Text>
-          <Text style={styles.emptySub}>
-            Tap the heart ♡ on any destination to save it here. Build your perfect Algeria trip list.
-          </Text>
-          <TouchableOpacity
-            style={styles.exploreBtn}
-            onPress={() => router.push('/(tabs)' as any)}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="compass-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.exploreBtnText}>Explore Destinations</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState
+          icon="heart-outline"
+          title="Start saving places"
+          subtitle="Tap the heart on any destination to build your Algeria trip list."
+          actionLabel="Explore"
+          onAction={() => router.push('/(tabs)' as any)}
+        />
       </SafeAreaView>
     );
   }
@@ -75,6 +74,9 @@ export default function WishlistsScreen() {
         data={savedDestinations}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={SAHEL.accent} colors={[SAHEL.accent]} />
+        }
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.header}>
@@ -128,7 +130,7 @@ export default function WishlistsScreen() {
                   style={styles.heartBtn}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="heart" size={22} color="#FF385C" />
+                  <Ionicons name="heart" size={22} color="#0a2540" />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.viewBtn, { backgroundColor: item.gradient[0] }]}
@@ -148,7 +150,7 @@ export default function WishlistsScreen() {
               { text: 'Clear All', style: 'destructive', onPress: () => savedDestinations.forEach(d => toggleFavorite(d.id)) },
             ]);
           }}>
-            <Ionicons name="trash-outline" size={16} color="#717171" />
+            <Ionicons name="trash-outline" size={16} color="#888888" />
             <Text style={styles.clearBtnText}>Clear all</Text>
           </TouchableOpacity>
         }
@@ -158,7 +160,7 @@ export default function WishlistsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F7F7F7' },
+  root: { flex: 1, backgroundColor: '#fafbfc' },
 
   header: {
     paddingHorizontal: 24,
@@ -166,7 +168,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   headerTitle: { fontFamily: 'mon-b', fontSize: 28, color: '#111111', letterSpacing: -0.5 },
-  headerSub: { fontFamily: 'mon', fontSize: 14, color: '#717171', marginTop: 4 },
+  headerSub: { fontFamily: 'mon', fontSize: 14, color: '#888888', marginTop: 4 },
 
   // Empty state
   emptyContainer: {
@@ -190,7 +192,7 @@ const styles = StyleSheet.create({
   emptySub: {
     fontSize: 14,
     fontFamily: 'mon',
-    color: '#717171',
+    color: '#888888',
     textAlign: 'center',
     lineHeight: 21,
   },
@@ -199,7 +201,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginTop: 8,
-    backgroundColor: '#FF385C',
+    backgroundColor: '#0a2540',
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 999,
@@ -240,11 +242,11 @@ const styles = StyleSheet.create({
   cardEmojiText: { fontSize: 26 },
   cardInfo: { flex: 1, gap: 4 },
   cardName: { fontSize: 16, fontFamily: 'mon-b', color: '#111111' },
-  cardRegion: { fontSize: 13, fontFamily: 'mon', color: '#717171' },
+  cardRegion: { fontSize: 13, fontFamily: 'mon', color: '#888888' },
   cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   cardRating: { fontSize: 12, fontFamily: 'mon-sb', color: '#111111' },
   cardDot: { fontSize: 12, color: '#CCCCCC' },
-  cardDistance: { fontSize: 12, fontFamily: 'mon', color: '#717171' },
+  cardDistance: { fontSize: 12, fontFamily: 'mon', color: '#888888' },
   featureRow: { flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' },
   featureBadge: {
     paddingHorizontal: 8,
@@ -279,5 +281,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginTop: 8,
   },
-  clearBtnText: { fontSize: 13, fontFamily: 'mon-sb', color: '#717171' },
+  clearBtnText: { fontSize: 13, fontFamily: 'mon-sb', color: '#888888' },
 });

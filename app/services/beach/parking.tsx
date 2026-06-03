@@ -42,6 +42,11 @@ export default function ParkingScreen() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   const handleBook = async () => {
     if (!plate.trim()) return;
     setLoading(true);
@@ -75,7 +80,7 @@ export default function ParkingScreen() {
         colors={["#023E58", "#034F6E"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <MaterialCommunityIcons name="car" size={40} color="#FFFFFF" />

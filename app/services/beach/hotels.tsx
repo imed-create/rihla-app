@@ -17,7 +17,7 @@ const LISTINGS = [
     unit: "night",
     amenities: ["Pool", "Breakfast", "AC", "WiFi"],
     badge: "Most Popular",
-    color: "#0096C7",
+    color: "#00a896",
   },
   {
     id: "2",
@@ -65,6 +65,11 @@ export default function HotelsScreen() {
   const [typeFilter, setTypeFilter] = useState("All");
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   const filtered = LISTINGS.filter(
     (l) => typeFilter === "All" || l.type === typeFilter
   );
@@ -75,7 +80,7 @@ export default function HotelsScreen() {
         colors={["#1A6B3A", "#145C30"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <Ionicons name="bed-outline" size={40} color="#FFFFFF" />

@@ -34,6 +34,11 @@ export default function ShowersScreen() {
   const total = basePrice + addonTotal;
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   const toggleAddon = (id: string) => {
     setAddons((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
   };
@@ -61,10 +66,10 @@ export default function ShowersScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={["#48CAE4", "#0096C7"]}
+        colors={["#48CAE4", "#00a896"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <MaterialCommunityIcons name="shower-head" size={40} color="#FFFFFF" />

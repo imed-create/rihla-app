@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp, KycData } from '@/context/AppContext';
+import type { KycFieldProps } from '@/types/booking';
 
 const NATIONALITIES = [
   'Algerian', 'French', 'Moroccan', 'Tunisian', 'Egyptian', 'British',
@@ -82,7 +83,7 @@ export default function KycTravelerScreen() {
             <Image source={{ uri: selfieUri }} style={styles.selfieImg} />
           ) : (
             <View style={styles.selfiePlaceholder}>
-              <Ionicons name="camera-outline" size={28} color="#0096C7" />
+              <Ionicons name="camera-outline" size={28} color="#00a896" />
               <Text style={styles.selfieTip}>Add Profile Photo</Text>
               <Text style={styles.selfieHint}>Optional · Tap to upload</Text>
             </View>
@@ -137,7 +138,7 @@ export default function KycTravelerScreen() {
                     onPress={() => { setNationality(n); setShowNatPicker(false); }}
                   >
                     <Text style={[styles.pickerOptionText, nationality === n && styles.pickerOptionTextActive]}>{n}</Text>
-                    {nationality === n && <Ionicons name="checkmark" size={16} color="#0096C7" />}
+                    {nationality === n && <Ionicons name="checkmark" size={16} color="#00a896" />}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -147,7 +148,7 @@ export default function KycTravelerScreen() {
 
         {/* Privacy note */}
         <View style={styles.infoCard}>
-          <Ionicons name="shield-checkmark-outline" size={18} color="#0096C7" />
+          <Ionicons name="shield-checkmark-outline" size={18} color="#00a896" />
           <Text style={styles.infoText}>Your data is encrypted and never shared with third parties.</Text>
         </View>
       </ScrollView>
@@ -165,14 +166,14 @@ export default function KycTravelerScreen() {
   );
 }
 
-function Field({ label, required, placeholder, value, onChange, icon, keyboardType }: any) {
+function Field({ label, required, placeholder, value, onChange, icon, keyboardType }: KycFieldProps) {
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>
         {label}{required && <Text style={styles.required}> *</Text>}
       </Text>
       <View style={styles.fieldBox}>
-        <Ionicons name={icon} size={18} color="#64748B" style={{ marginRight: 10 }} />
+        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color="#64748B" style={{ marginRight: 10 }} />
         <TextInput
           style={styles.fieldInput}
           placeholder={placeholder}
@@ -234,12 +235,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 2,
   },
-  selfieTip: { fontSize: 10, fontFamily: 'mon-sb', color: '#0096C7' },
+  selfieTip: { fontSize: 10, fontFamily: 'mon-sb', color: '#00a896' },
   selfieHint: { fontSize: 9, fontFamily: 'mon', color: '#94A3B8' },
   selfieBadge: {
     position: 'absolute', bottom: 2, right: 2,
     width: 26, height: 26, borderRadius: 13,
-    backgroundColor: '#0096C7',
+    backgroundColor: '#00a896',
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: '#fff',
   },
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
   },
   pickerOptionActive: { backgroundColor: '#F0F9FF' },
   pickerOptionText: { fontSize: 14, fontFamily: 'mon', color: '#334155' },
-  pickerOptionTextActive: { color: '#0096C7', fontFamily: 'mon-sb' },
+  pickerOptionTextActive: { color: '#00a896', fontFamily: 'mon-sb' },
 
   // Info
   infoCard: {
@@ -323,7 +324,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E2E8F0',
   },
   submitBtn: {
-    backgroundColor: '#FF385C',
+    backgroundColor: '#0a2540',
     height: 52,
     borderRadius: 12,
     alignItems: 'center',

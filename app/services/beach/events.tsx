@@ -70,6 +70,11 @@ export default function EventsScreen() {
   const total = event ? event.price * tickets : 0;
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as any);
+  };
+
   const handleBuy = async () => {
     if (!event) return;
     setLoading(true);
@@ -96,7 +101,7 @@ export default function EventsScreen() {
         colors={["#FF70A6", "#E0508C"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
         <Ionicons name="musical-notes-outline" size={40} color="#FFFFFF" />
