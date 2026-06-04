@@ -6,9 +6,9 @@
 
 ## Latest Update
 - **Date:** June 4, 2026
-- **Phase:** Phase 2.1 Complete (Polymorphic Marketplace Type Architecture)
+- **Phase:** Advanced Dynamic Filtering + Polymorphic Business Dashboard
 - **TypeScript:** 0 errors
-- **Git:** Pushed to `origin/main` — commit `e265165`
+- **Git:** Local commit `794ac2e` — push pending (auth issue on machine)
 
 ---
 
@@ -68,6 +68,16 @@ SAHEL is an ultra-premium experience and asset-rental mobile platform for coasta
 | Delete legacy `components/ExploreHeader.tsx` (unused Airbnb component) | ✅ |
 | Category filter engine (CategoryBar + region chips) already wired | ✅ |
 | Geo-fencing proximity badge in Discover feed | ✅ |
+
+### Advanced Dynamic Filtering + Polymorphic Business Dashboard ✅
+**Date:** June 4, 2026 | **Commit:** `794ac2e`
+
+| Task | Status |
+|---|---|
+| Add GeoRegion, Environment, ServiceCategory types + REGION_MAP to `constants/destinations.ts` | ✅ |
+| Add 10 new translation keys per locale (greeting, geo-region, environment, service category) | ✅ |
+| Rewrite Discover feed with 6-layer multi-dimensional filter engine | ✅ |
+| Rewrite Business dashboard with polymorphic UI (beach_spot / food_delivery / camel_trek / partner_activity) | ✅ |
 
 ### Phase 2.1: Polymorphic Marketplace Type Architecture ✅
 **Date:** June 4, 2026 | **Commit:** `e265165`
@@ -272,6 +282,7 @@ SAHEL/
 
 | Date | Commit | Description |
 |---|---|---|
+| June 4, 2026 | `794ac2e` | Advanced Dynamic Filtering + Polymorphic Business Dashboard |
 | June 4, 2026 | `e265165` | Phase 2.1: Polymorphic marketplace type architecture |
 | June 4, 2026 | `e207d74` | Phase 4: QR Scanner + GPS Geo-Fencing |
 | June 4, 2026 | `4524267` | Phase 3: Discover i18n + hamburger menu + legacy cleanup |

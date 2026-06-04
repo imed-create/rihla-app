@@ -19,16 +19,14 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FoodCartSheet, { CartLine } from '@/components/beach/FoodCartSheet';
 import DeliverySpotMatrix from '@/components/beach/DeliverySpotMatrix';
-import { showToast } from '@/components/Toast';
 import { FOOD_CATEGORIES, FOOD_MENU } from '@/constants/foodMenu';
 import { SAHEL } from '@/constants/Colors';
 import { SandSpot, SandZoneId } from '@/constants/beachLayout';
-import { useApp } from '@/context/AppContext';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import type { MenuCategory } from '@/types/order';
-import { orderTrackingHref } from '@/utils/router';
+import { checkoutHref } from '@/utils/router';
 import { safeGoBack } from '@/utils/safeNavigation';
-import { hapticLight, hapticSuccess } from '@/utils/haptics';
+import { hapticLight } from '@/utils/haptics';
 
 const TAB_W = (Dimensions.get('window').width - 32) / 3;
 
@@ -36,7 +34,6 @@ type CartItem = { id: string; name: string; priceDZD: number; qty: number };
 
 export default function FoodScreen() {
   const insets = useSafeAreaInsets();
-  const { addOrder } = useApp();
   const { occupiedSpotIds, deliverySpotId } = useBeachOccupancy();
 
   const [category, setCategory] = useState<MenuCategory>('drinks');
@@ -44,7 +41,6 @@ export default function FoodScreen() {
   const [cartOpen, setCartOpen] = useState(false);
   const [zone, setZone] = useState<SandZoneId>('family');
   const [spot, setSpot] = useState<SandSpot | null>(null);
-  const [loading, setLoading] = useState(false);
   const cartScale = useSharedValue(1);
 
   const tabIndex = FOOD_CATEGORIES.findIndex((c) => c.key === category);
@@ -97,32 +93,12 @@ export default function FoodScreen() {
     });
   };
 
-  const placeOrder = async () => {
+  const goToCheckout = () => {
     if (cart.length === 0) return;
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
     const deliveryId = spot?.id ?? deliverySpotId ?? 'Desk';
-    const order = addOrder({
-      userId: 'guest',
-      beachId: 'sidi-fredj',
-      spotLabel: String(deliveryId),
-      totalDZD: total,
-      paid: false,
-      items: cart.map((c) => ({
-        id: c.id,
-        orderId: '',
-        menuItemId: c.id,
-        name: c.name,
-        quantity: c.qty,
-        priceDZD: c.priceDZD,
-      })),
-    });
-    setLoading(false);
-    setCart([]);
     setCartOpen(false);
-    hapticSuccess();
-    showToast('Order placed!', 'success');
-    router.push(orderTrackingHref(order.id));
+    hapticLight();
+    router.push(checkoutHref(cart, String(deliveryId), 'sidi-fredj'));
   };
 
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
@@ -219,8 +195,7 @@ export default function FoodScreen() {
         items={cart as CartLine[]}
         onClose={() => setCartOpen(false)}
         onAdjust={adjustCart}
-        onPlaceOrder={placeOrder}
-        loading={loading}
+        onPlaceOrder={goToCheckout}
       />
     </View>
   );
