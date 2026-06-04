@@ -1,43 +1,76 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams, Stack } from "expo-router";
-import React, { useMemo } from "react";
-import { ImageBackground, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColors } from "@/hooks/useColors";
-import { getDestinationById } from "@/constants/destinations";
-import { getServicesByCategory } from "@/constants/services";
-import ServiceCard from "@/components/ServiceCard";
-import TypeBadge from "@/components/TypeBadge";
-import { useAuth } from "@clerk/clerk-expo";
-import { useApp } from "@/context/AppContext";
+/**
+ * RIHLA — Destination Hub Screen
+ * ---------------------------------
+ * Shows a destination with category tabs (Hotels, Restaurants, Activities, etc.)
+ * Each tab loads marketplace listings from that category for this destination.
+ */
 
-export default function DestinationDetailScreen() {
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router, useLocalSearchParams, Stack } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SAHEL } from '@/constants/Colors';
+import { getDestinationById } from '@/constants/destinations';
+import { MOCK_LISTINGS } from '@/constants/mockListings';
+import { MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
+import { getCategoryDef } from '@/constants/marketplaceCategories';
+import type { MarketplaceCategory, Listing } from '@/types/service';
+import EmptyState from '@/components/EmptyState';
+import { safeGoBack } from '@/utils/safeNavigation';
+import { hapticLight } from '@/utils/haptics';
+
+const DESTINATION_IMAGES: Record<string, string> = {
+  beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400',
+  desert: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1400',
+  mountain: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400',
+  historical: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=1400',
+  city: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1400',
+};
+
+export default function DestinationHubScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const topPad = Platform.OS === "web" ? 20 : insets.top;
-  const { isSignedIn: clerkSignedIn } = useAuth();
-  const { user } = useApp();
-  const isSignedIn = clerkSignedIn || !!user.email;
+  const { width } = useWindowDimensions();
+  const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
+  const isWide = Platform.OS === 'web' && width >= 900;
 
-  const destination = useMemo(() => {
-    return getDestinationById(id ?? "");
-  }, [id]);
+  const destination = useMemo(() => getDestinationById(id ?? ''), [id]);
+  const [selectedCategory, setSelectedCategory] = useState<MarketplaceCategory | 'all'>('all');
 
-  const services = useMemo(() => {
+  // Get categories that have listings for this destination's wilaya
+  const availableCategories = useMemo(() => {
     if (!destination) return [];
-    return getServicesByCategory(destination.type);
+    const cats = new Set(MOCK_LISTINGS.filter((l) => l.is_active && l.wilaya === destination.region).map((l) => l.category));
+    return MARKETPLACE_CATEGORIES.filter((c) => cats.has(c.key));
   }, [destination]);
+
+  // Filter listings for this destination
+  const listings = useMemo(() => {
+    if (!destination) return [];
+    let results = MOCK_LISTINGS.filter((l) => l.is_active && l.wilaya === destination.region);
+    if (selectedCategory !== 'all') {
+      results = results.filter((l) => l.category === selectedCategory);
+    }
+    return results.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0) || b.rating - a.rating);
+  }, [destination, selectedCategory]);
 
   if (!destination) {
     return (
-      <View style={[styles.root, { backgroundColor: "#FFFFFF", paddingTop: topPad + 40 }]}>
+      <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Feather name="arrow-left" size={24} color="#0F172A" />
-        </TouchableOpacity>
+        <Pressable style={styles.backCircle} onPress={() => safeGoBack()}>
+          <Ionicons name="arrow-back" size={22} color={SAHEL.dark} />
+        </Pressable>
         <View style={styles.notFound}>
           <Ionicons name="alert-circle-outline" size={48} color="#94A3B8" />
           <Text style={styles.notFoundText}>Destination not found</Text>
@@ -46,320 +79,175 @@ export default function DestinationDetailScreen() {
     );
   }
 
-  // Define dynamic info strip items based on category
-  const infoItems = useMemo(() => {
-    if (destination.type === 'beach') {
-      return [
-        { icon: "water-outline", label: "Sea Temp", value: "24°C", color: "#00a896" },
-        { icon: "sunny-outline", label: "Air Temp", value: "29°C", color: "#F4A261" },
-        { icon: "cloud-outline", label: "Wind", value: "11 km/h", color: "#20C997" },
-      ];
-    } else if (destination.type === 'desert') {
-      return [
-        { icon: "sunny-outline", label: "Day Temp", value: "35°C", color: "#E76F51" },
-        { icon: "moon-outline", label: "Night Temp", value: "16°C", color: "#3F37C9" },
-        { icon: "eye-outline", label: "Visibility", value: "15 km", color: "#A8763E" },
-      ];
-    } else if (destination.type === 'mountain') {
-      return [
-        { icon: "trending-up-outline", label: "Altitude", value: "1,850m", color: "#2D6A4F" },
-        { icon: "leaf-outline", label: "Eco Level", value: "Pristine", color: "#52B788" },
-        { icon: "thermometer-outline", label: "Temp", value: "18°C", color: "#E63946" },
-      ];
-    } else {
-      return [
-        { icon: "time-outline", label: "Best Visit", value: "Spring/Fall", color: "#6C63FF" },
-        { icon: "walk-outline", label: "Walk Score", value: "Excellent", color: "#4834D4" },
-        { icon: "sparkles-outline", label: "Vibe", style: "Historic", value: "Magical", color: "#A855F7" },
-      ];
-    }
-  }, [destination]);
-
-  return (
-    <View style={[styles.root, { backgroundColor: "#fafbfc" }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+  const renderListingCard = useCallback(({ item }: { item: Listing }) => {
+    const catDef = getCategoryDef(item.category);
+    return (
+      <Pressable
+        style={[styles.listingCard, isWide && { width: '48%' }]}
+        onPress={() => router.push(`/listing/${item.id}` as any)}
       >
-        {/* ─── GRADIENT HERO HEADER ─── */}
-        <ImageBackground source={{ uri: DESTINATION_IMAGES[destination.type] }} style={styles.heroImage}>
-        <LinearGradient
-          colors={["rgba(0,0,0,0.12)", "rgba(0,0,0,0.35)", "rgba(0,0,0,0.78)"]}
-          locations={[0, 0.45, 1]}
-          style={[styles.heroGradient, { paddingTop: topPad + 16 }]}
-        >
-          {/* Back button */}
-          <TouchableOpacity
-            style={styles.backCircle}
-            onPress={() => router.back()}
-          >
-            <Feather name="arrow-left" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          {/* Hero details */}
-          <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.heroContent}>
-            <View style={styles.topRow}>
-              <TypeBadge type={destination.type} />
-              {destination.flag && (
-                <View style={[styles.flagPill, {
-                  backgroundColor: destination.flag === "green" ? "#06D6A0" : destination.flag === "yellow" ? "#FFD166" : "#EF4444"
-                }]}>
-                  <View style={styles.flagDot} />
-                  <Text style={styles.flagText}>
-                    {destination.flag === "green" ? "Green Flag" : destination.flag === "yellow" ? "Caution" : "Closed"}
-                  </Text>
-                </View>
-              )}
+        <View style={[styles.listingImage, { backgroundColor: catDef.color + '15' }]}>
+          <Ionicons name={catDef.icon as any} size={28} color={catDef.color} />
+          <View style={[styles.listingCatBadge, { backgroundColor: catDef.color }]}>
+            <Text style={styles.listingCatText}>{catDef.label}</Text>
+          </View>
+          {item.is_featured && (
+            <View style={styles.listingFeatBadge}>
+              <Ionicons name="star" size={10} color="#fff" />
+              <Text style={styles.listingFeatText}>Featured</Text>
             </View>
-
-            <Text style={styles.heroName}>{destination.name}</Text>
-            <Text style={styles.heroRegion}>{destination.region}</Text>
-
-            {/* Stats row */}
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Ionicons name="star" size={14} color="#FFD166" />
-                <Text style={styles.statValue}>{destination.rating}</Text>
-                <Text style={styles.statLabel}>({destination.reviews} reviews)</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Feather name="navigation" size={13} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.statValue}>{destination.distance}</Text>
-                <Text style={styles.statLabel}>away</Text>
-              </View>
+          )}
+        </View>
+        <View style={styles.listingInfo}>
+          <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
+          <Text style={styles.listingDesc} numberOfLines={2}>{item.description}</Text>
+          <View style={styles.listingBottom}>
+            <View style={styles.listingRating}>
+              <Ionicons name="star" size={12} color="#FFD166" />
+              <Text style={styles.listingRatingText}>{item.rating}</Text>
+              <Text style={styles.listingReviewCount}>({item.review_count})</Text>
             </View>
-
-            <Text style={styles.heroTagline}>{destination.tagline}</Text>
-          </Animated.View>
-        </LinearGradient>
-        </ImageBackground>
-
-        {/* ─── INFO STRIP ─── */}
-        <Animated.View entering={FadeInDown.delay(100)} style={[styles.infoStrip, { borderColor: "#E2E8F0" }]}>
-          {infoItems.map((item, index) => (
-            <React.Fragment key={item.label}>
-              {index > 0 && <View style={styles.infoSep} />}
-              <View style={styles.infoItem}>
-                <Ionicons name={item.icon as any} size={18} color={item.color} />
-                <Text style={styles.infoLabel}>{item.label}</Text>
-                <Text style={styles.infoValue}>{item.value}</Text>
-              </View>
-            </React.Fragment>
-          ))}
-        </Animated.View>
-
-        {/* ─── SERVICES GRID SECTION ─── */}
-        <View style={styles.servicesSection}>
-          <Animated.View entering={FadeInDown.delay(150)} style={styles.servicesHeader}>
-            <Text style={styles.servicesTitle}>Premium Services</Text>
-            <Text style={styles.servicesSubtitle}>Everything you need, booked instantly</Text>
-          </Animated.View>
-
-          <View style={styles.servicesGrid}>
-            {services.map((svc, idx) => (
-              <View
-                key={svc.id}
-                style={styles.gridCol}
-              >
-                <ServiceCard
-                  title={svc.title}
-                  tagline={svc.tagline}
-                  icon={svc.icon}
-                  iconFamily={svc.iconFamily}
-                  color={svc.color}
-                  onPress={() => {
-                    if (!isSignedIn) {
-                      router.push("/(modals)/login");
-                      return;
-                    }
-                    // Navigate to the service booking flow, passing destination ID
-                    router.push({
-                      pathname: svc.route as any,
-                      params: { destinationId: destination.id }
-                    });
-                  }}
-                />
-              </View>
-            ))}
+            <Text style={styles.listingPrice}>{item.price_dzd.toLocaleString()} DZD</Text>
           </View>
         </View>
-      </ScrollView>
+      </Pressable>
+    );
+  }, [isWide]);
+
+  const ListHeader = (
+    <View>
+      {/* Hero Header */}
+      <View style={[styles.heroWrap, { paddingTop: topPad }]}>
+        <LinearGradient colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.85)']} style={styles.heroGradient}>
+          <Pressable style={styles.backCircle} onPress={() => safeGoBack()}>
+            <Ionicons name="arrow-back" size={22} color="#fff" />
+          </Pressable>
+          <View style={styles.heroContent}>
+            <Text style={styles.heroName}>{destination.name}</Text>
+            <Text style={styles.heroRegion}>{destination.region}, Algeria</Text>
+            <View style={styles.heroStats}>
+              <View style={styles.heroStatItem}>
+                <Ionicons name="star" size={14} color="#FFD166" />
+                <Text style={styles.heroStatVal}>{destination.rating}</Text>
+                <Text style={styles.heroStatLabel}>({destination.reviews})</Text>
+              </View>
+              <View style={styles.heroStatDivider} />
+              <View style={styles.heroStatItem}>
+                <Ionicons name="navigate" size={13} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.heroStatVal}>{destination.distance}</Text>
+              </View>
+            </View>
+            <Text style={styles.heroTagline}>{destination.tagline}</Text>
+          </View>
+        </LinearGradient>
+      </View>
+
+      {/* Category Tabs */}
+      <View style={styles.tabsContainer}>
+        <Pressable
+          style={[styles.tab, selectedCategory === 'all' && styles.tabActive]}
+          onPress={() => { hapticLight(); setSelectedCategory('all'); }}
+        >
+          <Text style={[styles.tabText, selectedCategory === 'all' && styles.tabTextActive]}>All</Text>
+        </Pressable>
+        {availableCategories.map((cat) => (
+          <Pressable
+            key={cat.key}
+            style={[styles.tab, selectedCategory === cat.key && { backgroundColor: cat.color, borderColor: cat.color }]}
+            onPress={() => { hapticLight(); setSelectedCategory(selectedCategory === cat.key ? 'all' : cat.key); }}
+          >
+            <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : SAHEL.mutedText} />
+            <Text style={[styles.tabText, selectedCategory === cat.key && { color: '#fff' }]}>{cat.labelPlural}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Results Count */}
+      <View style={styles.resultsRow}>
+        <Text style={styles.resultsCount}>{listings.length} listing{listings.length !== 1 ? 's' : ''}</Text>
+      </View>
+    </View>
+  );
+
+  return (
+    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <FlatList
+        data={listings}
+        keyExtractor={(l) => l.id}
+        numColumns={isWide ? 2 : 1}
+        key={isWide ? 'wide' : 'narrow'}
+        columnWrapperStyle={isWide ? { gap: 16 } : undefined}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 20, maxWidth: 1180, alignSelf: 'center', width: '100%' }]}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={ListHeader}
+        ListEmptyComponent={
+          <EmptyState
+            icon="search-outline"
+            title={`No ${selectedCategory !== 'all' ? getCategoryDef(selectedCategory).labelPlural.toLowerCase() : 'listings'} yet`}
+            subtitle={`Marketplace listings for ${destination.name} will appear here.`}
+          />
+        }
+        renderItem={renderListingCard}
+      />
     </View>
   );
 }
 
-const DESTINATION_IMAGES: Record<string, string> = {
-  beach: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80",
-  desert: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=1400&q=80",
-  mountain: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=80",
-  historical: "https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?auto=format&fit=crop&w=1400&q=80",
-  city: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1400&q=80",
-};
-
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  backBtn: { padding: 20 },
-  notFound: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, paddingTop: 100 },
-  notFoundText: { fontSize: 16, fontFamily: "mon-sb", color: "#64748B" },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
 
-  /* Hero Gradient */
-  heroImage: {
-    overflow: "hidden",
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-  heroGradient: {
-    paddingHorizontal: 20,
-    paddingBottom: 42,
-  },
-  backCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  heroContent: {
-    gap: 8,
-  },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  flagPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  flagDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#FFFFFF",
-  },
-  flagText: {
-    fontSize: 11,
-    fontFamily: "mon-b",
-    color: "#FFFFFF",
-    textTransform: "uppercase",
-  },
-  heroName: {
-    fontSize: 32,
-    fontFamily: "mon-b",
-    color: "#FFFFFF",
-    letterSpacing: -0.8,
-  },
-  heroRegion: {
-    fontSize: 14,
-    fontFamily: "mon",
-    color: "rgba(255,255,255,0.8)",
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 4,
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  statValue: {
-    fontSize: 13,
-    fontFamily: "mon-b",
-    color: "#FFFFFF",
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: "mon",
-    color: "rgba(255,255,255,0.7)",
-  },
-  statDivider: {
-    width: 1,
-    height: 12,
-    backgroundColor: "rgba(255,255,255,0.3)",
-  },
-  heroTagline: {
-    fontSize: 14,
-    fontFamily: "mon",
-    color: "rgba(255,255,255,0.9)",
-    marginTop: 8,
-    lineHeight: 20,
-  },
+  // Hero
+  heroWrap: { overflow: 'hidden', borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
+  heroGradient: { paddingHorizontal: 20, paddingBottom: 28, minHeight: 260, justifyContent: 'space-between' },
+  backCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  heroContent: { gap: 4 },
+  heroName: { fontSize: 30, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.5 },
+  heroRegion: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.8)' },
+  heroStats: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
+  heroStatItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  heroStatVal: { fontSize: 13, fontFamily: 'mon-b', color: '#fff' },
+  heroStatLabel: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+  heroStatDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.3)' },
+  heroTagline: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)', marginTop: 6, lineHeight: 18 },
 
-  /* Info strip */
-  infoStrip: {
-    marginHorizontal: 20,
-    marginTop: -20,
-    borderRadius: 20,
-    borderWidth: 1,
-    backgroundColor: "#FFFFFF",
-    flexDirection: "row",
-    padding: 16,
-    elevation: 4,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+  // Tabs
+  tabsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20, paddingVertical: 14 },
+  tab: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
+    borderWidth: 1, borderColor: SAHEL.border, backgroundColor: '#fff',
   },
-  infoItem: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-  },
-  infoLabel: {
-    fontSize: 10,
-    fontFamily: "mon-sb",
-    color: "#64748B",
-    textTransform: "uppercase",
-  },
-  infoValue: {
-    fontSize: 14,
-    fontFamily: "mon-b",
-    color: "#0F172A",
-  },
-  infoSep: {
-    width: 1,
-    height: "60%",
-    alignSelf: "center",
-    backgroundColor: "#E2E8F0",
-  },
+  tabActive: { backgroundColor: SAHEL.primary, borderColor: SAHEL.primary },
+  tabText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  tabTextActive: { color: '#fff' },
 
-  /* Services grid */
-  servicesSection: {
-    paddingHorizontal: 20,
-    paddingTop: 30,
+  // Results
+  resultsRow: { paddingHorizontal: 24, paddingBottom: 8 },
+  resultsCount: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+
+  // Listing cards
+  list: { paddingHorizontal: 20, gap: 12 },
+  listingCard: {
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    overflow: 'hidden', marginBottom: 4,
   },
-  servicesHeader: {
-    marginBottom: 16,
+  listingImage: { height: 110, alignItems: 'center', justifyContent: 'center' },
+  listingCatBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  listingCatText: { fontSize: 10, fontFamily: 'mon-b', color: '#fff' },
+  listingFeatBadge: {
+    position: 'absolute', top: 10, right: 10, flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  servicesTitle: {
-    fontSize: 20,
-    fontFamily: "mon-b",
-    color: "#0F172A",
-  },
-  servicesSubtitle: {
-    fontSize: 13,
-    fontFamily: "mon",
-    color: "#64748B",
-    marginTop: 2,
-  },
-  servicesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -6,
-  },
-  gridCol: {
-    width: "50%",
-    padding: 6,
-  },
+  listingFeatText: { fontSize: 9, fontFamily: 'mon-b', color: '#fff' },
+  listingInfo: { padding: 14, gap: 4 },
+  listingTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
+  listingDesc: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, lineHeight: 16 },
+  listingBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
+  listingRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  listingRatingText: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.dark },
+  listingReviewCount: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  listingPrice: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.primary },
 });

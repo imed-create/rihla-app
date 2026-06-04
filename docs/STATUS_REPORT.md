@@ -6,9 +6,9 @@
 
 ## Latest Update
 - **Date:** June 4, 2026
-- **Phase:** Dedicated Filter Screen + Filter Store
+- **Phase:** RIHLA Marketplace Foundation — 10-Category Type System
 - **TypeScript:** 0 errors
-- **Git:** Commit `661d110` pushed to origin/main
+- **Git:** Commit `f5f46fd` pushed to origin/main
 
 ---
 
@@ -282,6 +282,7 @@ SAHEL/
 
 | Date | Commit | Description |
 |---|---|---|
+| June 4, 2026 | `f5f46fd` | RIHLA marketplace foundation — 10-category polymorphic types |
 | June 4, 2026 | `661d110` | Dedicated filter screen + shared Zustand filter store |
 | June 4, 2026 | `05bb0f1` | Cart & Checkout screen + dead code cleanup |
 | June 4, 2026 | `794ac2e` | Advanced Dynamic Filtering + Polymorphic Business Dashboard |
