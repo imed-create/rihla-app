@@ -6,9 +6,9 @@
 
 ## Latest Update
 - **Date:** June 4, 2026
-- **Phase:** RIHLA Marketplace — 3 Core Screens Built
+- **Phase:** RIHLA Marketplace — Destination Hub Fixed
 - **TypeScript:** 0 errors
-- **Git:** Commit `f345ebb` pushed to origin/main
+- **Git:** Commit `7ca2c23` pushed to origin/main
 
 ---
 
@@ -282,6 +282,7 @@ SAHEL/
 
 | Date | Commit | Description |
 |---|---|---|
+| June 4, 2026 | `7ca2c23` | Destination Hub: always show all categories first |
 | June 4, 2026 | `f345ebb` | RIHLA marketplace — 3 core screens + mock data |
 | June 4, 2026 | `f5f46fd` | RIHLA marketplace foundation — 10-category polymorphic types |
 | June 4, 2026 | `661d110` | Dedicated filter screen + shared Zustand filter store |
