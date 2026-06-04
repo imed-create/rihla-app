@@ -203,7 +203,7 @@ export default function RentalDetailScreen() {
           <Text style={styles.bottomUnit}>{totalNights} night{totalNights > 1 ? 's' : ''}</Text>
         </View>
         <Pressable style={[styles.bookBtn, (!checkIn || !checkOut) && { opacity: 0.5 }]}
-          onPress={() => { if (!checkIn || !checkOut) { showToast('Select check-in and check-out dates', 'info'); return; } hapticSuccess(); showToast('Reservation — Coming soon!', 'info'); }}>
+          onPress={() => { if (!checkIn || !checkOut) { showToast('Select check-in and check-out dates', 'info'); return; } hapticSuccess(); router.push(`/checkout/${listing.id}?price=${m.price_per_night_dzd}&qty=${totalNights}` as any); }}>
           <Text style={styles.bookBtnText}>Reserve</Text>
         </Pressable>
       </View>

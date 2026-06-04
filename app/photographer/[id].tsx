@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -172,7 +172,7 @@ export default function PhotographerDetailScreen() {
           {selectedPackage !== null && <Text style={styles.bottomUnit}>{m.packages[selectedPackage].name}</Text>}
         </View>
         <Pressable style={[styles.bookBtn, selectedPackage === null && { opacity: 0.5 }]}
-          onPress={() => { if (selectedPackage === null) { showToast('Select a package', 'info'); return; } hapticSuccess(); showToast('Booked! Photographer will confirm shortly.', 'success'); }}>
+          onPress={() => { if (selectedPackage === null) { showToast('Select a package', 'info'); return; } hapticSuccess(); router.push(`/checkout/${listing.id}?price=${m.packages[selectedPackage].price_dzd}` as any); }}>
           <Text style={styles.bookBtnText}>Book Shoot</Text>
         </Pressable>
       </View>

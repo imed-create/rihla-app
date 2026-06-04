@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -198,7 +198,7 @@ export default function ExperienceDetailScreen() {
           <Text style={styles.bottomUnit}>{participants} × {m.price_per_person_dzd.toLocaleString()} DZD/person</Text>
         </View>
         <Pressable style={[styles.bookBtn, selectedDate === null && { opacity: 0.5 }]}
-          onPress={() => { if (selectedDate === null) { showToast('Select a departure date', 'info'); return; } hapticSuccess(); showToast('Experience booked! Check your email.', 'success'); }}>
+          onPress={() => { if (selectedDate === null) { showToast('Select a departure date', 'info'); return; } hapticSuccess(); router.push(`/checkout/${listing.id}?price=${m.price_per_person_dzd}&qty=${participants}` as any); }}>
           <Text style={styles.bookBtnText}>Book Experience</Text>
         </Pressable>
       </View>

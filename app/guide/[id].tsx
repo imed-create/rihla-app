@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -199,7 +199,7 @@ export default function GuideDetailScreen() {
           <Text style={styles.bottomUnit}>per day · {groupSize} people</Text>
         </View>
         <Pressable style={[styles.bookBtn, !selectedSlot && { opacity: 0.5 }]}
-          onPress={() => { if (!selectedSlot) { showToast('Select a time slot', 'info'); return; } hapticSuccess(); showToast('Guide booked!', 'success'); }}>
+          onPress={() => { if (!selectedSlot) { showToast('Select a time slot', 'info'); return; } hapticSuccess(); router.push(`/checkout/${listing.id}?price=${m.daily_rate_dzd}` as any); }}>
           <Text style={styles.bookBtnText}>Book Guide</Text>
         </Pressable>
       </View>

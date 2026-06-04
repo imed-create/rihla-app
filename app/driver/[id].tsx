@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -149,7 +149,7 @@ export default function DriverDetailScreen() {
           <Text style={styles.bottomUnit}>{selectedRoute !== null ? 'Fixed route' : 'starting price'}</Text>
         </View>
         <Pressable style={[styles.bookBtn, !selectedRoute && { opacity: 0.6 }]}
-          onPress={() => { if (!selectedRoute) { showToast('Select a route', 'info'); return; } hapticSuccess(); showToast('Ride booked! Driver will confirm shortly.', 'success'); }}>
+          onPress={() => { if (selectedRoute === null) { showToast('Select a route', 'info'); return; } hapticSuccess(); router.push(`/checkout/${listing.id}?price=${m.fixed_routes[selectedRoute].price_dzd}` as any); }}>
           <Text style={styles.bookBtnText}>Book Ride</Text>
         </Pressable>
       </View>

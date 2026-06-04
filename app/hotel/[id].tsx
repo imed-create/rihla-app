@@ -352,7 +352,7 @@ export default function HotelDetailScreen() {
               return;
             }
             hapticSuccess();
-            showToast('Booking — Coming soon!', 'info');
+            router.push(`/checkout/${listing.id}?price=${m.price_per_night_dzd}&qty=${totalNights}` as any);
           }}
         >
           <Text style={styles.bookBtnText}>Book Now</Text>

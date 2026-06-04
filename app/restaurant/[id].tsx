@@ -413,7 +413,7 @@ export default function RestaurantDetailScreen() {
           style={styles.orderBtn}
           onPress={() => {
             hapticSuccess();
-            showToast('Menu ordering — Coming soon!', 'info');
+            router.push(`/checkout/${listing.id}?price=${m.avg_meal_price_dzd}` as any);
           }}
         >
           <Ionicons name="bag-outline" size={18} color="#fff" />

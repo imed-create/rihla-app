@@ -192,7 +192,7 @@ export default function ListingDetailScreen() {
           style={styles.bookBtn}
           onPress={() => {
             hapticSuccess();
-            showToast(`${uiConfig.primary_action_label} — Coming soon!`, 'info');
+            router.push(`/checkout/${listing.id}?price=${listing.price_dzd}` as any);
           }}
         >
           <Text style={styles.bookBtnText}>{uiConfig.primary_action_label}</Text>

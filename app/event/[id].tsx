@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -154,7 +154,7 @@ export default function EventDetailScreen() {
           {selectedTicketObj && <Text style={styles.bottomUnit}>{ticketQty} × {selectedTicketObj.price_dzd.toLocaleString()} DZD</Text>}
         </View>
         <Pressable style={[styles.bookBtn, selectedTicket === null && { opacity: 0.5 }]}
-          onPress={() => { if (selectedTicket === null) { showToast('Select a ticket type', 'info'); return; } hapticSuccess(); showToast('Tickets reserved! Check your email.', 'success'); }}>
+          onPress={() => { if (selectedTicket === null) { showToast('Select a ticket type', 'info'); return; } hapticSuccess(); const t = m.ticket_types[selectedTicket]; router.push(`/checkout/${listing.id}?price=${t.price_dzd}&qty=${ticketQty}` as any); }}>
           <Text style={styles.bookBtnText}>Get Tickets</Text>
         </Pressable>
       </View>
