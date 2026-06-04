@@ -137,6 +137,13 @@ function RootLayoutNav() {
       <Stack.Screen name="hotel/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="restaurant/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="beach-map/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="rental/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="activity/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="event/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="guide/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="photographer/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="driver/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="experience/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="services/beach" options={{ headerShown: false }} />
       <Stack.Screen name="services/desert" options={{ headerShown: false }} />
     </Stack>

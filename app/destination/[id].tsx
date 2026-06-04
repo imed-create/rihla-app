@@ -253,6 +253,13 @@ function getDetailRoute(item: Listing): string {
     case 'hotel': return `/hotel/${item.id}`;
     case 'restaurant': return `/restaurant/${item.id}`;
     case 'beach': return `/beach-map/${item.id}`;
+    case 'rental': return `/rental/${item.id}`;
+    case 'activity': return `/activity/${item.id}`;
+    case 'event': return `/event/${item.id}`;
+    case 'guide': return `/guide/${item.id}`;
+    case 'photographer': return `/photographer/${item.id}`;
+    case 'driver': return `/driver/${item.id}`;
+    case 'experience': return `/experience/${item.id}`;
     default: return `/listing/${item.id}`;
   }
 }
