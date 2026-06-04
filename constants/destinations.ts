@@ -1,5 +1,43 @@
 export type DestinationType = 'beach' | 'desert' | 'mountain' | 'historical' | 'city';
 
+/** Geographical macro-regions of Algeria */
+export type GeoRegion = 'East' | 'West' | 'Center' | 'Desert';
+
+/** Environment classification for filtering */
+export type Environment = 'beach' | 'desert';
+
+/** Service category toggles for the discover filter */
+export type ServiceCategory = 'spots' | 'food' | 'camel_trek' | 'jetski' | 'massage' | 'parking' | 'photos' | 'guide' | 'camping' | 'stargazing' | 'all';
+
+/** Maps wilaya / region names to macro-geo-regions */
+export const REGION_MAP: Record<string, GeoRegion> = {
+  // East
+  'Algiers': 'Center',
+  'Algiers East': 'Center',
+  'Tipaza': 'Center',
+  'Béjaïa': 'East',
+  'Batna': 'East',
+  'East Algeria': 'East',
+  'Tizi Ouzou': 'East',
+  // West
+  'Tlemcen': 'West',
+  'Oran': 'West',
+  'West Algeria': 'West',
+  // Center / Capital
+  'Capital': 'Center',
+  // Desert (Sahara)
+  'Hoggar': 'Desert',
+  "Tassili n'AJjer": 'Desert',
+  "Tassili n\\'Ajjer": 'Desert',
+  'Adrar': 'Desert',
+};
+
+/** Get the geo-region for a destination */
+export function getGeoRegion(dest: { region: string; type: DestinationType }): GeoRegion {
+  if (dest.type === 'desert') return 'Desert';
+  return REGION_MAP[dest.region] ?? 'Center';
+}
+
 export interface Destination {
   id: string;
   type: DestinationType;

@@ -6,7 +6,9 @@ import {
   Animated,
   FlatList,
   Platform,
+  Pressable,
   RefreshControl,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -20,20 +22,50 @@ import CategoryBar from '@/components/CategoryBar';
 import DestinationCard from '@/components/DestinationCard';
 import SkeletonCard from '@/components/SkeletonCard';
 import { categoryColors, SAHEL } from '@/constants/Colors';
-import { getDestinationsByType } from '@/constants/destinations';
+import {
+  DESTINATIONS,
+  DestinationType,
+  GeoRegion,
+  Environment,
+  ServiceCategory,
+  getDestinationsByType,
+  getGeoRegion,
+} from '@/constants/destinations';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { useTranslation } from '@/context/I18nContext';
 import { useGeoFence } from '@/hooks/useGeoFence';
 
+// ── GEO-REGION FILTER CHIPS ──
+const GEO_REGIONS: GeoRegion[] = ['East', 'West', 'Center', 'Desert'];
+const ENVIRONMENTS: Environment[] = ['beach', 'desert'];
+const SERVICE_CATEGORIES: { key: ServiceCategory; label: string; icon: string }[] = [
+  { key: 'spots', label: 'Spots', icon: 'umbrella-outline' },
+  { key: 'food', label: 'Food', icon: 'restaurant-outline' },
+  { key: 'camel_trek', label: 'Camel Trek', icon: 'leaf-outline' },
+  { key: 'jetski', label: 'Jetski', icon: 'boat-outline' },
+  { key: 'massage', label: 'Spa', icon: 'hand-left-outline' },
+  { key: 'parking', label: 'Parking', icon: 'car-outline' },
+  { key: 'photos', label: 'Photos', icon: 'camera-outline' },
+  { key: 'guide', label: 'Guide', icon: 'compass-outline' },
+];
+
 export default function DiscoverScreen() {
-  const { activeCategory, setActiveCategory } = useApp();
+  const { activeCategory, setActiveCategory, user } = useApp();
   const colors = useColors();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const { sortedDestinations: geoSorted, nearestDistanceKm, nearestDestination } = useGeoFence({ categoryFilter: activeCategory, radiusKm: 500 });
+  const { sortedDestinations: geoSorted, nearestDistanceKm, nearestDestination } = useGeoFence({
+    categoryFilter: activeCategory,
+    radiusKm: 500,
+  });
+
+  // ── FILTER STATE ──
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [selectedGeoRegion, setSelectedGeoRegion] = useState<GeoRegion | null>(null);
+  const [selectedEnvironment, setSelectedEnvironment] = useState<Environment | null>(null);
+  const [selectedServiceCategory, setSelectedServiceCategory] = useState<ServiceCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -54,10 +86,11 @@ export default function DiscoverScreen() {
       setRefreshing(false);
     }, 900);
   }, []);
+
   const categoryColor = categoryColors[activeCategory];
   const isWide = Platform.OS === 'web' && width >= 900;
 
-  // Animated header scroll — collapses hero on scroll
+  // Animated header scroll
   const scrollY = useRef(new Animated.Value(0)).current;
   const heroOpacity = scrollY.interpolate({
     inputRange: [0, 120],
@@ -66,39 +99,64 @@ export default function DiscoverScreen() {
   });
   const heroHeight = scrollY.interpolate({
     inputRange: [0, 160],
-    outputRange: [230, 0],
+    outputRange: [280, 0],
     extrapolate: 'clamp',
   });
 
+  // ── REGION CHIPS (wilaya-level) ──
   const regions = useMemo(() => {
     const allForCat = getDestinationsByType(activeCategory);
     const uniqueRegions = Array.from(new Set(allForCat.map((d) => d.region)));
     return [t('discover.all'), ...uniqueRegions];
   }, [activeCategory, t]);
 
+  // ── MULTI-DIMENSIONAL FILTER ENGINE ──
   const filteredDestinations = useMemo(() => {
-    // Use geo-sorted list when available, otherwise fallback to static
+    // Start with geo-sorted or static list
     let list = geoSorted.length > 0 ? [...geoSorted] : getDestinationsByType(activeCategory);
     const allLabel = t('discover.all');
 
+    // 1. Environment filter — override activeCategory if set
+    if (selectedEnvironment) {
+      list = DESTINATIONS.filter((d) => d.type === selectedEnvironment);
+    }
+
+    // 2. Geo-region filter (East / West / Center / Desert)
+    if (selectedGeoRegion) {
+      list = list.filter((d) => getGeoRegion(d) === selectedGeoRegion);
+    }
+
+    // 3. Wilaya / region filter
     if (selectedRegion && selectedRegion !== allLabel) {
       list = list.filter((d) => d.region === selectedRegion);
     }
 
+    // 4. Service category filter — match against destination's services array
+    if (selectedServiceCategory && selectedServiceCategory !== 'all') {
+      list = list.filter((d) => d.services.includes(selectedServiceCategory));
+    }
+
+    // 5. Search — matches name, region, wilaya, tagline
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
       list = list.filter(
-        (d) => d.name.toLowerCase().includes(q) || d.region.toLowerCase().includes(q)
+        (d) =>
+          d.name.toLowerCase().includes(q) ||
+          d.region.toLowerCase().includes(q) ||
+          d.tagline.toLowerCase().includes(q)
       );
     }
 
-    return list;
-  }, [geoSorted, activeCategory, selectedRegion, searchQuery, t]);
+    // 6. Curation: sort by rating (highest first) for premium impression
+    list.sort((a, b) => b.rating - a.rating);
 
-  // ── Header rendered as ListHeaderComponent so it scrolls away ──
+    return list;
+  }, [geoSorted, activeCategory, selectedGeoRegion, selectedEnvironment, selectedRegion, selectedServiceCategory, searchQuery, t]);
+
+  // ── HEADER ──
   const ListHeader = (
     <View>
-      {/* ── Top Bar ── */}
+      {/* Top Bar */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.push('/(modals)/settings' as any)}
@@ -123,12 +181,12 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      {/* ── Hero Panel ── */}
+      {/* Hero Panel */}
       <Animated.View style={[styles.heroWrap, { opacity: heroOpacity, maxHeight: heroHeight, overflow: 'hidden' }]}>
         <LinearGradient colors={[SAHEL.primary, SAHEL.accent]} style={styles.hero}>
           <View style={styles.heroCopy}>
             <Text style={styles.kicker}>{t('discover.kicker')}</Text>
-            <Text style={styles.title}>{t('discover.heroTitle')}</Text>
+            <Text style={styles.title}>{t('discover.greeting')}</Text>
             <Text style={styles.heroAr}>{t('discover.heroAr')}</Text>
             <Text style={styles.subtitle}>{t('discover.heroSub')}</Text>
             <TouchableOpacity
@@ -143,7 +201,7 @@ export default function DiscoverScreen() {
         </LinearGradient>
       </Animated.View>
 
-      {/* ── Search Bar (always visible) ── */}
+      {/* Search Bar */}
       <View style={styles.searchPanel}>
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#888888" />
@@ -165,10 +223,102 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      {/* ── Category Bar ── */}
+      {/* Category Bar */}
       <CategoryBar />
 
-      {/* ── Region Chips ── */}
+      {/* ── GEO-REGION CHIPS (East / West / Center / Desert) ── */}
+      <View style={styles.filterSection}>
+        <Text style={styles.filterLabel}>{t('discover.geoRegion')}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+          <Pressable
+            style={[styles.chip, !selectedGeoRegion && styles.chipActive]}
+            onPress={() => setSelectedGeoRegion(null)}
+          >
+            <Text style={[styles.chipText, !selectedGeoRegion && styles.chipTextActive]}>
+              {t('discover.allRegions')}
+            </Text>
+          </Pressable>
+          {GEO_REGIONS.map((gr) => (
+            <Pressable
+              key={gr}
+              style={[styles.chip, selectedGeoRegion === gr && styles.chipActive]}
+              onPress={() => setSelectedGeoRegion(selectedGeoRegion === gr ? null : gr)}
+            >
+              <Ionicons
+                name={gr === 'Desert' ? 'sunny-outline' : 'globe-outline'}
+                size={14}
+                color={selectedGeoRegion === gr ? '#FFFFFF' : SAHEL.mutedText}
+              />
+              <Text style={[styles.chipText, selectedGeoRegion === gr && styles.chipTextActive]}>
+                {gr}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* ── ENVIRONMENT TOGGLE (Beach / Desert) ── */}
+      <View style={styles.filterSection}>
+        <Text style={styles.filterLabel}>{t('discover.environment')}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+          {ENVIRONMENTS.map((env) => (
+            <Pressable
+              key={env}
+              style={[
+                styles.envChip,
+                selectedEnvironment === env && {
+                  backgroundColor: env === 'beach' ? SAHEL.accent : '#C56A39',
+                  borderColor: env === 'beach' ? SAHEL.accent : '#C56A39',
+                },
+              ]}
+              onPress={() => setSelectedEnvironment(selectedEnvironment === env ? null : env)}
+            >
+              <Text style={styles.envEmoji}>{env === 'beach' ? '🏖️' : '🏜️'}</Text>
+              <Text
+                style={[
+                  styles.envLabel,
+                  selectedEnvironment === env && { color: '#FFFFFF', fontFamily: 'mon-b' },
+                ]}
+              >
+                {env === 'beach' ? t('discover.beaches') : t('discover.deserts')}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* ── SERVICE CATEGORY CHIPS ── */}
+      <View style={styles.filterSection}>
+        <Text style={styles.filterLabel}>{t('discover.serviceCategory')}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+          <Pressable
+            style={[styles.chip, !selectedServiceCategory && styles.chipActive]}
+            onPress={() => setSelectedServiceCategory(null)}
+          >
+            <Text style={[styles.chipText, !selectedServiceCategory && styles.chipTextActive]}>
+              {t('discover.all')}
+            </Text>
+          </Pressable>
+          {SERVICE_CATEGORIES.map((sc) => (
+            <Pressable
+              key={sc.key}
+              style={[styles.chip, selectedServiceCategory === sc.key && styles.chipActive]}
+              onPress={() => setSelectedServiceCategory(selectedServiceCategory === sc.key ? null : sc.key)}
+            >
+              <Ionicons
+                name={sc.icon as any}
+                size={14}
+                color={selectedServiceCategory === sc.key ? '#FFFFFF' : SAHEL.mutedText}
+              />
+              <Text style={[styles.chipText, selectedServiceCategory === sc.key && styles.chipTextActive]}>
+                {sc.label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Region Chips (wilaya-level) */}
       {regions.length > 2 && (
         <FlatList
           horizontal
@@ -205,7 +355,7 @@ export default function DiscoverScreen() {
         />
       )}
 
-      {/* ── Nearest destination proximity badge ── */}
+      {/* Nearest destination proximity badge */}
       {nearestDestination && nearestDistanceKm !== null && !loading && (
         <View style={styles.proximityBadge}>
           <Ionicons name="navigate" size={14} color={SAHEL.accent} />
@@ -217,7 +367,7 @@ export default function DiscoverScreen() {
         </View>
       )}
 
-      {/* ── Section Header ── */}
+      {/* Section Header */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{t('discover.sectionTitle')}</Text>
         <Text style={styles.sectionMeta}>
@@ -334,11 +484,7 @@ const styles = StyleSheet.create({
   },
 
   heroWrap: { marginHorizontal: 20, marginTop: 6 },
-  hero: {
-    padding: 22,
-    borderRadius: 28,
-    overflow: 'hidden',
-  },
+  hero: { padding: 22, borderRadius: 28, overflow: 'hidden' },
   heroCopy: { gap: 8 },
   kicker: { fontSize: 12, fontFamily: 'mon-b', color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase' },
   title: {
@@ -393,7 +539,43 @@ const styles = StyleSheet.create({
   searchAccent: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon', color: '#1a1a1a', height: '100%' },
 
-  // Region chips
+  // Filter sections
+  filterSection: { paddingHorizontal: 20, marginBottom: 4 },
+  filterLabel: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.mutedText, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6, marginTop: 8 },
+  chipRow: { gap: 8, paddingHorizontal: 4 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: SAHEL.border,
+    backgroundColor: '#FFFFFF',
+  },
+  chipActive: {
+    backgroundColor: SAHEL.primary,
+    borderColor: SAHEL.primary,
+  },
+  chipText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  chipTextActive: { color: '#FFFFFF' },
+
+  envChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: SAHEL.border,
+    backgroundColor: '#FFFFFF',
+  },
+  envEmoji: { fontSize: 16 },
+  envLabel: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark },
+
+  // Region chips (wilaya)
   regionContainer: { height: 44, marginBottom: 8 },
   regionList: { paddingHorizontal: 20, gap: 8, alignItems: 'center' },
   regionChip: {
@@ -406,18 +588,7 @@ const styles = StyleSheet.create({
   },
   regionLabel: { fontSize: 12, fontFamily: 'mon' },
 
-  // Section header
-  sectionHeader: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 2,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    gap: 16,
-  },
-  sectionTitle: { flex: 1, fontSize: 19, fontFamily: 'mon-b', color: '#1a1a1a' },
-  sectionMeta: { fontSize: 12, fontFamily: 'mon-sb', color: '#888888' },
+  // Proximity
   proximityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -432,6 +603,19 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   proximityText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.primary },
+
+  // Section header
+  sectionHeader: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    gap: 16,
+  },
+  sectionTitle: { flex: 1, fontSize: 19, fontFamily: 'mon-b', color: '#1a1a1a' },
+  sectionMeta: { fontSize: 12, fontFamily: 'mon-sb', color: '#888888' },
 
   // List
   listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40 },

@@ -6,9 +6,9 @@
 
 ## Latest Update
 - **Date:** June 4, 2026
-- **Phase:** Phase 4 Complete (Native Hardware Integration)
+- **Phase:** Phase 2.1 Complete (Polymorphic Marketplace Type Architecture)
 - **TypeScript:** 0 errors
-- **Git:** Pushed to `origin/main` — commit `e207d74`
+- **Git:** Pushed to `origin/main` — commit `e265165`
 
 ---
 
@@ -68,6 +68,18 @@ SAHEL is an ultra-premium experience and asset-rental mobile platform for coasta
 | Delete legacy `components/ExploreHeader.tsx` (unused Airbnb component) | ✅ |
 | Category filter engine (CategoryBar + region chips) already wired | ✅ |
 | Geo-fencing proximity badge in Discover feed | ✅ |
+
+### Phase 2.1: Polymorphic Marketplace Type Architecture ✅
+**Date:** June 4, 2026 | **Commit:** `e265165`
+
+| Task | Status |
+|---|---|
+| Rewrite `types/service.ts` — ServiceVariant union, Listing interface, 4 metadata shapes, type guards, legacy compat | ✅ |
+| Create `types/listing.ts` — ListingUIConfig dispatch map, 4 interaction modes, detail props, revenue breakdown | ✅ |
+| Update `types/order.ts` — VariantOrderFields per variant, type guards with optional chaining, getOrderSummary helper | ✅ |
+| Update `types/beach.ts` — BeachBooking with grid_selection_label + countdown_hold_expires + hold helpers | ✅ |
+| Update `types/index.ts` — Added listing exports | ✅ |
+| Update `context/AppContext.tsx` — Backward-compatible addOrder defaults | ✅ |
 
 ### Phase 4: Native Hardware Integration ✅
 **Date:** June 4, 2026 | **Commit:** `e207d74`
@@ -260,6 +272,7 @@ SAHEL/
 
 | Date | Commit | Description |
 |---|---|---|
+| June 4, 2026 | `e265165` | Phase 2.1: Polymorphic marketplace type architecture |
 | June 4, 2026 | `e207d74` | Phase 4: QR Scanner + GPS Geo-Fencing |
 | June 4, 2026 | `4524267` | Phase 3: Discover i18n + hamburger menu + legacy cleanup |
 | June 3, 2026 | `52d8599` | Phase 2: Replace all `any` types with proper types |

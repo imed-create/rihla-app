@@ -24,17 +24,28 @@
     "profile": "Profile"
   },
   "discover": {
-    "searchPlaceholder": "Search destinations in Algeria",
+    "searchPlaceholder": "Search destinations, wilayas, or services",
     "regions": "Regions",
     "all": "All",
     "kicker": "Explore Algeria",
-    "heroTitle": "Find stays, places, and local services that feel handpicked.",
+    "heroTitle": "What do you want to discover today?",
     "heroSub": "Beach days, Sahara nights, mountain escapes — one polished flow.",
-    "sectionTitle": "Places guests are loving",
+    "sectionTitle": "Trending destinations",
     "options": "{{count}} options",
     "heroAr": "Discover Algeria's most stunning coastal escapes",
     "bookNow": "Book Now",
-    "noDestinations": "No destinations found in this area"
+    "noDestinations": "No destinations found in this area",
+    "greeting": "Hello, what do you want to discover today?",
+    "geoRegion": "Region",
+    "environment": "Environment",
+    "serviceCategory": "Service",
+    "beaches": "Beaches",
+    "deserts": "Desert",
+    "allRegions": "All Regions",
+    "east": "East",
+    "west": "West",
+    "center": "Center",
+    "desertRegion": "Sahara"
   },
   "profile": {
     "title": "Profile",

@@ -24,17 +24,28 @@
     "profile": "Profil"
   },
   "discover": {
-    "searchPlaceholder": "Rechercher une destination en Algérie",
+    "searchPlaceholder": "Rechercher destinations, wilayas ou services",
     "regions": "Régions",
     "all": "Tout",
     "kicker": "Explorez l'Algérie",
-    "heroTitle": "Séjours et services locaux, sélectionnés avec soin.",
+    "heroTitle": "Que voulez-vous découvrir aujourd'hui ?",
     "heroSub": "Plage, Sahara, montagne — une expérience fluide.",
-    "sectionTitle": "Les coups de cœur des voyageurs",
+    "sectionTitle": "Destinations tendance",
     "options": "{{count}} options",
     "heroAr": "Découvrez les plus beaux littoraux d'Algérie",
     "bookNow": "Réserver",
-    "noDestinations": "Aucune destination trouvée dans cette zone"
+    "noDestinations": "Aucune destination trouvée dans cette zone",
+    "greeting": "Bonjour, que voulez-vous découvrir aujourd'hui ?",
+    "geoRegion": "Région",
+    "environment": "Environnement",
+    "serviceCategory": "Service",
+    "beaches": "Plages",
+    "deserts": "Désert",
+    "allRegions": "Toutes les régions",
+    "east": "Est",
+    "west": "Ouest",
+    "center": "Centre",
+    "desertRegion": "Sahara"
   },
   "profile": {
     "title": "Profil",

@@ -24,17 +24,28 @@
     "profile": "الملف"
   },
   "discover": {
-    "searchPlaceholder": "ابحث عن وجهة في الجزائر",
+    "searchPlaceholder": "ابحث عن وجهة أو ولاية أو خدمة",
     "regions": "المناطق",
     "all": "الكل",
     "kicker": "استكشف الجزائر",
-    "heroTitle": "إقامات وخدمات محلية بعناية فائقة.",
+    "heroTitle": "ماذا تريد أن تستكشف اليوم؟",
     "heroSub": "شاطئ، صحراء، جبال — تجربة واحدة متكاملة.",
-    "sectionTitle": "أماكن يحبها الضيوف",
+    "sectionTitle": "وجهات رائجة",
     "options": "{{count}} خيار",
     "heroAr": "اكتشف أجمل شواطئ الجزائر",
     "bookNow": "احجز الآن",
-    "noDestinations": "لا توجد وجهات في هذه المنطقة"
+    "noDestinations": "لا توجد وجهات في هذه المنطقة",
+    "greeting": "مرحباً، ماذا تريد أن تستكشف اليوم؟",
+    "geoRegion": "المنطقة",
+    "environment": "البيئة",
+    "serviceCategory": "الخدمة",
+    "beaches": "الشواطئ",
+    "deserts": "الصحراء",
+    "allRegions": "جميع المناطق",
+    "east": "الشرق",
+    "west": "الغرب",
+    "center": "الوسط",
+    "desertRegion": "الصحراء الكبرى"
   },
   "profile": {
     "title": "الملف الشخصي",
