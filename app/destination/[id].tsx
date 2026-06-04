@@ -1,8 +1,9 @@
 /**
  * RIHLA — Destination Hub Screen
  * ---------------------------------
- * Shows a destination with category tabs (Hotels, Restaurants, Activities, etc.)
- * Each tab loads marketplace listings from that category for this destination.
+ * Shows destination hero + ALL category cards always.
+ * When a specific category tab is clicked, shows marketplace listings for that category.
+ * "All" tab shows the category overview grid.
  */
 
 import { Ionicons } from '@expo/vector-icons';
@@ -10,9 +11,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams, Stack } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  FlatList,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -22,9 +23,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SAHEL } from '@/constants/Colors';
 import { getDestinationById } from '@/constants/destinations';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
-import { MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
-import { getCategoryDef } from '@/constants/marketplaceCategories';
+import { MARKETPLACE_CATEGORIES, getCategoryDef } from '@/constants/marketplaceCategories';
 import type { MarketplaceCategory, Listing } from '@/types/service';
+import { getServicesByCategory } from '@/constants/services';
 import EmptyState from '@/components/EmptyState';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
@@ -47,14 +48,13 @@ export default function DestinationHubScreen() {
   const destination = useMemo(() => getDestinationById(id ?? ''), [id]);
   const [selectedCategory, setSelectedCategory] = useState<MarketplaceCategory | 'all'>('all');
 
-  // Get categories that have listings for this destination's wilaya
-  const availableCategories = useMemo(() => {
+  // Services for this destination type (always available, from constants/services)
+  const destinationServices = useMemo(() => {
     if (!destination) return [];
-    const cats = new Set(MOCK_LISTINGS.filter((l) => l.is_active && l.wilaya === destination.region).map((l) => l.category));
-    return MARKETPLACE_CATEGORIES.filter((c) => cats.has(c.key));
+    return getServicesByCategory(destination.type);
   }, [destination]);
 
-  // Filter listings for this destination
+  // Marketplace listings for this destination's region
   const listings = useMemo(() => {
     if (!destination) return [];
     let results = MOCK_LISTINGS.filter((l) => l.is_active && l.wilaya === destination.region);
@@ -79,118 +79,207 @@ export default function DestinationHubScreen() {
     );
   }
 
-  const renderListingCard = useCallback(({ item }: { item: Listing }) => {
-    const catDef = getCategoryDef(item.category);
-    return (
-      <Pressable
-        style={[styles.listingCard, isWide && { width: '48%' }]}
-        onPress={() => router.push(`/listing/${item.id}` as any)}
-      >
-        <View style={[styles.listingImage, { backgroundColor: catDef.color + '15' }]}>
-          <Ionicons name={catDef.icon as any} size={28} color={catDef.color} />
-          <View style={[styles.listingCatBadge, { backgroundColor: catDef.color }]}>
-            <Text style={styles.listingCatText}>{catDef.label}</Text>
-          </View>
-          {item.is_featured && (
-            <View style={styles.listingFeatBadge}>
-              <Ionicons name="star" size={10} color="#fff" />
-              <Text style={styles.listingFeatText}>Featured</Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.listingInfo}>
-          <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.listingDesc} numberOfLines={2}>{item.description}</Text>
-          <View style={styles.listingBottom}>
-            <View style={styles.listingRating}>
-              <Ionicons name="star" size={12} color="#FFD166" />
-              <Text style={styles.listingRatingText}>{item.rating}</Text>
-              <Text style={styles.listingReviewCount}>({item.review_count})</Text>
-            </View>
-            <Text style={styles.listingPrice}>{item.price_dzd.toLocaleString()} DZD</Text>
-          </View>
-        </View>
-      </Pressable>
-    );
-  }, [isWide]);
-
-  const ListHeader = (
-    <View>
-      {/* Hero Header */}
-      <View style={[styles.heroWrap, { paddingTop: topPad }]}>
-        <LinearGradient colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.85)']} style={styles.heroGradient}>
-          <Pressable style={styles.backCircle} onPress={() => safeGoBack()}>
-            <Ionicons name="arrow-back" size={22} color="#fff" />
-          </Pressable>
-          <View style={styles.heroContent}>
-            <Text style={styles.heroName}>{destination.name}</Text>
-            <Text style={styles.heroRegion}>{destination.region}, Algeria</Text>
-            <View style={styles.heroStats}>
-              <View style={styles.heroStatItem}>
-                <Ionicons name="star" size={14} color="#FFD166" />
-                <Text style={styles.heroStatVal}>{destination.rating}</Text>
-                <Text style={styles.heroStatLabel}>({destination.reviews})</Text>
-              </View>
-              <View style={styles.heroStatDivider} />
-              <View style={styles.heroStatItem}>
-                <Ionicons name="navigate" size={13} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.heroStatVal}>{destination.distance}</Text>
-              </View>
-            </View>
-            <Text style={styles.heroTagline}>{destination.tagline}</Text>
-          </View>
-        </LinearGradient>
-      </View>
-
-      {/* Category Tabs */}
-      <View style={styles.tabsContainer}>
-        <Pressable
-          style={[styles.tab, selectedCategory === 'all' && styles.tabActive]}
-          onPress={() => { hapticLight(); setSelectedCategory('all'); }}
-        >
-          <Text style={[styles.tabText, selectedCategory === 'all' && styles.tabTextActive]}>All</Text>
-        </Pressable>
-        {availableCategories.map((cat) => (
-          <Pressable
-            key={cat.key}
-            style={[styles.tab, selectedCategory === cat.key && { backgroundColor: cat.color, borderColor: cat.color }]}
-            onPress={() => { hapticLight(); setSelectedCategory(selectedCategory === cat.key ? 'all' : cat.key); }}
-          >
-            <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : SAHEL.mutedText} />
-            <Text style={[styles.tabText, selectedCategory === cat.key && { color: '#fff' }]}>{cat.labelPlural}</Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {/* Results Count */}
-      <View style={styles.resultsRow}>
-        <Text style={styles.resultsCount}>{listings.length} listing{listings.length !== 1 ? 's' : ''}</Text>
-      </View>
-    </View>
-  );
+  const isAll = selectedCategory === 'all';
+  const catDef = !isAll ? getCategoryDef(selectedCategory) : null;
 
   return (
     <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <FlatList
-        data={listings}
-        keyExtractor={(l) => l.id}
-        numColumns={isWide ? 2 : 1}
-        key={isWide ? 'wide' : 'narrow'}
-        columnWrapperStyle={isWide ? { gap: 16 } : undefined}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 20, maxWidth: 1180, alignSelf: 'center', width: '100%' }]}
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={
-          <EmptyState
-            icon="search-outline"
-            title={`No ${selectedCategory !== 'all' ? getCategoryDef(selectedCategory).labelPlural.toLowerCase() : 'listings'} yet`}
-            subtitle={`Marketplace listings for ${destination.name} will appear here.`}
-          />
-        }
-        renderItem={renderListingCard}
-      />
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+      >
+        {/* ── HERO HEADER ── */}
+        <View style={[styles.heroWrap, { paddingTop: topPad }]}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.85)']}
+            style={styles.heroGradient}
+          >
+            <Pressable style={styles.backCircle} onPress={() => safeGoBack()}>
+              <Ionicons name="arrow-back" size={22} color="#fff" />
+            </Pressable>
+            <View style={styles.heroContent}>
+              <Text style={styles.heroName}>{destination.name}</Text>
+              <Text style={styles.heroRegion}>{destination.region}, Algeria</Text>
+              <View style={styles.heroStats}>
+                <View style={styles.heroStatItem}>
+                  <Ionicons name="star" size={14} color="#FFD166" />
+                  <Text style={styles.heroStatVal}>{destination.rating}</Text>
+                  <Text style={styles.heroStatLabel}>({destination.reviews})</Text>
+                </View>
+                <View style={styles.heroStatDivider} />
+                <View style={styles.heroStatItem}>
+                  <Ionicons name="navigate" size={13} color="rgba(255,255,255,0.7)" />
+                  <Text style={styles.heroStatVal}>{destination.distance}</Text>
+                </View>
+              </View>
+              <Text style={styles.heroTagline}>{destination.tagline}</Text>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* ── CATEGORY TABS (always show ALL 10) ── */}
+        <View style={styles.tabsContainer}>
+          <Pressable
+            style={[styles.tab, isAll && styles.tabActive]}
+            onPress={() => { hapticLight(); setSelectedCategory('all'); }}
+          >
+            <Ionicons name="grid-outline" size={14} color={isAll ? '#fff' : SAHEL.mutedText} />
+            <Text style={[styles.tabText, isAll && styles.tabTextActive]}>All</Text>
+          </Pressable>
+          {MARKETPLACE_CATEGORIES.map((cat) => (
+            <Pressable
+              key={cat.key}
+              style={[styles.tab, selectedCategory === cat.key && { backgroundColor: cat.color, borderColor: cat.color }]}
+              onPress={() => { hapticLight(); setSelectedCategory(selectedCategory === cat.key ? 'all' : cat.key); }}
+            >
+              <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : SAHEL.mutedText} />
+              <Text style={[styles.tabText, selectedCategory === cat.key && { color: '#fff' }]}>{cat.labelPlural}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* ── "ALL" TAB: Show category overview cards + legacy services ── */}
+        {isAll && (
+          <>
+            {/* Category Cards Grid */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>What are you looking for?</Text>
+              <Text style={styles.sectionSub}>Browse by category in {destination.name}</Text>
+              <View style={styles.categoryGrid}>
+                {MARKETPLACE_CATEGORIES.map((cat) => {
+                  const count = MOCK_LISTINGS.filter(
+                    (l) => l.is_active && l.wilaya === destination.region && l.category === cat.key
+                  ).length;
+                  return (
+                    <Pressable
+                      key={cat.key}
+                      style={styles.categoryCard}
+                      onPress={() => { hapticLight(); setSelectedCategory(cat.key); }}
+                    >
+                      <View style={[styles.categoryIconWrap, { backgroundColor: cat.color + '15' }]}>
+                        <Ionicons name={cat.icon as any} size={24} color={cat.color} />
+                      </View>
+                      <Text style={styles.categoryLabel}>{cat.labelPlural}</Text>
+                      <Text style={styles.categoryCount}>
+                        {count > 0 ? `${count} listing${count > 1 ? 's' : ''}` : 'Browse'}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Legacy Services Grid (existing beach/desert services) */}
+            {destinationServices.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Services & Activities</Text>
+                <Text style={styles.sectionSub}>Everything you need, booked instantly</Text>
+                <View style={styles.servicesGrid}>
+                  {destinationServices.map((svc) => (
+                    <Pressable
+                      key={svc.id}
+                      style={styles.serviceCard}
+                      onPress={() => {
+                        hapticLight();
+                        router.push({ pathname: svc.route as any, params: { destinationId: destination.id } });
+                      }}
+                    >
+                      <View style={[styles.serviceIconWrap, { backgroundColor: svc.color + '18' }]}>
+                        <Ionicons name={svc.icon as any} size={22} color={svc.color} />
+                      </View>
+                      <Text style={styles.serviceTitle} numberOfLines={1}>{svc.title}</Text>
+                      <Text style={styles.serviceTagline} numberOfLines={1}>{svc.tagline}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Featured marketplace listings */}
+            {listings.filter((l) => l.is_featured).length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Featured in {destination.name}</Text>
+                <View style={styles.listingsGrid}>
+                  {listings.filter((l) => l.is_featured).map((item) => (
+                    <ListingCard key={item.id} item={item} isWide={isWide} />
+                  ))}
+                </View>
+              </View>
+            )}
+          </>
+        )}
+
+        {/* ── SPECIFIC CATEGORY TAB: Show marketplace listings ── */}
+        {!isAll && (
+          <>
+            {/* Category Header */}
+            <View style={styles.catHeader}>
+              <View style={[styles.catHeaderIcon, { backgroundColor: catDef!.color + '15' }]}>
+                <Ionicons name={catDef!.icon as any} size={24} color={catDef!.color} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.catHeaderTitle}>{catDef!.labelPlural} in {destination.name}</Text>
+                <Text style={styles.catHeaderSub}>{listings.length} listing{listings.length !== 1 ? 's' : ''} available</Text>
+              </View>
+            </View>
+
+            {/* Listings */}
+            {listings.length > 0 ? (
+              <View style={styles.listingsGrid}>
+                {listings.map((item) => (
+                  <ListingCard key={item.id} item={item} isWide={isWide} />
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyWrap}>
+                <EmptyState
+                  icon={catDef!.icon as any}
+                  title={`No ${catDef!.labelPlural.toLowerCase()} yet`}
+                  subtitle={`${catDef!.labelPlural} in ${destination.name} will appear here once listed by businesses.`}
+                />
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
     </View>
+  );
+}
+
+// ── Listing Card ──
+function ListingCard({ item, isWide }: { item: Listing; isWide: boolean }) {
+  const catDef = getCategoryDef(item.category);
+  return (
+    <Pressable
+      style={[styles.listingCard, isWide && { width: '48%' }]}
+      onPress={() => router.push(`/listing/${item.id}` as any)}
+    >
+      <View style={[styles.listingImage, { backgroundColor: catDef.color + '15' }]}>
+        <Ionicons name={catDef.icon as any} size={28} color={catDef.color} />
+        <View style={[styles.listingCatBadge, { backgroundColor: catDef.color }]}>
+          <Text style={styles.listingCatText}>{catDef.label}</Text>
+        </View>
+        {item.is_featured && (
+          <View style={styles.listingFeatBadge}>
+            <Ionicons name="star" size={10} color="#fff" />
+            <Text style={styles.listingFeatText}>Featured</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.listingInfo}>
+        <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.listingDesc} numberOfLines={2}>{item.description}</Text>
+        <View style={styles.listingBottom}>
+          <View style={styles.listingRating}>
+            <Ionicons name="star" size={12} color="#FFD166" />
+            <Text style={styles.listingRatingText}>{item.rating}</Text>
+            <Text style={styles.listingReviewCount}>({item.review_count})</Text>
+          </View>
+          <Text style={styles.listingPrice}>{item.price_dzd.toLocaleString()} DZD</Text>
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -213,7 +302,7 @@ const styles = StyleSheet.create({
   heroStatDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.3)' },
   heroTagline: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)', marginTop: 6, lineHeight: 18 },
 
-  // Tabs
+  // Tabs — ALWAYS show all 10 categories
   tabsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20, paddingVertical: 14 },
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -224,15 +313,53 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
   tabTextActive: { color: '#fff' },
 
-  // Results
-  resultsRow: { paddingHorizontal: 24, paddingBottom: 8 },
-  resultsCount: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  // Sections
+  section: { paddingHorizontal: 20, marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 2 },
+  sectionSub: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText, marginBottom: 14 },
+
+  // Category grid (on "All" tab)
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  categoryCard: {
+    width: '30%', minWidth: 100, alignItems: 'center', gap: 6,
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    paddingVertical: 16, paddingHorizontal: 8,
+  },
+  categoryIconWrap: {
+    width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
+  },
+  categoryLabel: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.dark, textAlign: 'center' },
+  categoryCount: { fontSize: 10, fontFamily: 'mon', color: SAHEL.mutedText },
+
+  // Services grid (legacy beach/desert services)
+  servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  serviceCard: {
+    width: '47%', alignItems: 'flex-start', gap: 6,
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    padding: 14,
+  },
+  serviceIconWrap: {
+    width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+  },
+  serviceTitle: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark },
+  serviceTagline: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+
+  // Category header (when specific category selected)
+  catHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#fff',
+    marginHorizontal: 20, borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    marginBottom: 14,
+  },
+  catHeaderIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  catHeaderTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
+  catHeaderSub: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
 
   // Listing cards
-  list: { paddingHorizontal: 20, gap: 12 },
+  listingsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 12 },
   listingCard: {
     backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
-    overflow: 'hidden', marginBottom: 4,
+    overflow: 'hidden', marginBottom: 4, width: '100%',
   },
   listingImage: { height: 110, alignItems: 'center', justifyContent: 'center' },
   listingCatBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
@@ -250,4 +377,7 @@ const styles = StyleSheet.create({
   listingRatingText: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.dark },
   listingReviewCount: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
   listingPrice: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.primary },
+
+  // Empty
+  emptyWrap: { paddingHorizontal: 20 },
 });
