@@ -127,6 +127,10 @@ function RootLayoutNav() {
         name="(modals)/settings"
         options={{ headerShown: false, presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="(modals)/filter"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
       <Stack.Screen name="destination/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="booking/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="services/beach" options={{ headerShown: false }} />

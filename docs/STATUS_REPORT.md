@@ -6,9 +6,9 @@
 
 ## Latest Update
 - **Date:** June 4, 2026
-- **Phase:** Advanced Dynamic Filtering + Polymorphic Business Dashboard
+- **Phase:** Cart & Checkout Screen + Dead Code Cleanup
 - **TypeScript:** 0 errors
-- **Git:** Local commit `794ac2e` — push pending (auth issue on machine)
+- **Git:** Commit `05bb0f1` pushed to origin/main
 
 ---
 
@@ -222,8 +222,8 @@ SAHEL is an ultra-premium experience and asset-rental mobile platform for coasta
 ### 🔴 1. Runtime Smoke Test
 Start Metro in cache-clean mode (`npx expo start --clear`) and verify app boots on simulator without red screens. TypeScript compiles clean, but runtime behavior is untested.
 
-### 🔴 2. Cart & Checkout Screen
-Build `app/services/beach/checkout.tsx` — order summary, Chargily WebView payment, COD option. Requires installing `react-native-webview`. This completes the end-to-end traveler purchase flow.
+### ✅ 2. Cart & Checkout Screen
+`app/services/beach/checkout.tsx` — order summary, delivery spot, payment method (COD/Chargily), ETA, place order. **Done — commit `05bb0f1`.**
 
 ### 🟡 3. Global Skeleton Loading + Pull-to-Refresh
 Extend `SkeletonCard` to all list screens (bookings, wishlists, inbox, business, partner dashboards). Add `RefreshControl` to business/partner dashboards.
@@ -231,7 +231,7 @@ Extend `SkeletonCard` to all list screens (bookings, wishlists, inbox, business,
 ### 🟡 4. Global Empty States
 Add `EmptyState` component to: Inbox, Partner Services, Partner Rentals, Business Promotions, Business Reviews, Business Analytics.
 
-### 🟡 5. Supabase Foundation
+### 🔴 5. Supabase Foundation
 Install `@supabase/supabase-js`. Create tables: users, bookings, orders, listings, services, reviews. Add RLS policies for multi-tenant isolation.
 
 ### 🟡 6. NativeWind v4 Migration
@@ -282,6 +282,7 @@ SAHEL/
 
 | Date | Commit | Description |
 |---|---|---|
+| June 4, 2026 | `05bb0f1` | Cart & Checkout screen + dead code cleanup |
 | June 4, 2026 | `794ac2e` | Advanced Dynamic Filtering + Polymorphic Business Dashboard |
 | June 4, 2026 | `e265165` | Phase 2.1: Polymorphic marketplace type architecture |
 | June 4, 2026 | `e207d74` | Phase 4: QR Scanner + GPS Geo-Fencing |

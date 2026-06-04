@@ -1,3 +1,10 @@
+/**
+ * SAHEL — Discover Screen (Traveler Home)
+ * ────────────────────────────────────────
+ * Hero, search, category bar, filter button → opens dedicated filter modal.
+ * Reads multi-dimensional filter state from useFilterStore.
+ */
+
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
@@ -8,7 +15,6 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -24,10 +30,6 @@ import SkeletonCard from '@/components/SkeletonCard';
 import { categoryColors, SAHEL } from '@/constants/Colors';
 import {
   DESTINATIONS,
-  DestinationType,
-  GeoRegion,
-  Environment,
-  ServiceCategory,
   getDestinationsByType,
   getGeoRegion,
 } from '@/constants/destinations';
@@ -35,37 +37,21 @@ import { useApp } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { useTranslation } from '@/context/I18nContext';
 import { useGeoFence } from '@/hooks/useGeoFence';
-
-// ── GEO-REGION FILTER CHIPS ──
-const GEO_REGIONS: GeoRegion[] = ['East', 'West', 'Center', 'Desert'];
-const ENVIRONMENTS: Environment[] = ['beach', 'desert'];
-const SERVICE_CATEGORIES: { key: ServiceCategory; label: string; icon: string }[] = [
-  { key: 'spots', label: 'Spots', icon: 'umbrella-outline' },
-  { key: 'food', label: 'Food', icon: 'restaurant-outline' },
-  { key: 'camel_trek', label: 'Camel Trek', icon: 'leaf-outline' },
-  { key: 'jetski', label: 'Jetski', icon: 'boat-outline' },
-  { key: 'massage', label: 'Spa', icon: 'hand-left-outline' },
-  { key: 'parking', label: 'Parking', icon: 'car-outline' },
-  { key: 'photos', label: 'Photos', icon: 'camera-outline' },
-  { key: 'guide', label: 'Guide', icon: 'compass-outline' },
-];
+import { useFilterStore, activeFilterCount } from '@/store/useFilterStore';
 
 export default function DiscoverScreen() {
   const { activeCategory, setActiveCategory, user } = useApp();
   const colors = useColors();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
+  const filterStore = useFilterStore();
   const { sortedDestinations: geoSorted, nearestDistanceKm, nearestDestination } = useGeoFence({
     categoryFilter: activeCategory,
     radiusKm: 500,
   });
 
-  // ── FILTER STATE ──
+  // ── LOCAL STATE ──
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [selectedGeoRegion, setSelectedGeoRegion] = useState<GeoRegion | null>(null);
-  const [selectedEnvironment, setSelectedEnvironment] = useState<Environment | null>(null);
-  const [selectedServiceCategory, setSelectedServiceCategory] = useState<ServiceCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -89,6 +75,7 @@ export default function DiscoverScreen() {
 
   const categoryColor = categoryColors[activeCategory];
   const isWide = Platform.OS === 'web' && width >= 900;
+  const filterCount = activeFilterCount(filterStore);
 
   // Animated header scroll
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -103,42 +90,33 @@ export default function DiscoverScreen() {
     extrapolate: 'clamp',
   });
 
-  // ── REGION CHIPS (wilaya-level) ──
-  const regions = useMemo(() => {
-    const allForCat = getDestinationsByType(activeCategory);
-    const uniqueRegions = Array.from(new Set(allForCat.map((d) => d.region)));
-    return [t('discover.all'), ...uniqueRegions];
-  }, [activeCategory, t]);
-
-  // ── MULTI-DIMENSIONAL FILTER ENGINE ──
+  // ── MULTI-DIMENSIONAL FILTER ENGINE (reads from store) ──
   const filteredDestinations = useMemo(() => {
-    // Start with geo-sorted or static list
     let list = geoSorted.length > 0 ? [...geoSorted] : getDestinationsByType(activeCategory);
-    const allLabel = t('discover.all');
 
-    // 1. Environment filter — override activeCategory if set
-    if (selectedEnvironment) {
-      list = DESTINATIONS.filter((d) => d.type === selectedEnvironment);
+    // 1. Environment filter
+    if (filterStore.environment) {
+      list = DESTINATIONS.filter((d) => d.type === filterStore.environment);
     }
 
-    // 2. Geo-region filter (East / West / Center / Desert)
-    if (selectedGeoRegion) {
-      list = list.filter((d) => getGeoRegion(d) === selectedGeoRegion);
+    // 2. Geo-region filter
+    if (filterStore.geoRegion) {
+      list = list.filter((d) => getGeoRegion(d) === filterStore.geoRegion);
     }
 
     // 3. Wilaya / region filter
-    if (selectedRegion && selectedRegion !== allLabel) {
-      list = list.filter((d) => d.region === selectedRegion);
+    if (filterStore.region) {
+      list = list.filter((d) => d.region === filterStore.region);
     }
 
-    // 4. Service category filter — match against destination's services array
-    if (selectedServiceCategory && selectedServiceCategory !== 'all') {
-      list = list.filter((d) => d.services.includes(selectedServiceCategory));
+    // 4. Service category filter
+    if (filterStore.serviceCategory) {
+      list = list.filter((d) => d.services.includes(filterStore.serviceCategory!));
     }
 
-    // 5. Search — matches name, region, wilaya, tagline
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase();
+    // 5. Search — matches name, region, tagline
+    const q = searchQuery.trim().toLowerCase();
+    if (q !== '') {
       list = list.filter(
         (d) =>
           d.name.toLowerCase().includes(q) ||
@@ -147,11 +125,11 @@ export default function DiscoverScreen() {
       );
     }
 
-    // 6. Curation: sort by rating (highest first) for premium impression
+    // 6. Curation: sort by rating (highest first)
     list.sort((a, b) => b.rating - a.rating);
 
     return list;
-  }, [geoSorted, activeCategory, selectedGeoRegion, selectedEnvironment, selectedRegion, selectedServiceCategory, searchQuery, t]);
+  }, [geoSorted, activeCategory, filterStore.geoRegion, filterStore.environment, filterStore.region, filterStore.serviceCategory, searchQuery]);
 
   // ── HEADER ──
   const ListHeader = (
@@ -201,7 +179,7 @@ export default function DiscoverScreen() {
         </LinearGradient>
       </Animated.View>
 
-      {/* Search Bar */}
+      {/* Search Bar + Filter Button */}
       <View style={styles.searchPanel}>
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#888888" />
@@ -218,142 +196,26 @@ export default function DiscoverScreen() {
             </TouchableOpacity>
           )}
         </View>
-        <View style={[styles.searchAccent, { backgroundColor: categoryColor }]}>
-          <Ionicons name="options-outline" size={18} color="#FFFFFF" />
-        </View>
+        <TouchableOpacity
+          style={[styles.filterBtn, filterStore.hasActiveFilters && { backgroundColor: SAHEL.primary }]}
+          onPress={() => router.push('/(modals)/filter' as any)}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="options-outline"
+            size={18}
+            color={filterStore.hasActiveFilters ? '#FFFFFF' : '#FFFFFF'}
+          />
+          {filterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{filterCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Category Bar */}
       <CategoryBar />
-
-      {/* ── GEO-REGION CHIPS (East / West / Center / Desert) ── */}
-      <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>{t('discover.geoRegion')}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          <Pressable
-            style={[styles.chip, !selectedGeoRegion && styles.chipActive]}
-            onPress={() => setSelectedGeoRegion(null)}
-          >
-            <Text style={[styles.chipText, !selectedGeoRegion && styles.chipTextActive]}>
-              {t('discover.allRegions')}
-            </Text>
-          </Pressable>
-          {GEO_REGIONS.map((gr) => (
-            <Pressable
-              key={gr}
-              style={[styles.chip, selectedGeoRegion === gr && styles.chipActive]}
-              onPress={() => setSelectedGeoRegion(selectedGeoRegion === gr ? null : gr)}
-            >
-              <Ionicons
-                name={gr === 'Desert' ? 'sunny-outline' : 'globe-outline'}
-                size={14}
-                color={selectedGeoRegion === gr ? '#FFFFFF' : SAHEL.mutedText}
-              />
-              <Text style={[styles.chipText, selectedGeoRegion === gr && styles.chipTextActive]}>
-                {gr}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* ── ENVIRONMENT TOGGLE (Beach / Desert) ── */}
-      <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>{t('discover.environment')}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          {ENVIRONMENTS.map((env) => (
-            <Pressable
-              key={env}
-              style={[
-                styles.envChip,
-                selectedEnvironment === env && {
-                  backgroundColor: env === 'beach' ? SAHEL.accent : '#C56A39',
-                  borderColor: env === 'beach' ? SAHEL.accent : '#C56A39',
-                },
-              ]}
-              onPress={() => setSelectedEnvironment(selectedEnvironment === env ? null : env)}
-            >
-              <Text style={styles.envEmoji}>{env === 'beach' ? '🏖️' : '🏜️'}</Text>
-              <Text
-                style={[
-                  styles.envLabel,
-                  selectedEnvironment === env && { color: '#FFFFFF', fontFamily: 'mon-b' },
-                ]}
-              >
-                {env === 'beach' ? t('discover.beaches') : t('discover.deserts')}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* ── SERVICE CATEGORY CHIPS ── */}
-      <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>{t('discover.serviceCategory')}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          <Pressable
-            style={[styles.chip, !selectedServiceCategory && styles.chipActive]}
-            onPress={() => setSelectedServiceCategory(null)}
-          >
-            <Text style={[styles.chipText, !selectedServiceCategory && styles.chipTextActive]}>
-              {t('discover.all')}
-            </Text>
-          </Pressable>
-          {SERVICE_CATEGORIES.map((sc) => (
-            <Pressable
-              key={sc.key}
-              style={[styles.chip, selectedServiceCategory === sc.key && styles.chipActive]}
-              onPress={() => setSelectedServiceCategory(selectedServiceCategory === sc.key ? null : sc.key)}
-            >
-              <Ionicons
-                name={sc.icon as any}
-                size={14}
-                color={selectedServiceCategory === sc.key ? '#FFFFFF' : SAHEL.mutedText}
-              />
-              <Text style={[styles.chipText, selectedServiceCategory === sc.key && styles.chipTextActive]}>
-                {sc.label}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Region Chips (wilaya-level) */}
-      {regions.length > 2 && (
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={regions}
-          keyExtractor={(item) => item}
-          contentContainerStyle={styles.regionList}
-          style={styles.regionContainer}
-          renderItem={({ item }) => {
-            const isSelected =
-              selectedRegion === item || (item === t('discover.all') && !selectedRegion);
-            return (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => setSelectedRegion(item === t('discover.all') ? null : item)}
-                style={[
-                  styles.regionChip,
-                  isSelected
-                    ? { backgroundColor: '#1a1a1a', borderColor: '#1a1a1a' }
-                    : { backgroundColor: '#FFFFFF', borderColor: '#e2e8f0' },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.regionLabel,
-                    isSelected ? { color: '#FFFFFF', fontFamily: 'mon-sb' } : { color: '#888888' },
-                  ]}
-                >
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      )}
 
       {/* Nearest destination proximity badge */}
       {nearestDestination && nearestDistanceKm !== null && !loading && (
@@ -364,6 +226,55 @@ export default function DiscoverScreen() {
               ? `Nearby: ${nearestDestination.name}`
               : `${nearestDistanceKm} km to ${nearestDestination.name}`}
           </Text>
+        </View>
+      )}
+
+      {/* Active filter pills */}
+      {filterStore.hasActiveFilters && (
+        <View style={styles.activeFiltersRow}>
+          {filterStore.geoRegion && (
+            <View style={styles.activePill}>
+              <Text style={styles.activePillText}>{filterStore.geoRegion}</Text>
+              <Pressable onPress={() => filterStore.setField('geoRegion', null)}>
+                <Ionicons name="close-circle" size={14} color={SAHEL.primary} />
+              </Pressable>
+            </View>
+          )}
+          {filterStore.environment && (
+            <View style={styles.activePill}>
+              <Text style={styles.activePillText}>{filterStore.environment === 'beach' ? '🏖 Beach' : '🏜 Desert'}</Text>
+              <Pressable onPress={() => filterStore.setField('environment', null)}>
+                <Ionicons name="close-circle" size={14} color={SAHEL.primary} />
+              </Pressable>
+            </View>
+          )}
+          {filterStore.serviceCategory && (
+            <View style={styles.activePill}>
+              <Text style={styles.activePillText}>{filterStore.serviceCategory}</Text>
+              <Pressable onPress={() => filterStore.setField('serviceCategory', null)}>
+                <Ionicons name="close-circle" size={14} color={SAHEL.primary} />
+              </Pressable>
+            </View>
+          )}
+          {filterStore.region && (
+            <View style={styles.activePill}>
+              <Text style={styles.activePillText}>{filterStore.region}</Text>
+              <Pressable onPress={() => filterStore.setField('region', null)}>
+                <Ionicons name="close-circle" size={14} color={SAHEL.primary} />
+              </Pressable>
+            </View>
+          )}
+          {filterStore.minRating > 0 && (
+            <View style={styles.activePill}>
+              <Text style={styles.activePillText}>⭐ {filterStore.minRating}+</Text>
+              <Pressable onPress={() => filterStore.setField('minRating', 0)}>
+                <Ionicons name="close-circle" size={14} color={SAHEL.primary} />
+              </Pressable>
+            </View>
+          )}
+          <Pressable onPress={filterStore.resetAll} style={styles.clearAllPill}>
+            <Text style={styles.clearAllText}>Clear all</Text>
+          </Pressable>
         </View>
       )}
 
@@ -489,28 +400,18 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 12, fontFamily: 'mon-b', color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase' },
   title: {
     fontSize: 24,
-    fontFamily: 'mon-b',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
-    lineHeight: 30,
+    fontFamily: 'mon-b', color: '#FFFFFF', letterSpacing: -0.3, lineHeight: 30,
   },
   heroAr: { fontSize: 15, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.95)', textAlign: 'right' },
   subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.85)', fontFamily: 'mon', lineHeight: 18 },
   bookBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 8,
-    marginTop: 6,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 999,
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8,
+    marginTop: 6, backgroundColor: '#FFFFFF', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999,
   },
   bookBtnText: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.primary },
   skeletonWrap: { gap: 16, marginTop: 8 },
 
-  // Search
+  // Search + Filter button
   searchPanel: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -536,57 +437,64 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  searchAccent: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon', color: '#1a1a1a', height: '100%' },
-
-  // Filter sections
-  filterSection: { paddingHorizontal: 20, marginBottom: 4 },
-  filterLabel: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.mutedText, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6, marginTop: 8 },
-  chipRow: { gap: 8, paddingHorizontal: 4 },
-  chip: {
-    flexDirection: 'row',
+  filterBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: SAHEL.border,
-    backgroundColor: '#FFFFFF',
-  },
-  chipActive: {
-    backgroundColor: SAHEL.primary,
-    borderColor: SAHEL.primary,
-  },
-  chipText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
-  chipTextActive: { color: '#FFFFFF' },
-
-  envChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: SAHEL.border,
-    backgroundColor: '#FFFFFF',
-  },
-  envEmoji: { fontSize: 16 },
-  envLabel: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark },
-
-  // Region chips (wilaya)
-  regionContainer: { height: 44, marginBottom: 8 },
-  regionList: { paddingHorizontal: 20, gap: 8, alignItems: 'center' },
-  regionChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
     justifyContent: 'center',
-    height: 34,
+    backgroundColor: SAHEL.accent,
+    shadowColor: SAHEL.accent,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    position: 'relative',
   },
-  regionLabel: { fontSize: 12, fontFamily: 'mon' },
+  filterBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: SAHEL.highlight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: SAHEL.accent,
+  },
+  filterBadgeText: { fontSize: 10, fontFamily: 'mon-b', color: '#FFFFFF' },
+
+  // Active filter pills
+  activeFiltersRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  activePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: SAHEL.primary + '12',
+    borderWidth: 1,
+    borderColor: SAHEL.primary + '30',
+  },
+  activePillText: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.primary, textTransform: 'capitalize' },
+  clearAllPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  clearAllText: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.mutedText, textDecorationLine: 'underline' },
 
   // Proximity
   proximityBadge: {
