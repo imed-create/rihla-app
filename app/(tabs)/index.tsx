@@ -27,6 +27,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CategoryBar from '@/components/CategoryBar';
 import DestinationCard from '@/components/DestinationCard';
 import SkeletonCard from '@/components/SkeletonCard';
+import MarketplaceCategoryGrid from '@/components/MarketplaceCategoryGrid';
 import { categoryColors, SAHEL } from '@/constants/Colors';
 import {
   DESTINATIONS,
@@ -216,6 +217,20 @@ export default function DiscoverScreen() {
 
       {/* Category Bar */}
       <CategoryBar />
+
+      {/* ── MARKETPLACE CATEGORIES ── */}
+      {!loading && (
+        <View style={styles.marketplaceSection}>
+          <View style={styles.marketplaceHeader}>
+            <Text style={styles.marketplaceTitle}>Browse Marketplace</Text>
+            <Pressable onPress={() => router.push('/search' as any)}>
+              <Text style={styles.marketplaceSeeAll}>See all →</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.marketplaceSub}>Find hotels, restaurants, guides, activities & more</Text>
+          <MarketplaceCategoryGrid />
+        </View>
+      )}
 
       {/* Nearest destination proximity badge */}
       {nearestDestination && nearestDistanceKm !== null && !loading && (
@@ -529,6 +544,22 @@ const styles = StyleSheet.create({
   listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40 },
   columnWrapper: { gap: 18 },
   cardSlot: { flex: 1 },
+
+  // Marketplace section
+  marketplaceSection: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  marketplaceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  marketplaceTitle: { fontSize: 19, fontFamily: 'mon-b', color: '#1a1a1a' },
+  marketplaceSeeAll: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.accent },
+  marketplaceSub: { fontSize: 13, fontFamily: 'mon', color: '#888888', marginBottom: 14 },
 
   // Empty
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 12 },

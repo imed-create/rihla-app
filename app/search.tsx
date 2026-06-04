@@ -24,7 +24,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SAHEL } from '@/constants/Colors';
 import { MARKETPLACE_CATEGORIES, getCategoryDef } from '@/constants/marketplaceCategories';
-import { DESTINATIONS } from '@/constants/destinations';
 import { MOCK_LISTINGS, getListingWilayas } from '@/constants/mockListings';
 import type { MarketplaceCategory, Listing } from '@/types/service';
 import { safeGoBack } from '@/utils/safeNavigation';
@@ -40,6 +39,22 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 ];
 
 const WILAYAS = getListingWilayas();
+
+function getDetailRoute(item: Listing): string {
+  switch (item.category) {
+    case 'hotel': return `/hotel/${item.id}`;
+    case 'restaurant': return `/restaurant/${item.id}`;
+    case 'beach': return `/beach-map/${item.id}`;
+    case 'rental': return `/rental/${item.id}`;
+    case 'activity': return `/activity/${item.id}`;
+    case 'event': return `/event/${item.id}`;
+    case 'guide': return `/guide/${item.id}`;
+    case 'photographer': return `/photographer/${item.id}`;
+    case 'driver': return `/driver/${item.id}`;
+    case 'experience': return `/experience/${item.id}`;
+    default: return `/listing/${item.id}`;
+  }
+}
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
@@ -123,7 +138,7 @@ export default function SearchScreen() {
     return (
       <Pressable
         style={[styles.resultCard, isWide && { width: '48%' }]}
-        onPress={() => router.push(`/listing/${item.id}` as any)}
+        onPress={() => router.push(getDetailRoute(item) as any)}
       >
         {item.cover_image_url ? (
           <View style={[styles.resultImage, { backgroundColor: catDef.color + '20' }]}>

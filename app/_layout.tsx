@@ -148,6 +148,7 @@ function RootLayoutNav() {
       <Stack.Screen name="experience/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="services/beach" options={{ headerShown: false }} />
       <Stack.Screen name="services/desert" options={{ headerShown: false }} />
+      <Stack.Screen name="marketplace/[category]" options={{ headerShown: false }} />
     </Stack>
   );
 }
