@@ -248,12 +248,21 @@ export default function DestinationHubScreen() {
 }
 
 // ── Listing Card ──
+function getDetailRoute(item: Listing): string {
+  switch (item.category) {
+    case 'hotel': return `/hotel/${item.id}`;
+    case 'restaurant': return `/restaurant/${item.id}`;
+    case 'beach': return `/beach-map/${item.id}`;
+    default: return `/listing/${item.id}`;
+  }
+}
+
 function ListingCard({ item, isWide }: { item: Listing; isWide: boolean }) {
   const catDef = getCategoryDef(item.category);
   return (
     <Pressable
       style={[styles.listingCard, isWide && { width: '48%' }]}
-      onPress={() => router.push(`/listing/${item.id}` as any)}
+      onPress={() => router.push(getDetailRoute(item) as any)}
     >
       <View style={[styles.listingImage, { backgroundColor: catDef.color + '15' }]}>
         <Ionicons name={catDef.icon as any} size={28} color={catDef.color} />
