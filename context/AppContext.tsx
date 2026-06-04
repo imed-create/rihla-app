@@ -246,6 +246,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         id: uid(),
         createdAt: new Date().toISOString(),
         status: 'pending',
+        service_variant: order.service_variant ?? 'food_delivery',
+        variant_fields: order.variant_fields ?? {
+          variant: 'food_delivery',
+          items: (order.items ?? []).map((item) => ({
+            item_id: item.menuItemId,
+            name: item.name,
+            quantity: item.quantity,
+            unit_price_dzd: item.priceDZD,
+            line_total_dzd: item.priceDZD * item.quantity,
+          })),
+          delivery_spot_label: order.spotLabel ?? 'Desk',
+          estimated_prep_minutes: 15,
+        },
       };
       saveOrders([newOrder, ...orders]);
       return newOrder;
