@@ -6,3 +6,5 @@ export * from './service';
 export * from './listing';
 export * from './app';
 export * from './airbnb-listing';
+export * from './review';
+export * from './itinerary';

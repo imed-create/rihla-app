@@ -20,13 +20,13 @@ import {
 } from '@/lib/dashboardStats';
 
 // ── PROVIDER TYPE (determines which dashboard panel to render) ──
-type ProviderType = 'beach_spot' | 'food_delivery' | 'camel_trek' | 'partner_activity';
+type ProviderType = 'beach_spot' | 'restaurant' | 'experience' | 'activity';
 
 const PROVIDER_TYPES: { key: ProviderType; label: string; icon: string; color: string }[] = [
   { key: 'beach_spot', label: 'Beach Spots', icon: 'umbrella-outline', color: SAHEL.accent },
-  { key: 'food_delivery', label: 'Food Delivery', icon: 'restaurant-outline', color: '#C56A39' },
-  { key: 'camel_trek', label: 'Camel Trek', icon: 'leaf-outline', color: SAHEL.highlight },
-  { key: 'partner_activity', label: 'Activities', icon: 'football-outline', color: SAHEL.primary },
+  { key: 'restaurant', label: 'Restaurant', icon: 'restaurant-outline', color: '#C56A39' },
+  { key: 'experience', label: 'Experiences', icon: 'sparkles-outline', color: SAHEL.highlight },
+  { key: 'activity', label: 'Activities', icon: 'bicycle-outline', color: SAHEL.primary },
 ];
 
 // ── MOCK DATA: Beach Spot Grid Controls ──
@@ -134,9 +134,9 @@ export default function BusinessDashboard() {
 
         {/* ── DYNAMIC PANEL: Based on providerType ── */}
         {providerType === 'beach_spot' && <BeachSpotPanel />}
-        {providerType === 'food_delivery' && <FoodDeliveryPanel />}
-        {providerType === 'camel_trek' && <CamelTrekPanel />}
-        {providerType === 'partner_activity' && <PartnerActivityPanel />}
+        {providerType === 'restaurant' && <FoodDeliveryPanel />}
+        {providerType === 'experience' && <CamelTrekPanel />}
+        {providerType === 'activity' && <PartnerActivityPanel />}
 
         {/* ── QUICK LINKS ── */}
         <View style={styles.quickLinks}>

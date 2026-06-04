@@ -246,9 +246,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         id: uid(),
         createdAt: new Date().toISOString(),
         status: 'pending',
-        service_variant: order.service_variant ?? 'food_delivery',
+        service_variant: order.service_variant ?? 'restaurant',
         variant_fields: order.variant_fields ?? {
-          variant: 'food_delivery',
+          variant: 'restaurant',
           items: (order.items ?? []).map((item) => ({
             item_id: item.menuItemId,
             name: item.name,

@@ -80,7 +80,7 @@ export type OrderItem = {
  * Carries grid selection metadata and hold countdown info.
  */
 export type BeachSpotOrderFields = {
-  variant: 'beach_spot';
+  variant: 'beach';
   /** Human-readable grid selection label (e.g., "Row B - Spot 4") */
   grid_selection_label: string;
   /** ISO 8601 timestamp when the 20-minute hold expires */
@@ -99,7 +99,7 @@ export type BeachSpotOrderFields = {
  * Validation fields specific to hotel_stay bookings.
  */
 export type HotelStayOrderFields = {
-  variant: 'hotel_stay';
+  variant: 'hotel';
   /** ISO 8601 check-in date */
   check_in_date: string;
   /** ISO 8601 check-out date */
@@ -117,7 +117,7 @@ export type HotelStayOrderFields = {
  * Tracks the full cart contents with item-level pricing.
  */
 export type FoodDeliveryOrderFields = {
-  variant: 'food_delivery';
+  variant: 'restaurant';
   /** Full list of ordered items with individual tracking */
   items: FoodOrderLine[];
   /** Delivery destination (beach spot label or desk number) */
@@ -146,7 +146,7 @@ export type FoodOrderLine = {
  * Validation fields specific to partner_activity bookings.
  */
 export type PartnerActivityOrderFields = {
-  variant: 'partner_activity';
+  variant: 'activity';
   /** The time slot booked (e.g., "10:00", "14:30") */
   time_slot: string;
   /** Duration of the session in minutes */
@@ -199,7 +199,7 @@ export type Order = {
   paid: boolean;
   /** ISO 8601 creation timestamp */
   createdAt: string;
-  /** Universal order items (used primarily by food_delivery) */
+  /** Universal order items (used primarily by restaurant orders) */
   items: OrderItem[];
   /** The marketplace vertical this order belongs to */
   service_variant?: ServiceVariant;
@@ -223,22 +223,22 @@ export type CreateOrderParams = Omit<Order, 'id' | 'createdAt' | 'status'> & {
 
 /** Type guard: check if order is a beach_spot order */
 export function isBeachSpotOrder(order: Order): order is Order & { variant_fields: BeachSpotOrderFields } {
-  return order.variant_fields?.variant === 'beach_spot';
+  return order.variant_fields?.variant === 'beach';
 }
 
 /** Type guard: check if order is a hotel_stay order */
 export function isHotelStayOrder(order: Order): order is Order & { variant_fields: HotelStayOrderFields } {
-  return order.variant_fields?.variant === 'hotel_stay';
+  return order.variant_fields?.variant === 'hotel';
 }
 
 /** Type guard: check if order is a food_delivery order */
 export function isFoodDeliveryOrder(order: Order): order is Order & { variant_fields: FoodDeliveryOrderFields } {
-  return order.variant_fields?.variant === 'food_delivery';
+  return order.variant_fields?.variant === 'restaurant';
 }
 
 /** Type guard: check if order is a partner_activity order */
 export function isPartnerActivityOrder(order: Order): order is Order & { variant_fields: PartnerActivityOrderFields } {
-  return order.variant_fields?.variant === 'partner_activity';
+  return order.variant_fields?.variant === 'activity';
 }
 
 /**
@@ -257,13 +257,13 @@ export function getOrderSummary(order: Order): string {
     return `${order.items.length} item(s) · ${order.totalDZD} DZD`;
   }
   switch (order.variant_fields.variant) {
-    case 'beach_spot':
+    case 'beach':
       return `Spot: ${order.variant_fields.grid_selection_label} (${order.variant_fields.zone} zone)`;
-    case 'hotel_stay':
+    case 'hotel':
       return `${order.variant_fields.nights_count} night(s) · ${order.variant_fields.room_type} · ${order.variant_fields.guest_count} guest(s)`;
-    case 'food_delivery':
+    case 'restaurant':
       return `${order.variant_fields.items.length} item(s) → ${order.variant_fields.delivery_spot_label}`;
-    case 'partner_activity':
+    case 'activity':
       return `${order.variant_fields.activity_category} · ${order.variant_fields.time_slot} · ${order.variant_fields.participant_count} pax`;
   }
 }
