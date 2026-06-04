@@ -24,12 +24,14 @@ import { getDestinationsByType } from '@/constants/destinations';
 import { useApp } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { useTranslation } from '@/context/I18nContext';
+import { useGeoFence } from '@/hooks/useGeoFence';
 
 export default function DiscoverScreen() {
   const { activeCategory, setActiveCategory } = useApp();
   const colors = useColors();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
+  const { sortedDestinations: geoSorted, nearestDistanceKm, nearestDestination } = useGeoFence({ categoryFilter: activeCategory, radiusKm: 500 });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,12 +77,9 @@ export default function DiscoverScreen() {
   }, [activeCategory, t]);
 
   const filteredDestinations = useMemo(() => {
-    let list = getDestinationsByType(activeCategory);
+    // Use geo-sorted list when available, otherwise fallback to static
+    let list = geoSorted.length > 0 ? [...geoSorted] : getDestinationsByType(activeCategory);
     const allLabel = t('discover.all');
-
-    if (activeCategory === 'beach') {
-      list = [...list].sort((a, b) => b.rating - a.rating);
-    }
 
     if (selectedRegion && selectedRegion !== allLabel) {
       list = list.filter((d) => d.region === selectedRegion);
@@ -94,7 +93,7 @@ export default function DiscoverScreen() {
     }
 
     return list;
-  }, [activeCategory, selectedRegion, searchQuery, t]);
+  }, [geoSorted, activeCategory, selectedRegion, searchQuery, t]);
 
   // ── Header rendered as ListHeaderComponent so it scrolls away ──
   const ListHeader = (
@@ -204,6 +203,18 @@ export default function DiscoverScreen() {
             );
           }}
         />
+      )}
+
+      {/* ── Nearest destination proximity badge ── */}
+      {nearestDestination && nearestDistanceKm !== null && !loading && (
+        <View style={styles.proximityBadge}>
+          <Ionicons name="navigate" size={14} color={SAHEL.accent} />
+          <Text style={styles.proximityText}>
+            {nearestDistanceKm < 1
+              ? `Nearby: ${nearestDestination.name}`
+              : `${nearestDistanceKm} km to ${nearestDestination.name}`}
+          </Text>
+        </View>
       )}
 
       {/* ── Section Header ── */}
@@ -407,6 +418,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { flex: 1, fontSize: 19, fontFamily: 'mon-b', color: '#1a1a1a' },
   sectionMeta: { fontSize: 12, fontFamily: 'mon-sb', color: '#888888' },
+  proximityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginHorizontal: 24,
+    marginTop: 4,
+    marginBottom: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: '#E6FAF7',
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+  },
+  proximityText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.primary },
 
   // List
   listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40 },

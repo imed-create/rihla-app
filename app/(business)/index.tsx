@@ -1,14 +1,17 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useApp } from '@/context/AppContext';
+import * as Haptics from 'expo-haptics';
 import ProTabShell from '@/components/pro/ProTabShell';
 import ProMenuShortcuts from '@/components/pro/ProMenuShortcuts';
+import ProQRScanner from '@/components/pro/ProQRScanner';
 import { PRO_THEME } from '@/constants/proNavigation';
 import { SAHEL } from '@/constants/Colors';
 import { useTranslation } from '@/context/I18nContext';
+import { showToast } from '@/components/Toast';
 import {
   activeFoodOrders,
   businessBookingsToday,
@@ -18,6 +21,7 @@ import {
 
 export default function BusinessDashboard() {
   const { user, bookings, orders } = useApp();
+  const [scannerOpen, setScannerOpen] = useState(false);
   const theme = PRO_THEME.business;
   const { t } = useTranslation();
   const name = user.kycData.businessName || user.name || 'Business';
@@ -58,10 +62,22 @@ export default function BusinessDashboard() {
           </View>
         </LinearGradient>
 
-        <Pressable style={styles.quickLink} onPress={() => router.push('/(business)/orders' as any)}>
-          <Ionicons name="fast-food-outline" size={20} color={SAHEL.accent} />
-          <Text style={styles.quickLinkText}>Live food orders →</Text>
-        </Pressable>
+        <View style={styles.quickLinks}>
+          <Pressable style={styles.quickLink} onPress={() => router.push('/(business)/orders' as any)}>
+            <Ionicons name="fast-food-outline" size={20} color={SAHEL.accent} />
+            <Text style={styles.quickLinkText}>Live food orders →</Text>
+          </Pressable>
+          <Pressable
+            style={styles.quickLink}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setScannerOpen(true);
+            }}
+          >
+            <Ionicons name="qr-code-outline" size={20} color={SAHEL.primary} />
+            <Text style={styles.quickLinkText}>Scan ticket QR →</Text>
+          </Pressable>
+        </View>
 
         <Text style={styles.sectionTitle}>Overview</Text>
         <View style={styles.statsGrid}>
@@ -78,6 +94,16 @@ export default function BusinessDashboard() {
 
         <ProMenuShortcuts role="business" />
       </ScrollView>
+      <Modal visible={scannerOpen} animationType="slide" onRequestClose={() => setScannerOpen(false)}>
+        <ProQRScanner
+          onScanned={(data) => {
+            setScannerOpen(false);
+            showToast(`Ticket verified: ${data}`, 'success');
+          }}
+          onClose={() => setScannerOpen(false)}
+          title="Scan Traveler Ticket"
+        />
+      </Modal>
     </ProTabShell>
   );
 }
@@ -90,7 +116,9 @@ const styles = StyleSheet.create({
   verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   verifiedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: SAHEL.accent },
   verifiedText: { fontSize: 12, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.9)' },
+  quickLinks: { flexDirection: 'row', gap: 10 },
   quickLink: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -100,7 +128,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SAHEL.border,
   },
-  quickLinkText: { fontFamily: 'mon-sb', fontSize: 14, color: SAHEL.primary },
+  quickLinkText: { fontFamily: 'mon-sb', fontSize: 13, color: SAHEL.primary, flexShrink: 1 },
   sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   statCard: {

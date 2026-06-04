@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -7,9 +7,11 @@ import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
 import ProTabShell from '@/components/pro/ProTabShell';
 import ProMenuShortcuts from '@/components/pro/ProMenuShortcuts';
+import ProQRScanner from '@/components/pro/ProQRScanner';
 import { PRO_THEME } from '@/constants/proNavigation';
 import { SAHEL } from '@/constants/Colors';
 import { useTranslation } from '@/context/I18nContext';
+import { showToast } from '@/components/Toast';
 import {
   partnerEarningsDzd,
   partnerEarningsThisWeek,
@@ -17,6 +19,7 @@ import {
 
 export default function PartnerDashboard() {
   const { user, serviceRequests, partnerOnline, setPartnerOnline } = useApp();
+  const [scannerOpen, setScannerOpen] = useState(false);
   const theme = PRO_THEME.partner;
   const { t } = useTranslation();
 
@@ -93,6 +96,17 @@ export default function PartnerDashboard() {
           </Text>
         </Pressable>
 
+        <Pressable
+          style={styles.scanLink}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setScannerOpen(true);
+          }}
+        >
+          <Ionicons name="qr-code-outline" size={20} color={SAHEL.highlight} />
+          <Text style={styles.scanLinkText}>Scan traveler ticket →</Text>
+        </Pressable>
+
         <Text style={styles.sectionTitle}>Overview</Text>
         <View style={styles.statsGrid}>
           {stats.map((s) => (
@@ -108,6 +122,16 @@ export default function PartnerDashboard() {
 
         <ProMenuShortcuts role="partner" />
       </ScrollView>
+      <Modal visible={scannerOpen} animationType="slide" onRequestClose={() => setScannerOpen(false)}>
+        <ProQRScanner
+          onScanned={(data) => {
+            setScannerOpen(false);
+            showToast(`Ticket verified: ${data}`, 'success');
+          }}
+          onClose={() => setScannerOpen(false)}
+          title="Scan Traveler Ticket"
+        />
+      </Modal>
     </ProTabShell>
   );
 }
@@ -145,4 +169,15 @@ const styles = StyleSheet.create({
   statIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: 20, fontFamily: 'mon-b', color: SAHEL.dark },
   statLabel: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  scanLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: SAHEL.card,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SAHEL.border,
+  },
+  scanLinkText: { fontFamily: 'mon-sb', fontSize: 14, color: SAHEL.highlight },
 });
