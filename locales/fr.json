@@ -31,7 +31,10 @@
     "heroTitle": "Séjours et services locaux, sélectionnés avec soin.",
     "heroSub": "Plage, Sahara, montagne — une expérience fluide.",
     "sectionTitle": "Les coups de cœur des voyageurs",
-    "options": "{{count}} options"
+    "options": "{{count}} options",
+    "heroAr": "Découvrez les plus beaux littoraux d'Algérie",
+    "bookNow": "Réserver",
+    "noDestinations": "Aucune destination trouvée dans cette zone"
   },
   "profile": {
     "title": "Profil",

@@ -101,6 +101,12 @@ export default function DiscoverScreen() {
     <View>
       {/* ── Top Bar ── */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.push('/(modals)/settings' as any)}
+          style={styles.headerIconBtn}
+        >
+          <Ionicons name="menu" size={22} color="#1a1a1a" />
+        </TouchableOpacity>
         <View style={styles.brandLockup}>
           <View style={styles.logoMark}>
             <Ionicons name="home" size={18} color="#FFFFFF" />
@@ -108,12 +114,6 @@ export default function DiscoverScreen() {
           <Text style={styles.brandText}>{t('brand.name')}</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity
-            onPress={() => router.push('/(modals)/settings' as any)}
-            style={styles.headerIconBtn}
-          >
-            <Ionicons name="settings-outline" size={20} color="#1a1a1a" />
-          </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/(tabs)/wishlists' as any)} style={styles.headerIconBtn}>
             <Ionicons name="heart-outline" size={20} color="#1a1a1a" />
           </TouchableOpacity>
@@ -130,14 +130,14 @@ export default function DiscoverScreen() {
           <View style={styles.heroCopy}>
             <Text style={styles.kicker}>{t('discover.kicker')}</Text>
             <Text style={styles.title}>{t('discover.heroTitle')}</Text>
-            <Text style={styles.heroAr}>اكتشف أجمل شواطئ الجزائر</Text>
+            <Text style={styles.heroAr}>{t('discover.heroAr')}</Text>
             <Text style={styles.subtitle}>{t('discover.heroSub')}</Text>
             <TouchableOpacity
               style={styles.bookBtn}
               activeOpacity={0.9}
               onPress={() => router.push('/services/beach/spots' as any)}
             >
-              <Text style={styles.bookBtnText}>Book Now</Text>
+              <Text style={styles.bookBtnText}>{t('discover.bookNow')}</Text>
               <Ionicons name="arrow-forward" size={16} color={SAHEL.primary} />
             </TouchableOpacity>
           </View>
@@ -253,7 +253,7 @@ export default function DiscoverScreen() {
           loading ? null : (
             <View style={styles.emptyContainer}>
               <Ionicons name="map-outline" size={48} color={SAHEL.border} />
-              <Text style={styles.emptyText}>No destinations found in this area</Text>
+              <Text style={styles.emptyText}>{t('discover.noDestinations')}</Text>
             </View>
           )
         }

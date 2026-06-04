@@ -31,7 +31,10 @@
     "heroTitle": "Find stays, places, and local services that feel handpicked.",
     "heroSub": "Beach days, Sahara nights, mountain escapes — one polished flow.",
     "sectionTitle": "Places guests are loving",
-    "options": "{{count}} options"
+    "options": "{{count}} options",
+    "heroAr": "Discover Algeria's most stunning coastal escapes",
+    "bookNow": "Book Now",
+    "noDestinations": "No destinations found in this area"
   },
   "profile": {
     "title": "Profile",
