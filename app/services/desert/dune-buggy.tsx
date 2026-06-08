@@ -1,4 +1,4 @@
-import DesertBookingScreen from "@/components/DesertBookingScreen";
+import DesertBookingScreen from '@/components/shared/DesertBookingScreen';
 
 const VEHICLES = [
   { id: "quad", label: "Quad ATV 450cc", desc: "Nimble, rugged single-rider quad", price: 5000 },

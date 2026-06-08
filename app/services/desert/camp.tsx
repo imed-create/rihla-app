@@ -1,4 +1,4 @@
-import DesertBookingScreen from "@/components/DesertBookingScreen";
+import DesertBookingScreen from '@/components/shared/DesertBookingScreen';
 
 const TIERS = [
   { id: "standard", label: "Standard Bivouac", desc: "Cozy wool tent and sleeping bag", price: 12000 },

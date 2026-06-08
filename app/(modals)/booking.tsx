@@ -12,8 +12,8 @@ import Animated, { FadeIn, FadeOut, SlideInDown } from 'react-native-reanimated'
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { TextInput } from 'react-native-gesture-handler';
-import { defaultStyles } from '@/constants/Styles';
-import Colors, { SAHEL } from '@/constants/Colors';
+import { defaultStyles } from '@/constants/theme';
+import Colors, { RIHLA } from '@/constants/theme';
 import { places } from '@/assets/data/places';
 import { useRouter } from 'expo-router';
 // @ts-expect-error — no bundled types for react-native-modern-datepicker
@@ -46,7 +46,7 @@ export function LegacyBookingModal({ onClose }: BookingModalProps) {
   return (
     <BlurView intensity={70} style={styles.container} tint="light">
       <Pressable onPress={onClose} style={styles.closeBtn} accessibilityLabel="Close booking modal">
-        <Ionicons name="close" size={24} color={SAHEL.dark} />
+        <Ionicons name="close" size={24} color={RIHLA.dark} />
       </Pressable>
 
       <View style={styles.card}>
@@ -66,7 +66,7 @@ export function LegacyBookingModal({ onClose }: BookingModalProps) {
         {openCard == 0 && (
           <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.cardBody}>
             <View style={styles.searchSection}>
-              <Ionicons style={styles.searchIcon} name="search-outline" size={20} color={SAHEL.dark} />
+              <Ionicons style={styles.searchIcon} name="search-outline" size={20} color={RIHLA.dark} />
               <TextInput
                 style={styles.inputField}
                 placeholder="Search destinations"
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 100,
-    backgroundColor: SAHEL.background,
+    backgroundColor: RIHLA.background,
   },
   closeBtn: {
     position: 'absolute',
@@ -233,14 +233,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
   },
   card: {
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     margin: 10,
     elevation: 4,
@@ -250,13 +250,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 2, height: 2 },
     gap: 20,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
   },
   cardHeader: {
     fontFamily: 'mon-b',
     fontSize: 24,
     padding: 20,
-    color: SAHEL.dark,
+    color: RIHLA.dark,
   },
   cardBody: {
     paddingHorizontal: 20,
@@ -272,9 +272,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     borderRadius: 8,
     marginBottom: 16,
   },
@@ -284,9 +284,9 @@ const styles = StyleSheet.create({
   inputField: {
     flex: 1,
     padding: 10,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     fontFamily: 'mon',
-    color: SAHEL.dark,
+    color: RIHLA.dark,
   },
   placesContainer: {
     flexDirection: 'row',
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   itemBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SAHEL.border,
+    borderBottomColor: RIHLA.border,
   },
   footerRow: {
     flexDirection: 'row',
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'mon-sb',
     textDecorationLine: 'underline',
-    color: SAHEL.dark,
+    color: RIHLA.dark,
   },
   searchBtn: {
     paddingRight: 20,

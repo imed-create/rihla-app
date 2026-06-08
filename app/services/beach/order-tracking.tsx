@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showToast } from '@/components/Toast';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
 import type { OrderStatus } from '@/types/order';
 import { safeGoBack } from '@/utils/safeNavigation';
@@ -91,7 +91,7 @@ export default function OrderTrackingScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <Pressable onPress={() => safeGoBack()} style={styles.back}>
-        <Ionicons name="arrow-back" size={24} color={SAHEL.dark} />
+        <Ionicons name="arrow-back" size={24} color={RIHLA.dark} />
       </Pressable>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24 }}>
@@ -122,7 +122,7 @@ export default function OrderTrackingScreen() {
                     <Ionicons
                       name={step.icon}
                       size={16}
-                      color={done ? '#fff' : SAHEL.mutedText}
+                      color={done ? '#fff' : RIHLA.mutedText}
                     />
                   )}
                 </View>
@@ -162,7 +162,7 @@ export default function OrderTrackingScreen() {
           style={styles.outlineBtn}
           onPress={() => Linking.openURL('tel:+213555000000')}
         >
-          <Ionicons name="call-outline" size={18} color={SAHEL.primary} />
+          <Ionicons name="call-outline" size={18} color={RIHLA.primary} />
           <Text style={styles.outlineBtnText}>Contact Beach Staff</Text>
         </Pressable>
 
@@ -177,10 +177,10 @@ export default function OrderTrackingScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: SAHEL.background },
+  root: { flex: 1, backgroundColor: RIHLA.background },
   back: { padding: 16 },
-  title: { fontSize: 26, fontFamily: 'mon-b', color: SAHEL.dark },
-  orderId: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText, marginBottom: 20 },
+  title: { fontSize: 26, fontFamily: 'mon-b', color: RIHLA.dark },
+  orderId: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, marginBottom: 20 },
   stepper: { gap: 16, marginBottom: 24, position: 'relative' },
   stepperTrackWrap: { position: 'absolute', left: 19, top: 12, bottom: 12, width: 4, zIndex: 0 },
   trackBg: {
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    backgroundColor: SAHEL.border,
+    backgroundColor: RIHLA.border,
     borderRadius: 2,
   },
   trackFill: {
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     height: '100%',
-    backgroundColor: SAHEL.accent,
+    backgroundColor: RIHLA.accent,
     borderRadius: 2,
   },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 14, zIndex: 1 },
@@ -205,59 +205,59 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SAHEL.border,
+    backgroundColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circleDone: { backgroundColor: SAHEL.accent },
-  circleActive: { backgroundColor: SAHEL.primary },
+  circleDone: { backgroundColor: RIHLA.accent },
+  circleActive: { backgroundColor: RIHLA.primary },
   stepText: { flex: 1 },
-  stepLabel: { fontSize: 15, fontFamily: 'mon', color: SAHEL.mutedText },
-  stepLabelBold: { fontFamily: 'mon-b', color: SAHEL.dark },
-  stepTime: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 2 },
+  stepLabel: { fontSize: 15, fontFamily: 'mon', color: RIHLA.mutedText },
+  stepLabelBold: { fontFamily: 'mon-b', color: RIHLA.dark },
+  stepTime: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
   card: {
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 16,
     gap: 8,
     marginBottom: 16,
   },
-  cardTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 4 },
-  spot: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.accent, marginBottom: 8 },
+  cardTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 4 },
+  spot: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent, marginBottom: 8 },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  itemName: { fontSize: 14, fontFamily: 'mon', color: SAHEL.dark },
-  itemPrice: { fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
+  itemName: { fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
+  itemPrice: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 8,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: SAHEL.border,
+    borderTopColor: RIHLA.border,
   },
-  totalLabel: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  totalVal: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.primary },
+  totalLabel: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  totalVal: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
   outlineBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: SAHEL.primary,
+    borderColor: RIHLA.primary,
     borderRadius: 14,
     paddingVertical: 14,
     marginBottom: 10,
   },
-  outlineBtnText: { fontFamily: 'mon-b', fontSize: 15, color: SAHEL.primary },
+  outlineBtnText: { fontFamily: 'mon-b', fontSize: 15, color: RIHLA.primary },
   rateBtn: {
-    backgroundColor: SAHEL.highlight,
+    backgroundColor: RIHLA.highlight,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   rateBtnText: { fontFamily: 'mon-b', fontSize: 15, color: '#fff' },
-  missing: { fontSize: 16, fontFamily: 'mon-b', textAlign: 'center', color: SAHEL.dark },
-  link: { textAlign: 'center', color: SAHEL.accent, marginTop: 12, fontFamily: 'mon-sb' },
+  missing: { fontSize: 16, fontFamily: 'mon-b', textAlign: 'center', color: RIHLA.dark },
+  link: { textAlign: 'center', color: RIHLA.accent, marginTop: 12, fontFamily: 'mon-sb' },
 });

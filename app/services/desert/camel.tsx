@@ -1,4 +1,4 @@
-import DesertBookingScreen from "@/components/DesertBookingScreen";
+import DesertBookingScreen from '@/components/shared/DesertBookingScreen';
 
 const TREK_TYPES = [
   { id: "sunset", label: "Sunset Trek", desc: "2 hours during golden hour", price: 2500 },

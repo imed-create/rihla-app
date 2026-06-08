@@ -1,5 +1,5 @@
 /**
- * SAHEL Beach & Spot Types
+ * RIHLA Beach & Spot Types
  * ------------------------
  * Defines the beach zone architecture, spot grid matrix, and
  * booking types with polymorphic support for grid selection

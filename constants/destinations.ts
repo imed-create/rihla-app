@@ -53,6 +53,7 @@ export interface Destination {
   services: string[]; // service IDs available at this destination
   lat: number;
   lng: number;
+  price_dzd?: number;
 }
 
 export const DESTINATIONS: Destination[] = [

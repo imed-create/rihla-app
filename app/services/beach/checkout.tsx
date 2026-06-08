@@ -1,5 +1,5 @@
 /**
- * SAHEL — Cart & Checkout Screen
+ * RIHLA — Cart & Checkout Screen
  * ──────────────────────────────
  * Order summary, delivery spot confirmation, payment method selection
  * (Chargily online payment or Cash on Delivery), and final order placement.
@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showToast } from '@/components/Toast';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import { orderTrackingHref } from '@/utils/router';
@@ -40,14 +40,14 @@ const PAYMENT_METHODS: { key: PaymentMethod; label: string; icon: string; desc: 
     label: 'Cash on Delivery',
     icon: 'cash-outline',
     desc: 'Pay when your order arrives at your spot',
-    color: SAHEL.accent,
+    color: RIHLA.accent,
   },
   {
     key: 'chargily',
     label: 'Pay Online',
     icon: 'card-outline',
     desc: 'Secure payment via Chargily (Visum, CCP, BaridiMob)',
-    color: SAHEL.primary,
+    color: RIHLA.primary,
   },
 ];
 
@@ -128,9 +128,9 @@ export default function CheckoutScreen() {
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       {/* Header */}
-      <LinearGradient colors={[SAHEL.primary, SAHEL.accent]} style={[styles.header, { paddingTop: topPad + 12 }]}>
+      <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </Pressable>
@@ -145,7 +145,7 @@ export default function CheckoutScreen() {
         {/* ── DELIVERY INFO ── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="location-outline" size={18} color={SAHEL.accent} />
+            <Ionicons name="location-outline" size={18} color={RIHLA.accent} />
             <Text style={styles.sectionTitle}>Delivery Location</Text>
           </View>
           <View style={styles.deliveryCard}>
@@ -154,14 +154,14 @@ export default function CheckoutScreen() {
               <Text style={styles.deliverySpot}>{spotLabel}</Text>
               <Text style={styles.deliveryBeach}>Sidi Fredj Beach · Algiers</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={SAHEL.mutedText} />
+            <Ionicons name="chevron-forward" size={18} color={RIHLA.mutedText} />
           </View>
         </View>
 
         {/* ── ORDER SUMMARY ── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="receipt-outline" size={18} color={SAHEL.primary} />
+            <Ionicons name="receipt-outline" size={18} color={RIHLA.primary} />
             <Text style={styles.sectionTitle}>Order Summary</Text>
           </View>
           <View style={styles.summaryCard}>
@@ -181,7 +181,7 @@ export default function CheckoutScreen() {
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery</Text>
-              <Text style={[styles.summaryValue, { color: SAHEL.accent }]}>
+              <Text style={[styles.summaryValue, { color: RIHLA.accent }]}>
                 {deliveryFee === 0 ? 'FREE' : `${deliveryFee.toLocaleString()} DZD`}
               </Text>
             </View>
@@ -196,7 +196,7 @@ export default function CheckoutScreen() {
         {/* ── PAYMENT METHOD ── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="wallet-outline" size={18} color={SAHEL.highlight} />
+            <Ionicons name="wallet-outline" size={18} color={RIHLA.highlight} />
             <Text style={styles.sectionTitle}>Payment Method</Text>
           </View>
           {PAYMENT_METHODS.map((pm) => (
@@ -241,7 +241,7 @@ export default function CheckoutScreen() {
 
         {/* ── ESTIMATED TIME ── */}
         <View style={styles.etaCard}>
-          <Ionicons name="time-outline" size={18} color={SAHEL.accent} />
+          <Ionicons name="time-outline" size={18} color={RIHLA.accent} />
           <Text style={styles.etaText}>Estimated delivery: 15–25 minutes</Text>
         </View>
       </ScrollView>
@@ -291,52 +291,52 @@ const styles = StyleSheet.create({
   // Sections
   section: { marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  sectionTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
+  sectionTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
 
   // Delivery
   deliveryCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 14,
   },
-  deliveryDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: SAHEL.accent },
-  deliverySpot: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  deliveryBeach: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 2 },
+  deliveryDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: RIHLA.accent },
+  deliverySpot: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  deliveryBeach: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
 
   // Summary
   summaryCard: {
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 16,
     gap: 10,
   },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  summaryQty: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.mutedText, minWidth: 24 },
-  summaryName: { fontSize: 14, fontFamily: 'mon', color: SAHEL.dark, flexShrink: 1 },
-  summaryPrice: { fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
-  summaryLabel: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText },
-  summaryValue: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark },
-  divider: { height: 1, backgroundColor: SAHEL.border, marginVertical: 4 },
-  totalLabel: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
-  totalValue: { fontSize: 20, fontFamily: 'mon-b', color: SAHEL.primary },
+  summaryQty: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.mutedText, minWidth: 24 },
+  summaryName: { fontSize: 14, fontFamily: 'mon', color: RIHLA.dark, flexShrink: 1 },
+  summaryPrice: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
+  summaryLabel: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
+  summaryValue: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
+  divider: { height: 1, backgroundColor: RIHLA.border, marginVertical: 4 },
+  totalLabel: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
+  totalValue: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.primary },
 
   // Payment
   paymentCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 14,
     marginBottom: 10,
   },
@@ -347,14 +347,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  paymentLabel: { fontSize: 15, fontFamily: 'mon-sb', color: SAHEL.dark },
-  paymentDesc: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 2 },
+  paymentLabel: { fontSize: 15, fontFamily: 'mon-sb', color: RIHLA.dark },
+  paymentDesc: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
   radio: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
-  etaText: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.primary },
+  etaText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary },
 
   // Bottom bar
   bottomBar: {
@@ -382,22 +382,22 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 20,
     paddingTop: 14,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderTopWidth: 1,
-    borderTopColor: SAHEL.border,
+    borderTopColor: RIHLA.border,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 12,
   },
   bottomInfo: { flex: 1 },
-  bottomTotal: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.primary },
-  bottomItems: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
+  bottomTotal: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+  bottomItems: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
   orderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 14,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import CountdownTimer from '@/components/CountdownTimer';
+import CountdownTimer from '@/components/shared/CountdownTimer';
 import { BEACH_ACCENT } from '@/constants/beachLayout';
 
 export default function SpotHoldBanner({

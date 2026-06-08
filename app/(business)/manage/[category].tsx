@@ -19,7 +19,7 @@ import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import type { MarketplaceCategory } from '@/types/service';
 import { safeGoBack } from '@/utils/safeNavigation';
@@ -172,20 +172,20 @@ export default function BusinessManageScreen() {
   const [isListed, setIsListed] = useState(true);
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* ── HEADER ── */}
       <View style={[styles.header, { paddingTop: topPad }]}>
         <Pressable style={styles.backBtn} onPress={() => safeGoBack()}>
-          <Ionicons name="arrow-back" size={22} color={SAHEL.dark} />
+          <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Manage {catDef.label}</Text>
           <Text style={styles.headerSub}>Your business dashboard</Text>
         </View>
         <Pressable style={styles.settingsBtn}>
-          <Ionicons name="settings-outline" size={22} color={SAHEL.primary} />
+          <Ionicons name="settings-outline" size={22} color={RIHLA.primary} />
         </Pressable>
       </View>
 
@@ -243,7 +243,7 @@ export default function BusinessManageScreen() {
         {/* ── QUICK TIPS ── */}
         <View style={styles.section}>
           <View style={styles.tipCard}>
-            <Ionicons name="bulb-outline" size={18} color={SAHEL.accent} />
+            <Ionicons name="bulb-outline" size={18} color={RIHLA.accent} />
             <View style={{ flex: 1 }}>
               <Text style={styles.tipTitle}>Pro Tip</Text>
               <Text style={styles.tipText}>
@@ -264,35 +264,35 @@ export default function BusinessManageScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, gap: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: SAHEL.card, borderWidth: 1, borderColor: SAHEL.border, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: RIHLA.card, borderWidth: 1, borderColor: RIHLA.border, alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1 },
-  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.dark },
-  headerSub: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
-  settingsBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: SAHEL.card, borderWidth: 1, borderColor: SAHEL.border, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
+  headerSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  settingsBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: RIHLA.card, borderWidth: 1, borderColor: RIHLA.border, alignItems: 'center', justifyContent: 'center' },
 
   // Status
-  statusCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 8, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, padding: 14 },
+  statusCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 8, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },
   statusLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark },
+  statusText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
 
   // Stats
   section: { paddingHorizontal: 20, paddingTop: 16 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 12 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { width: '47%', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, padding: 14, gap: 6 },
+  statCard: { width: '47%', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14, gap: 6 },
   statIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.dark },
+  statValue: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
   statLabel: { fontSize: 12, fontFamily: 'mon', color: '#94A3B8' },
 
   // Actions
   actionList: { gap: 8 },
-  actionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, padding: 14 },
-  actionIconWrap: { width: 42, height: 42, borderRadius: 12, backgroundColor: SAHEL.muted, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { flex: 1, fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
+  actionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },
+  actionIconWrap: { width: 42, height: 42, borderRadius: 12, backgroundColor: RIHLA.muted, alignItems: 'center', justifyContent: 'center' },
+  actionLabel: { flex: 1, fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
 
   // Tips
   tipCard: { flexDirection: 'row', gap: 10, backgroundColor: '#F0FDFA', borderRadius: 12, padding: 14 },
-  tipTitle: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 4 },
+  tipTitle: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 4 },
   tipText: { fontSize: 12, fontFamily: 'mon', color: '#475569', lineHeight: 17 },
 });

@@ -1,82 +1,93 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Modal } from 'react-native';
+/**
+ * RIHLA — Business Owner Dashboard Home
+ * ──────────────────────────────────────
+ * STEP 2 OF PROMPTFULL: "Zero-State" Dashboard Hub
+ *
+ * Once KYC is approved, the user lands here.
+ * - If they have NO listings → premium zero-state with "＋ List Your Property" CTA
+ * - If they HAVE listings → active "Hotel Command Center" dashboard
+ *
+ * Tab structure (PROMPTFULL §Re-Architecting):
+ *   Tab 1: 📊 Operations  — Live stats, check-ins/outs, QR scanner, booking feed
+ *   Tab 2: 🗓️ Inventory   — Availability calendar + room status matrix
+ *   Tab 3: 🏢 Property    — Listing CRUD, edit details
+ *   Tab 4: 📈 Analytics   — Reviews engine, revenue analytics
+ */
+
+import React, { useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import * as Haptics from 'expo-haptics';
-import ProTabShell from '@/components/pro/ProTabShell';
-import ProMenuShortcuts from '@/components/pro/ProMenuShortcuts';
-import ProQRScanner from '@/components/pro/ProQRScanner';
+import ProTabShell from '@/components/dashboard/TabShell';
 import { PRO_THEME } from '@/constants/proNavigation';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { useTranslation } from '@/context/I18nContext';
-import { showToast } from '@/components/Toast';
-import {
-  activeFoodOrders,
-  businessBookingsToday,
-  businessRevenueDzd,
-  pendingBusinessBookings,
-} from '@/lib/dashboardStats';
+import { getCategoryDef, MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
+import { useBusinessAssets } from '@/store/useBusinessAssets';
 
-// ── PROVIDER TYPE (determines which dashboard panel to render) ──
-type ProviderType = 'beach_spot' | 'restaurant' | 'experience' | 'activity';
+// Dashboard components
+import HotelOverview from '@/components/dashboard/hotel/HotelOverview';
+import KitchenOrderTickets from '@/components/dashboard/restaurant/KitchenOrderTickets';
+import BeachDashboard from '@/components/dashboard/BeachDashboard';
+import ActivityDashboard from '@/components/dashboard/ActivityDashboard';
+import EventDashboard from '@/components/dashboard/EventDashboard';
+import DispatchCalendar from '@/components/dashboard/guide/DispatchCalendar';
+import DriverDashboard from './dashboards/driver';
+import PhotographerDashboard from './dashboards/photographer';
+import AssetInventoryList from '@/components/dashboard/rental/AssetInventoryList';
 
-const PROVIDER_TYPES: { key: ProviderType; label: string; icon: string; color: string }[] = [
-  { key: 'beach_spot', label: 'Beach Spots', icon: 'umbrella-outline', color: SAHEL.accent },
-  { key: 'restaurant', label: 'Restaurant', icon: 'restaurant-outline', color: '#C56A39' },
-  { key: 'experience', label: 'Experiences', icon: 'sparkles-outline', color: SAHEL.highlight },
-  { key: 'activity', label: 'Activities', icon: 'bicycle-outline', color: SAHEL.primary },
-];
+const DASHBOARD_MAP: Record<string, React.ComponentType> = {
+  hotel: HotelOverview,
+  restaurant: KitchenOrderTickets,
+  beach: BeachDashboard,
+  activity: ActivityDashboard,
+  event: EventDashboard,
+  guide: DispatchCalendar,
+  driver: DriverDashboard,
+  experience: DispatchCalendar,
+  photographer: PhotographerDashboard,
+  rental: AssetInventoryList,
+};
 
-// ── MOCK DATA: Beach Spot Grid Controls ──
-const MOCK_SPOTS = [
-  { id: 'A1', zone: 'family', status: 'available' as const, price: 1000 },
-  { id: 'A2', zone: 'family', status: 'occupied' as const, price: 1000 },
-  { id: 'A3', zone: 'family', status: 'available' as const, price: 1000 },
-  { id: 'A4', zone: 'vip', status: 'available' as const, price: 3000 },
-  { id: 'B1', zone: 'family', status: 'occupied' as const, price: 1000 },
-  { id: 'B2', zone: 'family', status: 'available' as const, price: 1000 },
-  { id: 'B3', zone: 'vip', status: 'occupied' as const, price: 3000 },
-  { id: 'B4', zone: 'vip', status: 'available' as const, price: 3000 },
-];
-
-// ── MOCK DATA: Camel Trek Fleet ──
-const MOCK_FLEET = [
-  { id: 'camel-1', name: 'Caravan Alpha', status: 'active', capacity: 8, guide: 'Yacine', nextDeparture: '09:00' },
-  { id: 'camel-2', name: 'Caravan Bravo', status: 'available', capacity: 6, guide: 'Amina', nextDeparture: '11:00' },
-  { id: 'camel-3', name: 'Quad Fleet A', status: 'active', capacity: 4, guide: 'Karim', nextDeparture: '10:30' },
-  { id: 'dune-buggy-1', name: 'Dune Buggy X1', status: 'maintenance', capacity: 2, guide: '—', nextDeparture: '—' },
-];
-
-// ── MOCK DATA: Kitchen Pipeline ──
-const MOCK_KITCHEN = [
-  { id: 'k1', item: 'Couscous Royal', qty: 3, status: 'preparing', elapsed: '8 min' },
-  { id: 'k2', item: 'Fresh Orange Juice x6', qty: 6, status: 'ready', elapsed: '2 min' },
-  { id: 'k3', item: 'Grilled Sea Bass', qty: 1, status: 'preparing', elapsed: '15 min' },
-  { id: 'k4', item: 'Mint Tea x4', qty: 4, status: 'pending', elapsed: '—' },
-];
+const TYPE_GRADIENTS: Record<string, [string, string]> = {
+  hotel:        ['#1A6B3A', '#0F4027'],
+  restaurant:   ['#C56A39', '#A0472A'],
+  beach:        ['#00a896', '#007a6e'],
+  rental:       ['#6C63FF', '#4E46CC'],
+  activity:     ['#E76F51', '#C44D2E'],
+  event:        ['#A855F7', '#8B3FD4'],
+  guide:        ['#8B5E3C', '#6B4226'],
+  photographer: ['#FF499E', '#CC2A78'],
+  driver:       ['#0a2540', '#061527'],
+  experience:   ['#f4a261', '#e07d38'],
+};
 
 export default function BusinessDashboard() {
-  const { user, bookings, orders } = useApp();
-  const [scannerOpen, setScannerOpen] = useState(false);
-  const [providerType, setProviderType] = useState<ProviderType>('beach_spot');
+  const { user, updateUser } = useApp();
+  const { getAssetCount } = useBusinessAssets();
+  const [changingType, setChangingType] = React.useState(false);
   const theme = PRO_THEME.business;
   const { t } = useTranslation();
-  const name = user.kycData.businessName || user.name || 'Business';
 
-  const stats = useMemo(() => {
-    const today = businessBookingsToday(bookings);
-    const revenue = businessRevenueDzd(bookings, ['confirmed', 'active', 'completed']);
-    const foodOrders = activeFoodOrders(orders);
-    const pending = pendingBusinessBookings(bookings);
-    return [
-      { label: "Today's Bookings", value: String(today.length), icon: 'calendar-outline' as const, color: SAHEL.accent },
-      { label: 'Revenue (DZD)', value: revenue.toLocaleString(), icon: 'cash-outline' as const, color: SAHEL.highlight },
-      { label: 'Active Orders', value: String(foodOrders.length), icon: 'restaurant-outline' as const, color: SAHEL.primary },
-      { label: 'Pending', value: String(pending.length), icon: 'time-outline' as const, color: '#94A3B8' },
-    ];
-  }, [bookings, orders]);
+  const businessType = (user.kycData?.businessType ?? '').toLowerCase();
+  const catDef = businessType ? getCategoryDef(businessType as any) : null;
+  const heroGradient = TYPE_GRADIENTS[businessType] ?? ['#0a2540', '#061527'];
+  const businessName = user.kycData?.businessName || user.name || 'My Business';
+  const ownerName = user.kycData?.fullName || user.name || 'Owner';
+
+  const hasListings = useMemo(() => getAssetCount(businessType) > 0, [businessType, getAssetCount]);
+  const SpecializedDashboard = DASHBOARD_MAP[businessType] ?? null;
 
   const settingsBtn = (
     <Pressable onPress={() => router.push('/(modals)/settings' as any)} style={{ padding: 8 }}>
@@ -84,391 +95,304 @@ export default function BusinessDashboard() {
     </Pressable>
   );
 
+  const handleChangeType = (newType: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    updateUser({ kycData: { ...user.kycData, businessType: newType } });
+    setChangingType(false);
+  };
+
   return (
     <ProTabShell
       role="business"
-      title={t('pro.saheelPro')}
-      subtitle={t('roles.business')}
+      title={catDef ? `${catDef.label} Dashboard` : 'Dashboard'}
+      subtitle={businessName}
       headerRight={settingsBtn}
     >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* ── HERO GRADIENT ── */}
-        <LinearGradient colors={theme.gradient} style={styles.hero}>
-          <Text style={styles.heroGreeting}>Welcome back</Text>
-          <Text style={styles.heroName}>{name}</Text>
-          <View style={styles.verifiedRow}>
-            <View style={styles.verifiedDot} />
-            <Text style={styles.verifiedText}>Verified · Business Owner</Text>
+
+        {/* ── HERO BANNER ── */}
+        <LinearGradient colors={heroGradient} style={styles.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <View style={styles.heroTop}>
+            <View style={styles.heroBadge}>
+              <Ionicons name={catDef ? (catDef.icon as any) : 'business-outline'} size={14} color="#fff" />
+              <Text style={styles.heroBadgeText}>{catDef?.label ?? 'Business'}</Text>
+            </View>
+            <TouchableOpacity style={styles.changeTypeBtn} onPress={() => setChangingType(true)}>
+              <Ionicons name="swap-horizontal-outline" size={14} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.changeTypeBtnText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.heroName}>{businessName}</Text>
+          <Text style={styles.heroOwner}>Managed by {ownerName}</Text>
+
+          <View style={styles.heroStats}>
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatValue}>🟢 Online</Text>
+              <Text style={styles.heroStatLabel}>Status</Text>
+            </View>
+            <View style={styles.heroStatDivider} />
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatValue}>✅ Verified</Text>
+              <Text style={styles.heroStatLabel}>KYC Approved</Text>
+            </View>
+            <View style={styles.heroStatDivider} />
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatValue}>{hasListings ? getAssetCount(businessType) : '0'}</Text>
+              <Text style={styles.heroStatLabel}>{hasListings ? 'Listings' : 'Listings'}</Text>
+            </View>
           </View>
         </LinearGradient>
 
-        {/* ── PROVIDER TYPE SELECTOR ── */}
-        <Text style={styles.sectionTitle}>Your Business</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.typeRow}>
-          {PROVIDER_TYPES.map((pt) => (
-            <Pressable
-              key={pt.key}
-              style={[
-                styles.typeCard,
-                providerType === pt.key && { borderColor: pt.color, backgroundColor: pt.color + '10' },
-              ]}
-              onPress={() => {
-                Haptics.selectionAsync();
-                setProviderType(pt.key);
-              }}
-            >
-              <View style={[styles.typeIconWrap, { backgroundColor: pt.color + '18' }]}>
-                <Ionicons name={pt.icon as any} size={22} color={pt.color} />
-              </View>
-              <Text
-                style={[
-                  styles.typeLabel,
-                  providerType === pt.key && { color: pt.color, fontFamily: 'mon-b' },
-                ]}
-              >
-                {pt.label}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        {/* ── CONTENT: Zero-State vs Active Dashboard ── */}
+        {!hasListings ? (
+          <ZeroStateHub
+            businessType={businessType}
+            catDef={catDef}
+            heroGradient={heroGradient}
+          />
+        ) : SpecializedDashboard ? (
+          <View style={styles.dashboardWrap}>
+            <SpecializedDashboard />
+          </View>
+        ) : (
+          <NoDashboardPrompt onSelectType={(t) => handleChangeType(t)} />
+        )}
 
-        {/* ── DYNAMIC PANEL: Based on providerType ── */}
-        {providerType === 'beach_spot' && <BeachSpotPanel />}
-        {providerType === 'restaurant' && <FoodDeliveryPanel />}
-        {providerType === 'experience' && <CamelTrekPanel />}
-        {providerType === 'activity' && <PartnerActivityPanel />}
-
-        {/* ── QUICK LINKS ── */}
-        <View style={styles.quickLinks}>
-          <Pressable style={styles.quickLink} onPress={() => router.push('/(business)/orders' as any)}>
-            <Ionicons name="fast-food-outline" size={20} color={SAHEL.accent} />
-            <Text style={styles.quickLinkText}>Live food orders →</Text>
-          </Pressable>
-          <Pressable
-            style={styles.quickLink}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              setScannerOpen(true);
-            }}
-          >
-            <Ionicons name="qr-code-outline" size={20} color={SAHEL.primary} />
-            <Text style={styles.quickLinkText}>Scan ticket QR →</Text>
-          </Pressable>
-        </View>
-
-        {/* ── OVERVIEW STATS ── */}
-        <Text style={styles.sectionTitle}>Overview</Text>
-        <View style={styles.statsGrid}>
-          {stats.map((s) => (
-            <View key={s.label} style={styles.statCard}>
-              <View style={[styles.statIcon, { backgroundColor: s.color + '15' }]}>
-                <Ionicons name={s.icon} size={22} color={s.color} />
-              </View>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+        {/* ── GLOBAL QUICK LINKS ── */}
+        {hasListings && (
+          <View style={styles.globalActions}>
+            <Text style={styles.sectionTitle}>Business Tools</Text>
+            <View style={styles.actionsGrid}>
+              <QuickAction icon="calendar-outline" label="Bookings" color={RIHLA.accent} onPress={() => router.push('/(business)/bookings' as any)} />
+              <QuickAction icon="list-outline" label="Listings" color={RIHLA.primary} onPress={() => router.push('/(business)/listings' as any)} />
+              <QuickAction icon="stats-chart-outline" label="Analytics" color={RIHLA.highlight} onPress={() => router.push('/(business)/analytics' as any)} />
+              <QuickAction icon="star-outline" label="Reviews" color="#A855F7" onPress={() => router.push('/(business)/reviews' as any)} />
+              <QuickAction icon="pricetag-outline" label="Promos" color="#EF4444" onPress={() => router.push('/(business)/promotions' as any)} />
             </View>
-          ))}
-        </View>
+          </View>
+        )}
 
-        <ProMenuShortcuts role="business" />
       </ScrollView>
 
-      <Modal visible={scannerOpen} animationType="slide" onRequestClose={() => setScannerOpen(false)}>
-        <ProQRScanner
-          onScanned={(data) => {
-            setScannerOpen(false);
-            showToast(`Ticket verified: ${data}`, 'success');
-          }}
-          onClose={() => setScannerOpen(false)}
-          title="Scan Traveler Ticket"
-        />
+      {/* ── CHANGE BUSINESS TYPE MODAL ── */}
+      <Modal visible={changingType} transparent animationType="slide" onRequestClose={() => setChangingType(false)}>
+        <View style={styles.modalBackdrop}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setChangingType(false)} />
+          <View style={styles.modalSheet}>
+            <View style={styles.modalKnob} />
+            <Text style={styles.modalTitle}>Switch Dashboard View</Text>
+            <Text style={styles.modalSubtitle}>Switch to see a different business dashboard.</Text>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+              {MARKETPLACE_CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat.key}
+                  style={[styles.typeOption, businessType === cat.key && { borderColor: cat.color, backgroundColor: cat.color + '10' }]}
+                  onPress={() => handleChangeType(cat.key)}
+                >
+                  <View style={[styles.typeOptionIcon, { backgroundColor: cat.color + '18' }]}>
+                    <Ionicons name={cat.icon as any} size={22} color={cat.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.typeOptionLabel}>{cat.label}</Text>
+                    <Text style={styles.typeOptionDesc}>{cat.description}</Text>
+                  </View>
+                  {businessType === cat.key && <Ionicons name="checkmark-circle" size={20} color={cat.color} />}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setChangingType(false)}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
     </ProTabShell>
   );
 }
 
-// ══════════════════════════════════════════════
-// DYNAMIC PANEL COMPONENTS (per provider type)
-// ══════════════════════════════════════════════
-
-/** Beach Spot panel: 2D grid matrix controls for umbrella slots */
-function BeachSpotPanel() {
-  const occupiedCount = MOCK_SPOTS.filter((s) => s.status === 'occupied').length;
-  const availableCount = MOCK_SPOTS.filter((s) => s.status === 'available').length;
+// ═══════════════════════════════════════════════════════════════
+// ZERO-STATE HUB — Premium empty state per PROMPTFULL §Step 2
+// ═══════════════════════════════════════════════════════════════
+function ZeroStateHub({
+  businessType,
+  catDef,
+  heroGradient,
+}: {
+  businessType: string;
+  catDef: { label: string; icon: string; color: string } | null;
+  heroGradient: [string, string];
+}) {
+  const isHotel = businessType === 'hotel';
+  const color = catDef?.color ?? '#0a2540';
 
   return (
-    <View style={styles.panel}>
-      <View style={styles.panelHeader}>
-        <Ionicons name="grid-outline" size={20} color={SAHEL.accent} />
-        <Text style={styles.panelTitle}>Spot Grid Control</Text>
-      </View>
-      <View style={styles.panelRow}>
-        <View style={[styles.metricPill, { backgroundColor: SAHEL.accent + '12' }]}>
-          <View style={[styles.metricDot, { backgroundColor: SAHEL.accent }]} />
-          <Text style={styles.metricText}>{availableCount} Available</Text>
+    <View style={styles.zeroRoot}>
+      {/* Welcome card */}
+      <View style={styles.zeroWelcome}>
+        <View style={[styles.zeroIconRing, { borderColor: color + '20' }]}>
+          <View style={[styles.zeroIconCircle, { backgroundColor: color + '12' }]}>
+            <Ionicons name={catDef ? (catDef.icon as any) : 'business-outline'} size={36} color={color} />
+          </View>
         </View>
-        <View style={[styles.metricPill, { backgroundColor: '#FEE2E2' }]}>
-          <View style={[styles.metricDot, { backgroundColor: '#EF4444' }]} />
-          <Text style={styles.metricText}>{occupiedCount} Occupied</Text>
+        <Text style={styles.zeroTitle}>
+          Welcome to your {catDef?.label ?? 'Business'} Dashboard
+        </Text>
+        <Text style={styles.zeroSubtitle}>
+          You're verified and ready to start! List your first {isHotel ? 'property' : 'offering'} to begin receiving bookings from travelers across Algeria.
+        </Text>
+
+        {/* Feature highlights */}
+        <View style={styles.zeroFeatures}>
+          {isHotel && (
+            <>
+              <FeatureRow icon="bed-outline" text="Add room types with pricing & availability" color={color} />
+              <FeatureRow icon="calendar-outline" text="Manage bookings & check-ins in real-time" color={color} />
+              <FeatureRow icon="images-outline" text="Upload photos & showcase your property" color={color} />
+              <FeatureRow icon="stats-chart-outline" text="Track revenue & performance analytics" color={color} />
+            </>
+          )}
+          {!isHotel && (
+            <>
+              <FeatureRow icon="add-circle-outline" text="Create your first listing to get started" color={color} />
+              <FeatureRow icon="calendar-outline" text="Manage reservations & availability" color={color} />
+              <FeatureRow icon="stats-chart-outline" text="Track your business performance" color={color} />
+            </>
+          )}
         </View>
       </View>
-      <View style={styles.miniGrid}>
-        {MOCK_SPOTS.map((spot) => (
-          <Pressable
-            key={spot.id}
-            style={[
-              styles.miniSpot,
-              spot.status === 'occupied'
-                ? { backgroundColor: '#E2E8F0' }
-                : { backgroundColor: SAHEL.accent, borderColor: SAHEL.accent },
-            ]}
-            onPress={() => {
-              Haptics.selectionAsync();
-              showToast(`Spot ${spot.id}: ${spot.status === 'available' ? `${spot.price} DZD` : 'Occupied'}`, 'info');
-            }}
-          >
-            <Text
-              style={[
-                styles.miniSpotText,
-                spot.status === 'occupied' && { color: '#94A3B8' },
-              ]}
-            >
-              {spot.id}
-            </Text>
+
+      {/* CTA button */}
+      <TouchableOpacity
+        style={[styles.zeroCta, { backgroundColor: color }]}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          router.push('/(business)/listings/new' as any);
+        }}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add-circle" size={22} color="#fff" />
+        <Text style={styles.zeroCtaText}>List Your {isHotel ? 'Property' : 'Service'}</Text>
+      </TouchableOpacity>
+
+      {/* Help text */}
+      <View style={styles.zeroHelp}>
+        <Ionicons name="information-circle-outline" size={16} color="#64748B" />
+        <Text style={styles.zeroHelpText}>
+          Need help getting started? Check the guide or contact our support team.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function FeatureRow({ icon, text, color }: { icon: string; text: string; color: string }) {
+  return (
+    <View style={styles.featureRow}>
+      <View style={[styles.featureIcon, { backgroundColor: color + '12' }]}>
+        <Ionicons name={icon as any} size={16} color={color} />
+      </View>
+      <Text style={styles.featureText}>{text}</Text>
+    </View>
+  );
+}
+
+function QuickAction({ icon, label, color, onPress }: { icon: string; label: string; color: string; onPress: () => void }) {
+  return (
+    <Pressable style={styles.globalAction} onPress={onPress}>
+      <View style={[styles.globalActionIcon, { backgroundColor: color + '18' }]}>
+        <Ionicons name={icon as any} size={20} color={color} />
+      </View>
+      <Text style={styles.globalActionText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+// ── No business type set yet ──
+function NoDashboardPrompt({ onSelectType }: { onSelectType: (t: string) => void }) {
+  return (
+    <View style={styles.noTypeWrap}>
+      <Ionicons name="business-outline" size={48} color={RIHLA.border} />
+      <Text style={styles.noTypeTitle}>Choose Your Business Category</Text>
+      <Text style={styles.noTypeSubtitle}>Select your business type to see a tailored dashboard.</Text>
+      <View style={styles.noTypeGrid}>
+        {MARKETPLACE_CATEGORIES.map((cat) => (
+          <Pressable key={cat.key} style={styles.noTypeCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSelectType(cat.key); }}>
+            <View style={[styles.noTypeIcon, { backgroundColor: cat.color + '18' }]}>
+              <Ionicons name={cat.icon as any} size={22} color={cat.color} />
+            </View>
+            <Text style={styles.noTypeCardLabel}>{cat.label}</Text>
           </Pressable>
         ))}
       </View>
-      <Text style={styles.panelHint}>Tap spots to manage availability · Prices in DZD</Text>
     </View>
   );
 }
-
-/** Food Delivery panel: Kitchen prep stream + inventory toggles */
-function FoodDeliveryPanel() {
-  return (
-    <View style={styles.panel}>
-      <View style={styles.panelHeader}>
-        <Ionicons name="restaurant-outline" size={20} color="#C56A39" />
-        <Text style={styles.panelTitle}>Kitchen Pipeline</Text>
-      </View>
-      {MOCK_KITCHEN.map((ticket) => (
-        <View key={ticket.id} style={styles.kitchenRow}>
-          <View style={[styles.statusDot, { backgroundColor: ticket.status === 'ready' ? SAHEL.accent : ticket.status === 'preparing' ? SAHEL.highlight : '#94A3B8' }]} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.kitchenItem}>{ticket.item}</Text>
-            <Text style={styles.kitchenMeta}>
-              {ticket.qty}× · {ticket.elapsed}
-            </Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: ticket.status === 'ready' ? '#D1FAE5' : ticket.status === 'preparing' ? '#FEF3C7' : '#F1F5F9' }]}>
-            <Text style={[styles.statusBadgeText, { color: ticket.status === 'ready' ? '#059669' : ticket.status === 'preparing' ? '#B45309' : '#64748B' }]}>
-              {ticket.status}
-            </Text>
-          </View>
-        </View>
-      ))}
-      <Text style={styles.panelHint}>Live kitchen stream · All prices in DZD</Text>
-    </View>
-  );
-}
-
-/** Camel Trek / Fleet panel: Caravan manager with time-slots and guides */
-function CamelTrekPanel() {
-  return (
-    <View style={styles.panel}>
-      <View style={styles.panelHeader}>
-        <Ionicons name="leaf-outline" size={20} color={SAHEL.highlight} />
-        <Text style={styles.panelTitle}>Fleet & Caravan Manager</Text>
-      </View>
-      {MOCK_FLEET.map((vehicle) => (
-        <View key={vehicle.id} style={styles.fleetRow}>
-          <View style={[styles.statusDot, { backgroundColor: vehicle.status === 'active' ? SAHEL.accent : vehicle.status === 'available' ? SAHEL.highlight : '#EF4444' }]} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.fleetName}>{vehicle.name}</Text>
-            <Text style={styles.fleetMeta}>
-              Guide: {vehicle.guide} · {vehicle.capacity} pax
-            </Text>
-          </View>
-          <View style={styles.fleetRight}>
-            <Text style={styles.fleetDeparture}>{vehicle.nextDeparture}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: vehicle.status === 'active' ? '#D1FAE5' : vehicle.status === 'available' ? '#FEF3C7' : '#FEE2E2' }]}>
-              <Text style={[styles.statusBadgeText, { color: vehicle.status === 'active' ? '#059669' : vehicle.status === 'available' ? '#B45309' : '#EF4444' }]}>
-                {vehicle.status}
-              </Text>
-            </View>
-          </View>
-        </View>
-      ))}
-      <Text style={styles.panelHint}>Track fleet availability · Departures in 24h format</Text>
-    </View>
-  );
-}
-
-/** Partner Activity panel: Generic operations overview */
-function PartnerActivityPanel() {
-  return (
-    <View style={styles.panel}>
-      <View style={styles.panelHeader}>
-        <Ionicons name="football-outline" size={20} color={SAHEL.primary} />
-        <Text style={styles.panelTitle}>Activity Operations</Text>
-      </View>
-      <View style={styles.panelRow}>
-        <View style={[styles.metricPill, { backgroundColor: SAHEL.primary + '12' }]}>
-          <Text style={[styles.metricValue, { color: SAHEL.primary }]}>12</Text>
-          <Text style={styles.metricText}>Active Sessions</Text>
-        </View>
-        <View style={[styles.metricPill, { backgroundColor: SAHEL.highlight + '12' }]}>
-          <Text style={[styles.metricValue, { color: SAHEL.highlight }]}>48</Text>
-          <Text style={styles.metricText}>Today's Bookings</Text>
-        </View>
-      </View>
-      <View style={styles.panelRow}>
-        <View style={[styles.metricPill, { backgroundColor: SAHEL.accent + '12' }]}>
-          <Text style={[styles.metricValue, { color: SAHEL.accent }]}>8,500</Text>
-          <Text style={styles.metricText}>Revenue (DZD)</Text>
-        </View>
-        <View style={[styles.metricPill, { backgroundColor: '#F1F5F9' }]}>
-          <Text style={[styles.metricValue, { color: '#64748B' }]}>3</Text>
-          <Text style={styles.metricText}>Pending</Text>
-        </View>
-      </View>
-      <Text style={styles.panelHint}>Unified operations view · All values in DZD</Text>
-    </View>
-  );
-}
-
-// ══════════════════════════════════════════════
-// STYLES
-// ══════════════════════════════════════════════
 
 const styles = StyleSheet.create({
-  scroll: { padding: 20, gap: 16, paddingBottom: 32 },
-  hero: { borderRadius: 20, padding: 22, gap: 6 },
-  heroGreeting: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.8)' },
-  heroName: { fontSize: 24, fontFamily: 'mon-b', color: '#FFFFFF' },
-  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  verifiedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: SAHEL.accent },
-  verifiedText: { fontSize: 12, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.9)' },
+  scroll: { paddingBottom: 48 },
 
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
+  // Hero
+  hero: { margin: 16, borderRadius: 24, padding: 20, gap: 8 },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  heroBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  heroBadgeText: { fontSize: 11, fontFamily: 'mon-sb', color: '#fff' },
+  changeTypeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  changeTypeBtnText: { fontSize: 11, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.8)' },
+  heroName: { fontSize: 22, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
+  heroOwner: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+  heroStats: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 14, padding: 12, marginTop: 8 },
+  heroStat: { flex: 1, alignItems: 'center', gap: 2 },
+  heroStatValue: { fontSize: 14, fontFamily: 'mon-b', color: '#fff' },
+  heroStatLabel: { fontSize: 10, fontFamily: 'mon', color: 'rgba(255,255,255,0.65)' },
+  heroStatDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.2)' },
 
-  // Provider type selector
-  typeRow: { gap: 10, paddingBottom: 4 },
-  typeCard: {
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    backgroundColor: SAHEL.card,
-    borderWidth: 1.5,
-    borderColor: SAHEL.border,
-    minWidth: 100,
-  },
-  typeIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  typeLabel: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  // Dashboard wrapper
+  dashboardWrap: { paddingHorizontal: 16, gap: 16 },
 
-  // Dynamic panels
-  panel: {
-    backgroundColor: SAHEL.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: SAHEL.border,
-    padding: 16,
-    gap: 10,
-  },
-  panelHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  panelTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  panelRow: { flexDirection: 'row', gap: 10 },
-  panelHint: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 4 },
+  // Zero-state
+  zeroRoot: { marginHorizontal: 16, gap: 16, marginTop: 8 },
+  zeroWelcome: { backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center', gap: 12, borderWidth: 1, borderColor: RIHLA.border },
+  zeroIconRing: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  zeroIconCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
+  zeroTitle: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.dark, textAlign: 'center', letterSpacing: -0.3 },
+  zeroSubtitle: { fontSize: 13, fontFamily: 'mon', color: '#64748B', textAlign: 'center', lineHeight: 20, paddingHorizontal: 8 },
+  zeroFeatures: { width: '100%', gap: 10, marginTop: 8 },
+  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  featureIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  featureText: { flex: 1, fontSize: 13, fontFamily: 'mon', color: '#334155' },
+  zeroCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 16 },
+  zeroCtaText: { fontSize: 16, fontFamily: 'mon-b', color: '#fff' },
+  zeroHelp: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
+  zeroHelpText: { flex: 1, fontSize: 12, fontFamily: 'mon', color: '#64748B', lineHeight: 17 },
 
-  // Metric pills
-  metricPill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 4,
-  },
-  metricDot: { width: 8, height: 8, borderRadius: 4 },
-  metricValue: { fontSize: 20, fontFamily: 'mon-b' },
-  metricText: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  // Global quick links
+  globalActions: { paddingHorizontal: 16, paddingTop: 24, gap: 12 },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
+  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  globalAction: { width: '18%', alignItems: 'center', gap: 6 },
+  globalActionIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  globalActionText: { fontSize: 10, fontFamily: 'mon-sb', color: RIHLA.mutedText, textAlign: 'center' },
 
-  // Mini grid (beach spots)
-  miniGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  miniSpot: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  miniSpotText: { fontSize: 12, fontFamily: 'mon-b', color: '#FFFFFF' },
+  // No type prompt
+  noTypeWrap: { margin: 16, backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', gap: 12, borderWidth: 1, borderColor: RIHLA.border },
+  noTypeTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark, textAlign: 'center' },
+  noTypeSubtitle: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, textAlign: 'center', lineHeight: 20 },
+  noTypeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8, width: '100%' },
+  noTypeCard: { width: '29%', backgroundColor: '#F8FAFC', borderRadius: 14, padding: 12, alignItems: 'center', gap: 6, borderWidth: 1, borderColor: RIHLA.border },
+  noTypeIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  noTypeCardLabel: { fontSize: 10, fontFamily: 'mon-sb', color: RIHLA.dark, textAlign: 'center' },
 
-  // Kitchen pipeline (food delivery)
-  kitchenRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: SAHEL.border,
-  },
-  kitchenItem: { fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
-  kitchenMeta: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
-
-  // Fleet (camel trek)
-  fleetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: SAHEL.border,
-  },
-  fleetName: { fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
-  fleetMeta: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
-  fleetRight: { alignItems: 'flex-end', gap: 4 },
-  fleetDeparture: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.primary },
-
-  // Status
-  statusDot: { width: 10, height: 10, borderRadius: 5 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  statusBadgeText: { fontSize: 10, fontFamily: 'mon-b', textTransform: 'capitalize' },
-
-  // Quick links
-  quickLinks: { flexDirection: 'row', gap: 10 },
-  quickLink: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: SAHEL.card,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: SAHEL.border,
-  },
-  quickLinkText: { fontFamily: 'mon-sb', fontSize: 13, color: SAHEL.primary, flexShrink: 1 },
-
-  // Stats
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  statCard: {
-    width: '47%',
-    backgroundColor: SAHEL.card,
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: SAHEL.border,
-  },
-  statIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 22, fontFamily: 'mon-b', color: SAHEL.dark },
-  statLabel: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
+  // Change type modal
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(10,37,64,0.55)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
+  modalKnob: { width: 44, height: 5, backgroundColor: '#E5E7EB', borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 20, fontFamily: 'mon-b', color: '#111827', marginBottom: 4 },
+  modalSubtitle: { fontSize: 13, fontFamily: 'mon', color: '#6B7280', lineHeight: 18, marginBottom: 16 },
+  typeOption: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#F9FAFB', marginBottom: 10 },
+  typeOptionIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  typeOptionLabel: { fontSize: 15, fontFamily: 'mon-sb', color: '#1F2937', marginBottom: 2 },
+  typeOptionDesc: { fontSize: 12, fontFamily: 'mon', color: '#6B7280' },
+  modalCancel: { height: 52, borderRadius: 16, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  modalCancelText: { fontSize: 15, fontFamily: 'mon-sb', color: '#4B5563' },
 });

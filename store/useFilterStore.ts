@@ -1,5 +1,5 @@
 /**
- * SAHEL — Filter Store
+ * RIHLA — Filter Store
  * ─────────────────────
  * Shared filter state for the Discover flow.
  * The filter screen writes to this store; the discover screen reads from it.

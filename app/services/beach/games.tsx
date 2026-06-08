@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ConfirmButton from "@/components/ConfirmButton";
+import ConfirmButton from '@/components/shared/ConfirmButton';
 import VisualSlotGrid, { VisualSlot } from "@/components/beach/VisualSlotGrid";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";

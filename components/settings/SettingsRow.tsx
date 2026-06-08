@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 
 export function SettingsNavRow({
   icon,
-  iconColor = SAHEL.primary,
+  iconColor = RIHLA.primary,
   label,
   subtitle,
   value,
@@ -53,7 +53,7 @@ export function SettingsNavRow({
 
 export function SettingsToggleRow({
   icon,
-  iconColor = SAHEL.accent,
+  iconColor = RIHLA.accent,
   label,
   subtitle,
   value,
@@ -80,7 +80,7 @@ export function SettingsToggleRow({
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: SAHEL.border, true: SAHEL.primary }}
+        trackColor={{ false: RIHLA.border, true: RIHLA.primary }}
         thumbColor="#FFFFFF"
       />
     </View>

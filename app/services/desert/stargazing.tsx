@@ -1,4 +1,4 @@
-import DesertBookingScreen from "@/components/DesertBookingScreen";
+import DesertBookingScreen from '@/components/shared/DesertBookingScreen';
 
 const STAR_SESSIONS = [
   { id: "telescope", label: "Telescope Session", desc: "1 hour guided telescope tour", price: 1500 },

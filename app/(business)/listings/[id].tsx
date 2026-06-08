@@ -1,320 +1,301 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert } from 'react-native';
+/**
+ * RIHLA — Business Asset Detail Screen
+ * ─────────────────────────────────────
+ * Rich type-specific detail view for business owners to manage each asset.
+ * Shows images, descriptions, full fields per business type.
+ * Hotel rooms, rental properties, beach spots, etc.
+ */
+
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import StackHeader from '@/components/StackHeader';
-import ConfirmButton from '@/components/ConfirmButton';
-import { BusinessListingStatus, BusinessType, useBusinessListings } from '@/store/useBusinessListings';
+import * as Haptics from 'expo-haptics';
+import { RIHLA } from '@/constants/theme';
+import { useBusinessAssets } from '@/store/useBusinessAssets';
+import { showToast } from '@/components/Toast';
 
-const TYPES: { id: BusinessType; label: string }[] = [
-  { id: 'hotel', label: 'Hotel' },
-  { id: 'resort', label: 'Resort' },
-  { id: 'restaurant', label: 'Restaurant' },
-  { id: 'cafe', label: 'Café' },
-  { id: 'event-venue', label: 'Event venue' },
-  { id: 'tour-office', label: 'Tour office' },
-  { id: 'other', label: 'Other' },
-];
+const TYPE_CONFIGS: Record<string, { label: string; icon: string; color: string; colorLt: string }> = {
+  hotel:        { label: 'Room',       icon: 'bed-outline',        color: '#1A6B3A', colorLt: '#E6F4EC' },
+  restaurant:   { label: 'Menu Item',  icon: 'restaurant-outline', color: '#C56A39', colorLt: '#FEF3E8' },
+  beach:        { label: 'Spot',       icon: 'umbrella-outline',   color: '#00a896', colorLt: '#F0FDFA' },
+  rental:       { label: 'Property',   icon: 'home-outline',       color: '#6C63FF', colorLt: '#EEF2FF' },
+  activity:     { label: 'Program',    icon: 'bicycle-outline',    color: '#E76F51', colorLt: '#FEF2EE' },
+  event:        { label: 'Event',      icon: 'ticket-outline',     color: '#A855F7', colorLt: '#F5F3FF' },
+  guide:        { label: 'Expedition', icon: 'compass-outline',    color: '#8B5E3C', colorLt: '#F5F0EB' },
+  photographer: { label: 'Package',    icon: 'camera-outline',     color: '#FF499E', colorLt: '#FFF0F6' },
+  driver:       { label: 'Route',      icon: 'car-outline',        color: '#0a2540', colorLt: '#F0F2F5' },
+  experience:   { label: 'Experience', icon: 'sparkles-outline',   color: '#f4a261', colorLt: '#FEF8F0' },
+};
 
-export default function BusinessListingDetails() {
+export default function BusinessAssetDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getListingById, updateListing, removeListing } = useBusinessListings();
-  const listing = getListingById(id);
+  const { assets, getAssetById, toggleAvailable, updateAsset, removeAsset } = useBusinessAssets();
 
-  const [name, setName] = useState(listing?.name ?? '');
-  const [city, setCity] = useState(listing?.city ?? '');
-  const [address, setAddress] = useState(listing?.address ?? '');
-  const [priceFrom, setPriceFrom] = useState(
-    listing?.priceFromDzd !== undefined ? String(listing.priceFromDzd) : ''
-  );
+  const asset = useMemo(() => getAssetById(id ?? ''), [id, assets]);
 
-  const canSave = useMemo(() => name.trim().length >= 3 && city.trim().length >= 2, [name, city]);
-
-  if (!listing) {
+  if (!asset) {
     return (
       <SafeAreaView style={styles.root}>
-        <StackHeader title="Listing" subtitle="Not found" />
-        <View style={styles.missing}>
-          <Ionicons name="alert-circle-outline" size={44} color="#CBD5E1" />
-          <Text style={styles.missingTitle}>This listing doesn’t exist</Text>
-          <TouchableOpacity style={styles.backCta} onPress={() => router.back()} activeOpacity={0.85}>
-            <Text style={styles.backCtaText}>Go back</Text>
+        <View style={styles.missingWrap}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
           </TouchableOpacity>
+          <Ionicons name="alert-circle-outline" size={48} color="#CBD5E1" />
+          <Text style={styles.missingTitle}>Asset not found</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const setStatus = (status: BusinessListingStatus) => updateListing(listing.id, { status });
-
-  const handleSave = () => {
-    if (!canSave) return;
-    updateListing(listing.id, {
-      name: name.trim(),
-      city: city.trim(),
-      address: address.trim() || undefined,
-      priceFromDzd: priceFrom ? Number(priceFrom) : undefined,
-    });
-  };
-
-  const handleDelete = () => {
-    Alert.alert('Delete listing?', 'This will remove it from your dashboard.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          removeListing(listing.id);
-          router.back();
-        },
-      },
-    ]);
-  };
+  const cfg = TYPE_CONFIGS[asset.businessType] || TYPE_CONFIGS.hotel;
+  const f = asset.fields || {};
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <StackHeader
-        title="Listing"
-        subtitle={listing.status === 'published' ? 'Published' : 'Draft'}
-        right={
-          <TouchableOpacity onPress={handleDelete} style={styles.iconBtn} activeOpacity={0.85}>
-            <Ionicons name="trash-outline" size={18} color="#EF4444" />
-          </TouchableOpacity>
-        }
-      />
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* ── Header ── */}
+        <View style={[styles.hero, { backgroundColor: cfg.color }]}>
+          <View style={styles.heroNav}>
+            <TouchableOpacity style={styles.heroBack} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={22} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.heroDelete} onPress={() => {
+              removeAsset(asset.id);
+              showToast('Asset removed', 'info');
+              router.back();
+            }}>
+              <Ionicons name="trash-outline" size={18} color="rgba(255,255,255,0.8)" />
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.heroBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+            <Ionicons name={cfg.icon as any} size={14} color="#fff" />
+            <Text style={styles.heroBadgeText}>{cfg.label}</Text>
+          </View>
+          <Text style={styles.heroName}>{asset.name}</Text>
+          <Text style={styles.heroPrice}>{asset.priceDZD.toLocaleString()} DZD</Text>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
-          <View style={styles.heroTop}>
-            <View style={styles.heroIcon}>
-              <Ionicons name="storefront-outline" size={18} color="#0a2540" />
+          {/* Availability toggle */}
+          <View style={styles.availRow}>
+            <View style={[styles.availDot, { backgroundColor: asset.available ? '#10B981' : '#EF4444' }]} />
+            <Text style={styles.availText}>{asset.available ? 'Active & Bookable' : 'Unavailable'}</Text>
+            <Switch
+              value={asset.available}
+              onValueChange={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleAvailable(asset.id); }}
+              trackColor={{ false: '#E2E8F0', true: 'rgba(255,255,255,0.5)' }}
+              thumbColor={asset.available ? '#fff' : '#94A3B8'}
+              style={{ marginLeft: 'auto' }}
+            />
+          </View>
+        </View>
+
+        {/* ── Description ── */}
+        {asset.description ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.descriptionText}>{asset.description}</Text>
+          </View>
+        ) : null}
+
+        {/* ── Images ── */}
+        {f.images && (f.images as string[]).length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Photos ({f.images.length})</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imageRow}>
+              {(f.images as string[]).map((uri: string, i: number) => (
+                <View key={i} style={styles.imageCard}>
+                  {uri.startsWith('file://') ? (
+                    <Image source={{ uri }} style={styles.imagePreview} />
+                  ) : (
+                    <View style={styles.imagePlaceholder}>
+                      <Ionicons name="image-outline" size={24} color={cfg.color} />
+                    </View>
+                  )}
+                </View>
+              ))}
+              <TouchableOpacity style={[styles.addImageBtn, { borderColor: cfg.color }]}>
+                <Ionicons name="add-outline" size={20} color={cfg.color} />
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        ) : null}
+
+        {/* ── Video ── */}
+        {f.videoUrl ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Video Tour</Text>
+            <View style={styles.videoCard}>
+              <Ionicons name="play-circle-outline" size={32} color="#EF4444" />
+              <Text style={styles.videoUrlText} numberOfLines={1}>{f.videoUrl}</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.heroTitle} numberOfLines={1}>
-                {listing.name}
-              </Text>
-              <Text style={styles.heroSub} numberOfLines={1}>
-                {labelType(listing.businessType)} · {listing.city}
-              </Text>
+          </View>
+        ) : null}
+
+        {/* ── Type-specific details ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Details</Text>
+          <View style={styles.detailsCard}>
+            <DetailRow icon="pricetag-outline" label="Price" value={`${asset.priceDZD.toLocaleString()} DZD`} />
+            <DetailRow icon="calendar-outline" label="Created" value={new Date(asset.createdAt).toLocaleDateString()} />
+            <DetailRow icon="sync-outline" label="Updated" value={new Date(asset.updatedAt).toLocaleDateString()} />
+
+            {/* Hotel room fields */}
+            {asset.businessType === 'hotel' && (
+              <>
+                <DetailRow icon="bed-outline" label="Room Type" value={f.roomType || 'Standard'} />
+                <DetailRow icon="bed-outline" label="Bed" value={f.bedType || '1 King'} />
+                <DetailRow icon="people-outline" label="Capacity" value={`${f.capacity || 2} guests`} />
+                <DetailRow icon="resize-outline" label="Size" value={`${f.sizeSqM || 30} m²`} />
+                <DetailRow icon="eye-outline" label="View" value={f.viewType || 'Sea View'} />
+                <DetailRow icon="restaurant-outline" label="Breakfast" value={f.hasBreakfast ? 'Included' : 'Not included'} />
+                {f.amenities && <DetailRow icon="layers-outline" label="Amenities" value={`${(f.amenities as string[]).length} items`} />}
+              </>
+            )}
+
+            {/* Rental property fields */}
+            {asset.businessType === 'rental' && (
+              <>
+                <DetailRow icon="bed-outline" label="Bedrooms" value={`${f.bedrooms || 3}`} />
+                <DetailRow icon="water-outline" label="Bathrooms" value={`${f.bathrooms || 2}`} />
+                <DetailRow icon="people-outline" label="Max Guests" value={`${f.maxGuests || 6}`} />
+                <DetailRow icon="resize-outline" label="Size" value={f.sizeSqM ? `${f.sizeSqM} m²` : '120 m²'} />
+                <DetailRow icon="home-outline" label="Type" value={f.propertyType || 'villa'} />
+                <DetailRow icon="time-outline" label="Check-in" value={f.checkInTime || '14:00'} />
+                <DetailRow icon="time-outline" label="Check-out" value={f.checkOutTime || '11:00'} />
+                {f.amenities && <DetailRow icon="layers-outline" label="Amenities" value={`${(f.amenities as string[]).length} items`} />}
+                {f.houseRules && <DetailRow icon="shield-checkmark-outline" label="Rules" value={`${(f.houseRules as string[]).length} rules`} />}
+                <DetailRow icon="refresh-outline" label="Cancellation" value={f.cancellationPolicy || 'Moderate'} />
+              </>
+            )}
+
+            {/* Beach spot fields */}
+            {asset.businessType === 'beach' && (
+              <>
+                <DetailRow icon="grid-outline" label="Asset Type" value={f.assetType || 'umbrella'} />
+                <DetailRow icon="flag-outline" label="Zone" value={f.zone || 'family'} />
+                <DetailRow icon="sunny-outline" label="Facing" value={f.facing || 'Sea View'} />
+                <DetailRow icon="navigate-outline" label="Grid Position" value={`Row ${f.gridRow || 1}, Col ${f.gridCol || 1}`} />
+                {f.gpsLat && <DetailRow icon="locate-outline" label="GPS" value={`${f.gpsLat}, ${f.gpsLng}`} />}
+              </>
+            )}
+
+            {/* Generic fields for other types */}
+            {!['hotel', 'rental', 'beach'].includes(asset.businessType) && Object.entries(f).filter(([k]) => !['images', 'videoUrl'].includes(k)).map(([key, val]) => (
+              <DetailRow key={key} icon="information-circle-outline" label={key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}
+                value={Array.isArray(val) ? `${val.length} items` : String(val)} />
+            ))}
+          </View>
+        </View>
+
+        {/* ── Amenities full list ── */}
+        {f.amenities && (f.amenities as string[]).length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Amenities</Text>
+            <View style={styles.tagRow}>
+              {(f.amenities as string[]).map((a: string, i: number) => (
+                <View key={i} style={[styles.tag, { backgroundColor: cfg.colorLt, borderColor: cfg.color + '30' }]}>
+                  <Ionicons name="checkmark-circle" size={12} color={cfg.color} />
+                  <Text style={[styles.tagText, { color: cfg.color }]}>{a}</Text>
+                </View>
+              ))}
             </View>
-            <View style={[styles.statusPill, pillStyle(listing.status)]}>
-              <Text style={[styles.statusText, pillTextStyle(listing.status)]}>{listing.status}</Text>
+          </View>
+        )}
+
+        {/* ── House Rules ── */}
+        {f.houseRules && (f.houseRules as string[]).length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>House Rules</Text>
+            <View style={styles.tagRow}>
+              {(f.houseRules as string[]).map((r: string, i: number) => (
+                <View key={i} style={[styles.tag, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
+                  <Ionicons name="close-circle" size={12} color="#EF4444" />
+                  <Text style={[styles.tagText, { color: '#DC2626' }]}>{r}</Text>
+                </View>
+              ))}
             </View>
           </View>
+        )}
 
-          <View style={styles.heroActions}>
-            <ActionChip
-              label="Publish"
-              icon="rocket-outline"
-              color="#0a2540"
-              disabled={listing.status === 'published'}
-              onPress={() => setStatus('published')}
-            />
-            <ActionChip
-              label="Pause"
-              icon="pause-outline"
-              color="#B45309"
-              disabled={listing.status === 'paused'}
-              onPress={() => setStatus('paused')}
-            />
-            <ActionChip
-              label="Draft"
-              icon="document-text-outline"
-              color="#64748B"
-              disabled={listing.status === 'draft'}
-              onPress={() => setStatus('draft')}
-            />
+        {/* ── Address ── */}
+        {f.address ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Address</Text>
+            <View style={styles.addressCard}>
+              <Ionicons name="location-outline" size={16} color={RIHLA.mutedText} />
+              <Text style={styles.addressText}>{f.address}</Text>
+            </View>
           </View>
-        </View>
-
-        <View style={styles.block}>
-          <Text style={styles.label}>Listing name</Text>
-          <TextInput value={name} onChangeText={setName} style={styles.input} placeholderTextColor="#94A3B8" />
-        </View>
-
-        <View style={styles.block}>
-          <Text style={styles.label}>Business type</Text>
-          <View style={styles.typeRow}>
-            {TYPES.map((t) => {
-              const active = t.id === listing.businessType;
-              return (
-                <TouchableOpacity
-                  key={t.id}
-                  activeOpacity={0.85}
-                  onPress={() => updateListing(listing.id, { businessType: t.id })}
-                  style={[styles.typePill, active && styles.typePillActive]}
-                >
-                  <Text style={[styles.typeText, active && styles.typeTextActive]}>{t.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <View style={[styles.block, { flex: 1 }]}>
-            <Text style={styles.label}>City</Text>
-            <TextInput value={city} onChangeText={setCity} style={styles.input} placeholderTextColor="#94A3B8" />
-          </View>
-          <View style={[styles.block, { flex: 1 }]}>
-            <Text style={styles.label}>From (DZD)</Text>
-            <TextInput
-              value={priceFrom}
-              onChangeText={setPriceFrom}
-              keyboardType="number-pad"
-              style={styles.input}
-              placeholderTextColor="#94A3B8"
-            />
-          </View>
-        </View>
-
-        <View style={styles.block}>
-          <Text style={styles.label}>Address</Text>
-          <TextInput value={address} onChangeText={setAddress} style={styles.input} placeholderTextColor="#94A3B8" />
-        </View>
-
-        <ConfirmButton label={canSave ? 'Save changes' : 'Add name + city'} onPress={handleSave} />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function ActionChip({
-  label,
-  icon,
-  color,
-  onPress,
-  disabled,
-}: {
-  label: string;
-  icon: string;
-  color: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
+function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <TouchableOpacity
-      style={[
-        styles.actionChip,
-        { borderColor: color + '40', backgroundColor: disabled ? '#F1F5F9' : '#FFFFFF' },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.85}
-      disabled={disabled}
-    >
-      <Ionicons name={icon as any} size={14} color={disabled ? '#94A3B8' : color} />
-      <Text style={[styles.actionChipText, { color: disabled ? '#94A3B8' : '#0F172A' }]}>{label}</Text>
-    </TouchableOpacity>
+    <View style={detailStyles.row}>
+      <Ionicons name={icon as any} size={15} color="#6B7280" />
+      <Text style={detailStyles.label}>{label}</Text>
+      <Text style={detailStyles.value} numberOfLines={1}>{value}</Text>
+    </View>
   );
 }
 
-function labelType(type: string) {
-  const map: Record<string, string> = {
-    hotel: 'Hotel',
-    resort: 'Resort',
-    restaurant: 'Restaurant',
-    cafe: 'Café',
-    'event-venue': 'Venue',
-    'tour-office': 'Tour office',
-    other: 'Other',
-  };
-  return map[type] ?? 'Other';
-}
-
-function pillStyle(status: string) {
-  if (status === 'published') return { backgroundColor: '#ECFDF5' };
-  if (status === 'paused') return { backgroundColor: '#FEF3C7' };
-  return { backgroundColor: '#F1F5F9' };
-}
-
-function pillTextStyle(status: string) {
-  if (status === 'published') return { color: '#0a2540' };
-  if (status === 'paused') return { color: '#B45309' };
-  return { color: '#64748B' };
-}
+const detailStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: '#E5E7EB', gap: 10 },
+  label: { flex: 1, fontSize: 13, fontFamily: 'mon', color: '#6B7280' },
+  value: { fontSize: 13, fontFamily: 'mon-sb', color: '#0F172A', textAlign: 'right', maxWidth: '55%' },
+});
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F8FAFC' },
-  content: { padding: 20, paddingBottom: 40, gap: 14 },
-  heroCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    gap: 12,
-  },
-  heroTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  heroIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: '#F5F3FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A' },
-  heroSub: { fontSize: 12, fontFamily: 'mon', color: '#64748B', marginTop: 2 },
-  statusPill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
-  statusText: { fontSize: 11, fontFamily: 'mon-sb', textTransform: 'capitalize' },
-  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  actionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  actionChipText: { fontSize: 12, fontFamily: 'mon-sb' },
-  block: { gap: 8 },
-  label: { fontSize: 13, fontFamily: 'mon-sb', color: '#0F172A' },
-  input: {
-    height: 48,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    fontFamily: 'mon-sb',
-    color: '#0F172A',
-  },
-  row: { flexDirection: 'row', gap: 12 },
-  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  typePill: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  typePillActive: { borderColor: '#DDD6FE', backgroundColor: '#F5F3FF' },
-  typeText: { fontSize: 12, fontFamily: 'mon-sb', color: '#64748B' },
-  typeTextActive: { color: '#0a2540' },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  missing: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 36 },
-  missingTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A' },
-  backCta: {
-    marginTop: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  backCtaText: { fontSize: 13, fontFamily: 'mon-b', color: '#0F172A' },
-});
+  scroll: { paddingBottom: 40 },
 
+  // Missing
+  missingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
+  backBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderWidth: 1, borderColor: '#E5E7EB' },
+  missingTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+
+  // Hero
+  hero: { padding: 20, gap: 8, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  heroNav: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  heroBack: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  heroDelete: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+  heroBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' },
+  heroBadgeText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
+  heroName: { fontSize: 24, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
+  heroPrice: { fontSize: 18, fontFamily: 'mon-b', color: 'rgba(255,255,255,0.9)' },
+  availRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: 10, marginTop: 4 },
+  availDot: { width: 8, height: 8, borderRadius: 4 },
+  availText: { fontSize: 13, fontFamily: 'mon-sb', color: '#fff', flex: 1 },
+
+  // Section
+  section: { paddingHorizontal: 20, paddingTop: 20 },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A', marginBottom: 10 },
+  descriptionText: { fontSize: 14, fontFamily: 'mon', color: '#6B7280', lineHeight: 22 },
+
+  // Images
+  imageRow: { gap: 10 },
+  imageCard: { width: 120, height: 90, borderRadius: 12, overflow: 'hidden' },
+  imagePreview: { width: '100%', height: '100%' },
+  imagePlaceholder: { flex: 1, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' },
+  addImageBtn: { width: 90, height: 90, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
+
+  // Video
+  videoCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#E5E7EB' },
+  videoUrlText: { fontSize: 12, fontFamily: 'mon', color: '#6B7280', flex: 1 },
+
+  // Details card
+  detailsCard: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', padding: 4, paddingHorizontal: 14 },
+
+  // Tags
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
+  tagText: { fontSize: 11, fontFamily: 'mon-sb' },
+
+  // Address
+  addressCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#E5E7EB' },
+  addressText: { fontSize: 13, fontFamily: 'mon', color: '#6B7280', flex: 1 },
+});

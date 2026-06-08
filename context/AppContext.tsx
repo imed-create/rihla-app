@@ -25,6 +25,8 @@ export type {
   KycStatus,
   KycData,
   UserProfile,
+  DocStatus,
+  KycDocument,
 } from '@/types/app';
 
 interface AppContextType {
@@ -32,6 +34,9 @@ interface AppContextType {
   updateUser: (updates: Partial<UserProfile>) => void;
   setRole: (role: UserRole) => void;
   submitKyc: (data: KycData) => Promise<void>;
+  simulateKycApproval: () => Promise<void>;
+  rejectKyc: (reason: string) => Promise<void>;
+  resubmitKyc: (data: Partial<KycData>) => Promise<void>;
   signOut: () => void;
   bookings: AppBooking[];
   addBooking: (booking: Omit<AppBooking, 'id' | 'createdAt' | 'status'>) => AppBooking;
@@ -164,19 +169,77 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const submitKyc = useCallback(
     async (data: KycData) => {
+      // Set per-document initial status to 'pending'
+      const idDoc = data.nationalIdDoc;
+      const crDoc = data.commercialRegDoc;
+      const txDoc = data.taxInfoDoc;
+      const docsData: KycData = {
+        ...data,
+        nationalIdDoc: idDoc?.uri ? { uri: idDoc.uri, status: 'pending' } : undefined,
+        commercialRegDoc: crDoc?.uri ? { uri: crDoc.uri, status: 'pending' } : undefined,
+        taxInfoDoc: txDoc?.uri ? { uri: txDoc.uri, status: 'pending' } : undefined,
+      };
+
       const submitted: UserProfile = {
         ...user,
-        kycData: data,
+        kycData: docsData,
         kycStatus: 'submitted',
         name: data.fullName ?? user.name,
         phone: data.phone ?? user.phone,
       };
       await saveUser(submitted);
-      await new Promise((r) => setTimeout(r, 2000));
-      await saveUser({ ...submitted, kycStatus: 'approved', isOnboarded: true });
+      // NO auto-approve! Documents must be reviewed.
     },
     [user, saveUser]
   );
+
+  /** Simulates an admin approving all KYC documents */
+  const simulateKycApproval = useCallback(async () => {
+    const approvedDocs: KycData = {
+      ...user.kycData,
+      nationalIdDoc: user.kycData.nationalIdDoc ? { ...user.kycData.nationalIdDoc, status: 'approved' } : undefined,
+      commercialRegDoc: user.kycData.commercialRegDoc ? { ...user.kycData.commercialRegDoc, status: 'approved' } : undefined,
+      taxInfoDoc: user.kycData.taxInfoDoc ? { ...user.kycData.taxInfoDoc, status: 'approved' } : undefined,
+    };
+    await saveUser({
+      ...user,
+      kycData: approvedDocs,
+      kycStatus: 'approved',
+      isOnboarded: true,
+    });
+  }, [user, saveUser]);
+
+  /** Simulates an admin rejecting KYC with a reason */
+  const rejectKyc = useCallback(async (reason: string) => {
+    const rejectedDocs: KycData = {
+      ...user.kycData,
+      nationalIdDoc: user.kycData.nationalIdDoc ? { ...user.kycData.nationalIdDoc, status: 'rejected', rejectedReason: 'Document unclear' } : undefined,
+      commercialRegDoc: user.kycData.commercialRegDoc ? { ...user.kycData.commercialRegDoc, status: 'rejected', rejectedReason: 'Missing signature' } : undefined,
+    };
+    await saveUser({
+      ...user,
+      kycData: rejectedDocs,
+      kycStatus: 'rejected',
+      kycRejectionReason: reason,
+    });
+  }, [user, saveUser]);
+
+  /** Resubmit KYC after rejection */
+  const resubmitKyc = useCallback(async (data: Partial<KycData>) => {
+    const updatedDocs: KycData = {
+      ...user.kycData,
+      ...data,
+      nationalIdDoc: data.nationalIdDoc ? { uri: data.nationalIdDoc.uri ?? user.kycData.nationalIdDoc?.uri ?? '', status: 'pending' } : user.kycData.nationalIdDoc,
+      commercialRegDoc: data.commercialRegDoc ? { uri: data.commercialRegDoc.uri ?? user.kycData.commercialRegDoc?.uri ?? '', status: 'pending' } : user.kycData.commercialRegDoc,
+      taxInfoDoc: data.taxInfoDoc ? { uri: data.taxInfoDoc.uri ?? user.kycData.taxInfoDoc?.uri ?? '', status: 'pending' } : user.kycData.taxInfoDoc,
+    };
+    await saveUser({
+      ...user,
+      kycData: updatedDocs,
+      kycStatus: 'submitted',
+      kycRejectionReason: undefined,
+    });
+  }, [user, saveUser]);
 
   const signOut = useCallback(async () => {
     await AsyncStorage.removeItem(USER_KEY);
@@ -306,6 +369,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateUser,
         setRole,
         submitKyc,
+        simulateKycApproval,
+        rejectKyc,
+        resubmitKyc,
         signOut,
         bookings,
         addBooking,

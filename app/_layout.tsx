@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -17,7 +18,7 @@ const tokenCache = {
     try { return SecureStore.getItemAsync(key); } catch { return null; }
   },
   async saveToken(key: string, value: string) {
-    try { return SecureStore.setItemAsync(key, value); } catch {}
+    try { return SecureStore.setItemAsync(key, value); } catch { }
   },
 };
 
@@ -71,34 +72,35 @@ function RootLayoutNav() {
   useEffect(() => {
     if (!isLoaded) return;
 
-    const inOnboarding = segments[0] === 'onboarding';
-    const inAuth = segments[0] === '(modals)';
+    const inAuth = segments[0] === '(auth)';
 
     if (!isSignedIn) {
-      // Push login modal on first launch, but let them close it to browse
+      // Push welcome onboarding modal on first launch, but let them close it to browse
       if (!hasShownLogin && !inAuth) {
         setHasShownLogin(true);
         setTimeout(() => {
-          router.push('/(modals)/login');
+          router.push('/(auth)/welcome');
         }, 100);
       }
       return;
     }
 
+    // ── User IS signed in below this point ──
+
     if (!user.role) {
-      if (!inOnboarding) router.replace('/onboarding/role-select');
+      if (!inAuth) router.replace('/(auth)/role-select');
       return;
     }
 
     if (user.kycStatus === 'none') {
-      if (!inOnboarding) {
-        router.replace(`/onboarding/kyc-${user.role}` as any);
+      if (!inAuth) {
+        router.replace(`/(auth)/kyc-${user.role}` as any);
       }
       return;
     }
 
     if (user.kycStatus === 'submitted') {
-      if (!inOnboarding) router.replace('/onboarding/kyc-pending');
+      if (!inAuth) router.replace('/(auth)/kyc-pending');
       return;
     }
 
@@ -108,47 +110,41 @@ function RootLayoutNav() {
       } else if (user.role === 'partner') {
         if (segments[0] !== '(partner)' && !inAuth) router.replace('/(partner)' as any);
       } else {
-        // Traveler can stay on tabs
+        // Traveler — if stuck on auth, send back to tabs
+        if (inAuth) router.replace('/(tabs)' as any);
       }
     }
   }, [isLoaded, isSignedIn, user.role, user.kycStatus, segments]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(business)" options={{ headerShown: false }} />
-      <Stack.Screen name="(partner)" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="(modals)/login"
-        options={{ headerShown: false, presentation: 'fullScreenModal' }}
-      />
-      <Stack.Screen
-        name="(modals)/settings"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="(modals)/filter"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen name="search" options={{ headerShown: false }} />
-      <Stack.Screen name="destination/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="booking/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="checkout/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="(business)/manage/[category]" options={{ headerShown: false }} />
-      <Stack.Screen name="hotel/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="restaurant/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="beach-map/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="rental/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="activity/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="event/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="guide/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="photographer/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="driver/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="experience/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="services/beach" options={{ headerShown: false }} />
-      <Stack.Screen name="services/desert" options={{ headerShown: false }} />
-      <Stack.Screen name="marketplace/[category]" options={{ headerShown: false }} />
-    </Stack>
+    <GluestackUIProvider mode="light">
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(business)" options={{ headerShown: false }} />
+        <Stack.Screen name="(partner)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(modals)/settings"
+          options={{ headerShown: false, presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="(modals)/filter"
+          options={{ headerShown: false, presentation: 'modal' }}
+        />
+        <Stack.Screen name="search" options={{ headerShown: false }} />
+        <Stack.Screen name="destination/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="booking/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="checkout/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="listing/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="listing/[category]/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="services" options={{ headerShown: false }} />
+        <Stack.Screen name="marketplace/[category]" options={{ headerShown: false }} />
+        <Stack.Screen name="wilaya" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(modals)/booking"
+          options={{ headerShown: false, presentation: 'modal' }}
+        />
+      </Stack>
+    </GluestackUIProvider>
   );
 }

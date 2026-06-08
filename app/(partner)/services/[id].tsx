@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import StackHeader from '@/components/StackHeader';
-import ConfirmButton from '@/components/ConfirmButton';
+import StackHeader from '@/components/shared/StackHeader';
+import ConfirmButton from '@/components/shared/ConfirmButton';
 import { PartnerServiceStatus, usePartnerServices } from '@/store/usePartnerServices';
 
 export default function PartnerServiceDetails() {

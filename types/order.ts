@@ -1,5 +1,5 @@
 /**
- * SAHEL Order & Booking Type System
+ * RIHLA Order & Booking Type System
  * ---------------------------------
  * Supports polymorphic order/booking states across all marketplace
  * verticals. Each variant carries its own validation fields so that
@@ -174,7 +174,7 @@ export type VariantOrderFields =
 // ─────────────────────────────────────────────
 
 /**
- * A polymorphic order in the SAHEL marketplace.
+ * A polymorphic order in the RIHLA marketplace.
  *
  * Every order belongs to one of the four marketplace verticals.
  * The `variant_fields` field is a discriminated union — narrow it

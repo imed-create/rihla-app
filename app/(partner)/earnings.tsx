@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ProScreenChrome from '@/components/pro/ProScreenChrome';
-import { SAHEL } from '@/constants/Colors';
+import ProScreenChrome from '@/components/dashboard/ScreenChrome';
+import { RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
 import {
   last7DaysEarnings,
@@ -62,7 +62,7 @@ export default function PartnerEarnings() {
           completed.map((r) => (
             <View key={r.id} style={styles.row}>
               <View style={styles.rowLeft}>
-                <Ionicons name="flash-outline" size={18} color={SAHEL.highlight} />
+                <Ionicons name="flash-outline" size={18} color={RIHLA.highlight} />
                 <View>
                   <Text style={styles.rowTitle}>{r.customerName}</Text>
                   <Text style={styles.rowSub}>{r.serviceType} · {r.date.slice(0, 10)}</Text>
@@ -80,26 +80,26 @@ export default function PartnerEarnings() {
 const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 40, gap: 14 },
   balanceCard: {
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 16,
     gap: 6,
   },
-  balanceLabel: { fontSize: 14, fontFamily: 'mon', color: SAHEL.mutedText },
-  balanceValue: { fontSize: 32, fontFamily: 'mon-b', color: SAHEL.primary },
-  muted: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark, marginTop: 8 },
+  balanceLabel: { fontSize: 14, fontFamily: 'mon', color: RIHLA.mutedText },
+  balanceValue: { fontSize: 32, fontFamily: 'mon-b', color: RIHLA.primary },
+  muted: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginTop: 8 },
   chart: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     height: 140,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 16,
     paddingBottom: 8,
   },
@@ -107,33 +107,33 @@ const styles = StyleSheet.create({
   barTrack: {
     width: 28,
     height: 100,
-    backgroundColor: SAHEL.muted,
+    backgroundColor: RIHLA.muted,
     borderRadius: 8,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   barFill: {
     width: '100%',
-    backgroundColor: SAHEL.accent,
+    backgroundColor: RIHLA.accent,
     borderTopLeftRadius: 6,
     borderTopRightRadius: 6,
     minHeight: 8,
   },
-  barLabel: { fontSize: 9, fontFamily: 'mon', color: SAHEL.mutedText },
+  barLabel: { fontSize: 9, fontFamily: 'mon', color: RIHLA.mutedText },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     marginBottom: 8,
   },
   rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  rowTitle: { fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
-  rowSub: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
-  rowAmount: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.highlight },
-  empty: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText },
+  rowTitle: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
+  rowSub: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
+  rowAmount: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.highlight },
+  empty: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
 });

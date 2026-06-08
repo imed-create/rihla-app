@@ -6,7 +6,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { SandSpot } from '@/constants/beachLayout';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { hapticLight } from '@/utils/haptics';
 import { BeachAssetIcon } from './BeachSvgIcons';
 
@@ -28,18 +28,18 @@ function SpotCellInner({ spot, state, isVip, onPress }: Props) {
   const disabled = state === 'occupied';
   const bg =
     state === 'selected'
-      ? SAHEL.primary
+      ? RIHLA.primary
       : state === 'occupied'
-        ? SAHEL.border
-        : SAHEL.card;
+        ? RIHLA.border
+        : RIHLA.card;
   const textColor =
-    state === 'selected' ? '#fff' : state === 'occupied' ? '#bbbbbb' : SAHEL.dark;
+    state === 'selected' ? '#fff' : state === 'occupied' ? '#bbbbbb' : RIHLA.dark;
   const borderColor =
     state === 'selected'
-      ? SAHEL.primary
+      ? RIHLA.primary
       : isVip && state === 'available'
-        ? SAHEL.highlight
-        : SAHEL.border;
+        ? RIHLA.highlight
+        : RIHLA.border;
 
   return (
     <AnimatedPressable
@@ -67,7 +67,7 @@ function SpotCellInner({ spot, state, isVip, onPress }: Props) {
       <BeachAssetIcon
         kind={spot.asset}
         size={22}
-        color={state === 'selected' ? '#fff' : state === 'occupied' ? '#bbb' : SAHEL.mutedText}
+        color={state === 'selected' ? '#fff' : state === 'occupied' ? '#bbb' : RIHLA.mutedText}
       />
       <Text
         style={[

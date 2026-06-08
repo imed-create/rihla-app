@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ProTabShell from '@/components/pro/ProTabShell';
-import EmptyState from '@/components/EmptyState';
+import ProTabShell from '@/components/dashboard/TabShell';
+import EmptyState from '@/components/shared/EmptyState';
 import { showToast } from '@/components/Toast';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
 import type { Order, OrderStatus } from '@/types/order';
 import { hapticLight } from '@/utils/haptics';
@@ -89,22 +89,22 @@ export default function BusinessOrders() {
 const styles = StyleSheet.create({
   list: { padding: 16, flexGrow: 1 },
   card: {
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 14,
     marginBottom: 10,
     gap: 4,
   },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  spot: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  time: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
-  line: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText },
-  total: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.primary, marginTop: 4 },
+  spot: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  time: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  line: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
+  total: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.primary, marginTop: 4 },
   statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 8 },
-  statusPill: { backgroundColor: SAHEL.muted, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  statusText: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.primary, textTransform: 'capitalize' },
-  btn: { backgroundColor: SAHEL.accent, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  statusPill: { backgroundColor: RIHLA.muted, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  statusText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.primary, textTransform: 'capitalize' },
+  btn: { backgroundColor: RIHLA.accent, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
   btnText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
 });

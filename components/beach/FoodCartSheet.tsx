@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { hapticMedium } from '@/utils/haptics';
 
 export type CartLine = { id: string; name: string; priceDZD: number; qty: number };
@@ -49,7 +49,7 @@ export default function FoodCartSheet({
               </View>
               <View style={styles.qtyRow}>
                 <Pressable style={styles.qtyBtn} onPress={() => onAdjust(item.id, -1)}>
-                  <Ionicons name="remove" size={18} color={SAHEL.dark} />
+                  <Ionicons name="remove" size={18} color={RIHLA.dark} />
                 </Pressable>
                 <Text style={styles.qty}>{item.qty}</Text>
                 <Pressable
@@ -84,7 +84,7 @@ export default function FoodCartSheet({
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(10,37,64,0.45)' },
   sheet: {
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -95,32 +95,32 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: SAHEL.border,
+    backgroundColor: RIHLA.border,
     alignSelf: 'center',
     marginBottom: 12,
   },
-  title: { fontSize: 20, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 12 },
+  title: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 12 },
   list: { maxHeight: 280 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SAHEL.border,
+    borderBottomColor: RIHLA.border,
     gap: 12,
   },
-  itemName: { fontSize: 15, fontFamily: 'mon-sb', color: SAHEL.dark },
-  itemPrice: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 2 },
+  itemName: { fontSize: 15, fontFamily: 'mon-sb', color: RIHLA.dark },
+  itemPrice: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   qtyBtn: {
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: SAHEL.border,
+    backgroundColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  qtyBtnPlus: { backgroundColor: SAHEL.primary },
+  qtyBtnPlus: { backgroundColor: RIHLA.primary },
   qty: { fontSize: 15, fontFamily: 'mon-b', minWidth: 20, textAlign: 'center' },
   footer: {
     flexDirection: 'row',
@@ -129,10 +129,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 12,
   },
-  totalLabel: { fontSize: 16, fontFamily: 'mon', color: SAHEL.mutedText },
-  totalValue: { fontSize: 22, fontFamily: 'mon-b', color: SAHEL.primary },
+  totalLabel: { fontSize: 16, fontFamily: 'mon', color: RIHLA.mutedText },
+  totalValue: { fontSize: 22, fontFamily: 'mon-b', color: RIHLA.primary },
   orderBtn: {
-    backgroundColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
     height: 52,
     borderRadius: 14,
     alignItems: 'center',

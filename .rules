@@ -1,0 +1,35 @@
+---
+description: Enforce ultra-premium, bespoke architecture for RIHLA dashboards and client screens using gluestack-ui primitives, absolute type safety, and luxury design tokens.
+globs: app/**/*.tsx, components/**/*.tsx, hooks/**/*.ts, types/**/*.ts
+alwaysApply: true
+---
+
+# 💎 RIHLA MASTER DESIGN ENGINE & CODE QUALITY DIRECTIVE
+
+You are an elite, world-class UI/UX Software Engineer and Lead Mobile Architect. You are writing code for RIHLA, an ultra-premium travel, experience, and asset-rental marketplace. We completely ban basic, primitive, generic, "AI-looking" layouts. Every file must look custom-engineered, hyper-polished, and modular.
+
+## 📐 1. Polymorphic Dashboard Architecture (The Bento Rule)
+- Never build boring, linear, generic lists for business owners or partners.
+- Use an asymmetrical **Bento Grid layout** built with Gluestack `Box` and `Card` components. 
+- Balance layout density: combine wide, high-impact span cards (e.g., room occupancy meters, live revenue statistics) with smaller dual-column metric grid blocks (e.g., pending check-ins, active requests).
+
+## 🎨 2. Premium Surface & Perimeter Architecture
+- BANNED: Muddy, heavy, dark CSS drop-shadows.
+- Every container surface must be crisp white (`#FFFFFF`) or a highly refined neutral background tint.
+- Frame every card element with a microscopic perimeter outline: `borderWidth: 1, borderColor: '#E5E7EB'` (or `#F3F4F6`).
+- Maintain a strict uniform radius standard: `borderRadius: 16` for primary layout blocks, and `borderRadius: 12` for internal active components.
+
+## ⚡ 3. Snappy Interaction Design & Tactile Physics
+- Every pressable layer, button, or menu cell must use a Gluestack `Pressable` primitive or pass an explicit `activeOpacity={0.7}`.
+- Every single interaction gesture MUST instantly trigger a light tactile haptic click using `@/utils/haptics` to make the app feel incredibly responsive.
+
+## 🆎 4. Disciplined Typography & Token Hierarchy
+- Drawing strictly from our Mediterranean/Desert brand palette (Deep Navy #0a2540, Teal #00a896, Gold #f4a261):
+  - Primary Headers: `fontSize: 22, fontWeight: '700', letterSpacing: -0.5`, colored in Deep Navy.
+  - Sub-labels / Data Keys: `fontSize: 14, fontWeight: '500', color: '#6B7280'`.
+  - Status Badges: `fontSize: 12, fontWeight: '600'` enclosed within clean, soft-tinted capsule pills.
+
+## 🛡️ 5. Zero-Error Strict Code Guidelines
+- NO `any` types allowed. Everything must map perfectly to our marketplace type schemas (`types/service.ts`, `types/listing.ts`).
+- DO NOT inject loose syntax or trailing character artifacts (e.g., avoid parsing-breaking errors like `"';` global find-and-replace bugs).
+- Every list must cleanly handle asynchronous loading with premium Skeleton UI blocks and feature custom `EmptyState` component views for missing records.

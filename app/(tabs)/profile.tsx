@@ -10,18 +10,36 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useApp } from '@/context/AppContext';
+import { useApp, UserRole } from '@/context/AppContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { router, Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from '@/context/I18nContext';
 
 export default function ProfileScreen() {
-  const { user, signOut, activeBookings, pastBookings } = useApp();
+  const { user, signOut, activeBookings, pastBookings, updateUser } = useApp();
   const { signOut: clerkSignOut, isSignedIn: clerkSignedIn } = useAuth();
   const { t } = useTranslation();
 
   const isSignedIn = clerkSignedIn || !!user.email;
+
+  const handleRoleSwitch = (role: UserRole, businessType?: string) => {
+    updateUser({
+      email: `${role}${businessType ? `-${businessType}` : ''}@demo.com`,
+      name: `Demo ${role.charAt(0).toUpperCase() + role.slice(1)} ${businessType ? `(${businessType})` : ''}`,
+      role: role,
+      kycStatus: 'approved',
+      isOnboarded: true,
+      kycData: {
+        fullName: `Demo ${role.charAt(0).toUpperCase() + role.slice(1)} ${businessType ? `(${businessType})` : ''}`,
+        phone: '+213 555 12 34 56',
+        nationality: 'Algerian',
+        ...(role === 'business' && { businessType: businessType || 'hotel' }),
+        ...(role === 'partner' && { serviceType: 'jetski' }),
+      }
+    });
+    Alert.alert('Demo Role Active', `Successfully switched to ${role} ${businessType ? `(${businessType})` : ''} mode!`);
+  };
 
   const handleSignOut = async () => {
     Alert.alert(t('profile.signOut'), t('profile.signOutConfirm'), [
@@ -36,7 +54,7 @@ export default function ProfileScreen() {
             /* noop */
           }
           signOut();
-          router.replace('/(modals)/login');
+          router.replace('/(auth)/login');
         },
       },
     ]);
@@ -72,11 +90,39 @@ export default function ProfileScreen() {
           <Text style={styles.guestSub}>{t('profile.guestSub')}</Text>
           <TouchableOpacity
             style={styles.loginBtn}
-            onPress={() => router.push('/(modals)/login')}
+            onPress={() => router.push('/(auth)/login')}
             activeOpacity={0.85}
           >
             <Text style={styles.loginBtnText}>{t('profile.loginCta')}</Text>
           </TouchableOpacity>
+          <View style={styles.divider} />
+          <View style={styles.settingsSection}>
+            <Text style={[styles.sectionTitle, { marginHorizontal: 16, marginTop: 12, marginBottom: 8 }]}>Demo Experience Switcher</Text>
+            <SettingRow
+              icon="compass-outline"
+              label="Experience traveler role"
+              color="#00a896"
+              onPress={() => handleRoleSwitch('traveler')}
+            />
+            <SettingRow
+              icon="business-outline"
+              label="Experience business owner (Hotel)"
+              color="#0a2540"
+              onPress={() => handleRoleSwitch('business', 'hotel')}
+            />
+            <SettingRow
+              icon="restaurant-outline"
+              label="Experience business owner (Restaurant)"
+              color="#e08f47"
+              onPress={() => handleRoleSwitch('business', 'restaurant')}
+            />
+            <SettingRow
+              icon="flash-outline"
+              label="Experience service partner"
+              color="#f4a261"
+              onPress={() => handleRoleSwitch('partner')}
+            />
+          </View>
           <View style={styles.divider} />
           <View style={styles.settingsSection}>
             <SettingRow
@@ -190,6 +236,38 @@ export default function ProfileScreen() {
               label={t('settings.help')}
               color="#f4a261"
               onPress={() => router.push('/(modals)/settings')}
+            />
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Role Switcher (Testing)</Text>
+          <View style={styles.settingsSection}>
+            <SettingRow
+              icon="compass-outline"
+              label="Switch to traveler role"
+              color="#00a896"
+              onPress={() => handleRoleSwitch('traveler')}
+            />
+            <SettingRow
+              icon="business-outline"
+              label="Switch to business owner (Hotel)"
+              color="#0a2540"
+              onPress={() => handleRoleSwitch('business', 'hotel')}
+            />
+            <SettingRow
+              icon="restaurant-outline"
+              label="Switch to business owner (Restaurant)"
+              color="#e08f47"
+              onPress={() => handleRoleSwitch('business', 'restaurant')}
+            />
+            <SettingRow
+              icon="flash-outline"
+              label="Switch to service partner"
+              color="#f4a261"
+              onPress={() => handleRoleSwitch('partner')}
             />
           </View>
         </View>

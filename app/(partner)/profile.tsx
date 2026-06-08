@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '@/context/AppContext';
-import ProTabShell from '@/components/pro/ProTabShell';
+import ProTabShell from '@/components/dashboard/TabShell';
 
 export default function PartnerProfile() {
   const { user } = useApp();

@@ -21,7 +21,7 @@ import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { getListingById } from '@/constants/mockListings';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import type {
@@ -83,20 +83,20 @@ function HotelBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Booking Details</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="bed-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="bed-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Room type: <Text style={styles.detailBold}>Double Room</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="calendar-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="calendar-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Check-in: <Text style={styles.detailBold}>{m.check_in_time}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="calendar-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="calendar-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Check-out: <Text style={styles.detailBold}>{m.check_out_time}</Text></Text>
       </View>
       {m.breakfast_included && (
         <View style={styles.detailRow}>
-          <Ionicons name="cafe-outline" size={16} color={SAHEL.accent} />
+          <Ionicons name="cafe-outline" size={16} color={RIHLA.accent} />
           <Text style={styles.detailText}>Breakfast <Text style={[styles.detailBold, { color: '#10B981' }]}>included</Text></Text>
         </View>
       )}
@@ -110,11 +110,11 @@ function RestaurantBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Order Details</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="restaurant-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="restaurant-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Cuisine: <Text style={styles.detailBold}>{m.cuisine_types.join(', ')}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name={m.delivery_available ? 'bicycle-outline' : 'restaurant-outline'} size={16} color={SAHEL.accent} />
+        <Ionicons name={m.delivery_available ? 'bicycle-outline' : 'restaurant-outline'} size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Service: <Text style={styles.detailBold}>{m.delivery_available ? 'Delivery available' : 'Dine-in only'}</Text></Text>
       </View>
     </View>
@@ -127,11 +127,11 @@ function BeachBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Spot Reservation</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="grid-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="grid-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Zone: <Text style={styles.detailBold}>{m.zone.charAt(0).toUpperCase() + m.zone.slice(1)} Zone</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="timer-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="timer-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Hold: <Text style={styles.detailBold}>{m.hold_duration_minutes} min countdown</Text></Text>
       </View>
     </View>
@@ -144,16 +144,16 @@ function RentalBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Reservation</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="bed-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="bed-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>{m.bedrooms} bedrooms · {m.bathrooms} bathrooms</Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="people-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="people-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Max {m.max_guests} guests · {m.property_type}</Text>
       </View>
       {m.monthly_available && (
         <View style={styles.detailRow}>
-          <Ionicons name="calendar-outline" size={16} color={SAHEL.accent} />
+          <Ionicons name="calendar-outline" size={16} color={RIHLA.accent} />
           <Text style={styles.detailText}>Monthly rental <Text style={[styles.detailBold, { color: '#10B981' }]}>available</Text></Text>
         </View>
       )}
@@ -167,15 +167,15 @@ function ActivityBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Session Booking</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="flash-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="flash-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Type: <Text style={styles.detailBold}>{m.activity_type}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="time-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="time-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Duration: <Text style={styles.detailBold}>{m.session_duration_minutes} min</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="speedometer-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="speedometer-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Difficulty: <Text style={styles.detailBold}>{m.difficulty}</Text></Text>
       </View>
       {m.equipment_included && (
@@ -194,15 +194,15 @@ function EventBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Ticket Purchase</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="calendar-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="calendar-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Date: <Text style={styles.detailBold}>{m.event_date}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="time-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="time-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Time: <Text style={styles.detailBold}>{m.start_time} – {m.end_time}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="location-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="location-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Venue: <Text style={styles.detailBold}>{m.venue}</Text></Text>
       </View>
       {m.age_restriction && (
@@ -221,15 +221,15 @@ function GuideBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Session Booking</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="globe-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="globe-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Languages: <Text style={styles.detailBold}>{m.languages.join(', ')}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="compass-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="compass-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Specialization: <Text style={styles.detailBold}>{m.specialization}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="people-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="people-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Max group: <Text style={styles.detailBold}>{m.max_group_size}</Text></Text>
       </View>
     </View>
@@ -242,11 +242,11 @@ function PhotographerBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Session Booking</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="color-palette-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="color-palette-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Styles: <Text style={styles.detailBold}>{m.style.join(', ')}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="time-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="time-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Turnaround: <Text style={styles.detailBold}>{m.turnaround_days} days</Text></Text>
       </View>
       {m.drone_available && (
@@ -265,11 +265,11 @@ function DriverBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Ride Booking</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="car-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="car-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Vehicle: <Text style={styles.detailBold}>{m.vehicle_name}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="pricetag-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="pricetag-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Rate: <Text style={styles.detailBold}>{m.price_per_km_dzd} DZD/km</Text></Text>
       </View>
       {m.airport_transfer && (
@@ -288,15 +288,15 @@ function ExperienceBookingForm({ listing }: { listing: Listing }) {
     <View style={styles.formSection}>
       <Text style={styles.formLabel}>Trip Booking</Text>
       <View style={styles.detailRow}>
-        <Ionicons name="calendar-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="calendar-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Duration: <Text style={styles.detailBold}>{m.duration_days} days</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="speedometer-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="speedometer-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Difficulty: <Text style={styles.detailBold}>{m.difficulty}</Text></Text>
       </View>
       <View style={styles.detailRow}>
-        <Ionicons name="people-outline" size={16} color={SAHEL.accent} />
+        <Ionicons name="people-outline" size={16} color={RIHLA.accent} />
         <Text style={styles.detailText}>Max group: <Text style={styles.detailBold}>{m.max_group_size}</Text></Text>
       </View>
       <View style={styles.detailRow}>
@@ -350,7 +350,7 @@ export default function CheckoutScreen() {
         <View style={styles.notFound}>
           <Ionicons name="alert-circle-outline" size={48} color="#94A3B8" />
           <Text style={styles.notFoundText}>Listing not found</Text>
-          <Pressable onPress={() => safeGoBack()}><Text style={{ fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.accent }}>← Go back</Text></Pressable>
+          <Pressable onPress={() => safeGoBack()}><Text style={{ fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent }}>← Go back</Text></Pressable>
         </View>
       </View>
     );
@@ -377,13 +377,13 @@ export default function CheckoutScreen() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* ── HEADER ── */}
       <View style={[styles.header, { paddingTop: topPad }]}>
         <Pressable style={styles.backBtn} onPress={() => safeGoBack()}>
-          <Ionicons name="arrow-back" size={22} color={SAHEL.dark} />
+          <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Checkout</Text>
@@ -457,15 +457,15 @@ export default function CheckoutScreen() {
         {/* ── TRUST BADGES ── */}
         <View style={styles.trustRow}>
           <View style={styles.trustItem}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={SAHEL.accent} />
+            <Ionicons name="shield-checkmark-outline" size={16} color={RIHLA.accent} />
             <Text style={styles.trustText}>Secure payment</Text>
           </View>
           <View style={styles.trustItem}>
-            <Ionicons name="refresh-outline" size={16} color={SAHEL.accent} />
+            <Ionicons name="refresh-outline" size={16} color={RIHLA.accent} />
             <Text style={styles.trustText}>Free cancellation</Text>
           </View>
           <View style={styles.trustItem}>
-            <Ionicons name="headset-outline" size={16} color={SAHEL.accent} />
+            <Ionicons name="headset-outline" size={16} color={RIHLA.accent} />
             <Text style={styles.trustText}>24/7 support</Text>
           </View>
         </View>
@@ -502,49 +502,49 @@ const styles = StyleSheet.create({
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, gap: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: SAHEL.card, borderWidth: 1, borderColor: SAHEL.border, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: RIHLA.card, borderWidth: 1, borderColor: RIHLA.border, alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1 },
-  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.dark },
-  headerSub: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
+  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
+  headerSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
 
   // Listing summary
-  listingCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginBottom: 8, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, padding: 14 },
+  listingCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginBottom: 8, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },
   listingIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  listingTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  listingCat: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 2 },
+  listingTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  listingCat: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
   listingRating: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
-  listingRatingText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.dark },
+  listingRatingText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.dark },
 
   // Form sections
   formSection: { paddingHorizontal: 20, paddingTop: 18 },
-  formLabel: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 10 },
-  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: SAHEL.border },
+  formLabel: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 10 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: RIHLA.border },
   detailText: { fontSize: 13, fontFamily: 'mon', color: '#475569', flex: 1 },
-  detailBold: { fontFamily: 'mon-sb', color: SAHEL.dark },
+  detailBold: { fontFamily: 'mon-sb', color: RIHLA.dark },
 
   // Contact inputs
-  inputGroup: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: SAHEL.border, paddingHorizontal: 14, height: 50, marginBottom: 8 },
-  input: { flex: 1, fontSize: 14, fontFamily: 'mon', color: SAHEL.dark },
+  inputGroup: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: RIHLA.border, paddingHorizontal: 14, height: 50, marginBottom: 8 },
+  input: { flex: 1, fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
 
   // Payment
   payList: { gap: 8 },
-  payCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1.5, borderColor: SAHEL.border, padding: 14 },
-  paySelected: { borderColor: SAHEL.accent, backgroundColor: '#F0FDFA' },
+  payCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1.5, borderColor: RIHLA.border, padding: 14 },
+  paySelected: { borderColor: RIHLA.accent, backgroundColor: '#F0FDFA' },
   payEmoji: { fontSize: 24 },
-  payLabel: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.dark },
+  payLabel: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.dark },
   payDesc: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: SAHEL.border, alignItems: 'center', justifyContent: 'center' },
-  radioActive: { borderColor: SAHEL.accent },
-  radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: SAHEL.accent },
+  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: RIHLA.border, alignItems: 'center', justifyContent: 'center' },
+  radioActive: { borderColor: RIHLA.accent },
+  radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: RIHLA.accent },
 
   // Price breakdown
-  priceCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, padding: 16, gap: 10 },
+  priceCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 16, gap: 10 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   priceLabel: { fontSize: 13, fontFamily: 'mon', color: '#64748B' },
-  priceValue: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark },
-  priceDivider: { height: 1, backgroundColor: SAHEL.border, marginVertical: 4 },
-  priceTotal: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  priceTotalValue: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.primary },
+  priceValue: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
+  priceDivider: { height: 1, backgroundColor: RIHLA.border, marginVertical: 4 },
+  priceTotal: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  priceTotalValue: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
 
   // Trust
   trustRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
@@ -552,9 +552,9 @@ const styles = StyleSheet.create({
   trustText: { fontSize: 11, fontFamily: 'mon-sb', color: '#64748B' },
 
   // Bottom bar
-  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: SAHEL.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
-  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.primary },
+  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: RIHLA.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
+  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
   bottomUnit: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  confirmBtn: { backgroundColor: SAHEL.accent, paddingHorizontal: 24, paddingVertical: 16, borderRadius: 14, minWidth: 140, alignItems: 'center' },
+  confirmBtn: { backgroundColor: RIHLA.accent, paddingHorizontal: 24, paddingVertical: 16, borderRadius: 14, minWidth: 140, alignItems: 'center' },
   confirmText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
 });

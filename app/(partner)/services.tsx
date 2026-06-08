@@ -4,8 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { usePartnerServices } from '@/store/usePartnerServices';
 import { useApp } from '@/context/AppContext';
-import ProTabShell from '@/components/pro/ProTabShell';
-import { SAHEL } from '@/constants/Colors';
+import ProTabShell from '@/components/dashboard/TabShell';
+import { RIHLA } from '@/constants/theme';
 import { showToast } from '@/components/Toast';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 
@@ -48,7 +48,7 @@ export default function PartnerServices() {
         {pendingRequests.map((r) => (
           <View key={r.id} style={styles.requestCard}>
             <View style={styles.requestLeft}>
-              <Ionicons name="person-circle-outline" size={28} color={SAHEL.highlight} />
+              <Ionicons name="person-circle-outline" size={28} color={RIHLA.highlight} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.requestName}>{r.customerName}</Text>
                 <Text style={styles.requestSub}>
@@ -58,7 +58,7 @@ export default function PartnerServices() {
             </View>
             <View style={styles.requestActions}>
               <Pressable style={styles.rejectBtn} onPress={() => reject(r.id)}>
-                <Ionicons name="close" size={18} color={SAHEL.mutedText} />
+                <Ionicons name="close" size={18} color={RIHLA.mutedText} />
               </Pressable>
               <Pressable style={styles.acceptBtn} onPress={() => accept(r.id)}>
                 <Text style={styles.acceptText}>Accept</Text>
@@ -74,7 +74,7 @@ export default function PartnerServices() {
       {services.length === 0 ? (
         <View style={styles.empty}>
           {requestsHeader}
-          <Ionicons name="cube-outline" size={52} color={SAHEL.accent} />
+          <Ionicons name="cube-outline" size={52} color={RIHLA.accent} />
           <Text style={styles.emptyText}>No services yet</Text>
           <Text style={styles.emptySub}>
             Add what you rent out (jet skis, buggies, camels…) and start earning.
@@ -84,7 +84,7 @@ export default function PartnerServices() {
             onPress={() => router.push('/(partner)/services/new' as any)}
             activeOpacity={0.85}
           >
-            <Ionicons name="add-circle-outline" size={18} color={SAHEL.highlight} />
+            <Ionicons name="add-circle-outline" size={18} color={RIHLA.highlight} />
             <Text style={styles.primaryCtaText}>Create a service</Text>
           </TouchableOpacity>
         </View>
@@ -103,7 +103,7 @@ export default function PartnerServices() {
             >
               <View style={styles.cardLeft}>
                 <View style={styles.iconWrap}>
-                  <Ionicons name="flash-outline" size={18} color={SAHEL.highlight} />
+                  <Ionicons name="flash-outline" size={18} color={RIHLA.highlight} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle} numberOfLines={1}>
@@ -155,7 +155,7 @@ function pillStyle(status: string) {
 }
 
 function pillTextStyle(status: string) {
-  if (status === 'published') return { color: SAHEL.highlight };
+  if (status === 'published') return { color: RIHLA.highlight };
   if (status === 'paused') return { color: '#B45309' };
   return { color: '#64748B' };
 }
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: SAHEL.highlight,
+    backgroundColor: RIHLA.highlight,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 12,
@@ -173,30 +173,30 @@ const styles = StyleSheet.create({
   addBtnText: { fontSize: 13, fontFamily: 'mon-b', color: '#fff' },
   list: { paddingHorizontal: 20, paddingBottom: 20, paddingTop: 8 },
   requestsBlock: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8, gap: 10 },
-  requestsTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
+  requestsTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
   requestCard: {
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 12,
     gap: 10,
   },
   requestLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  requestName: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.dark },
-  requestSub: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
+  requestName: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.dark },
+  requestSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
   requestActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 10 },
   rejectBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   acceptBtn: {
-    backgroundColor: SAHEL.accent,
+    backgroundColor: RIHLA.accent,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   statusPill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   statusText: { fontSize: 11, fontFamily: 'mon-sb', textTransform: 'capitalize' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 40 },
-  emptyText: { fontSize: 16, fontFamily: 'mon-sb', color: SAHEL.highlight },
+  emptyText: { fontSize: 16, fontFamily: 'mon-sb', color: RIHLA.highlight },
   emptySub: { fontSize: 13, fontFamily: 'mon', color: '#94A3B8', textAlign: 'center' },
   primaryCta: {
     flexDirection: 'row',
@@ -243,5 +243,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#A7F3D0',
   },
-  primaryCtaText: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.highlight },
+  primaryCtaText: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.highlight },
 });

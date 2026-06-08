@@ -28,7 +28,7 @@ import MapView, {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -112,8 +112,8 @@ function AssetPin({ asset, isSelected }: { asset: BeachAsset; isSelected: boolea
       style={[
         styles.assetPin,
         {
-          backgroundColor: isSelected ? SAHEL.primary : colors.bg,
-          borderColor: isSelected ? SAHEL.accent : colors.border,
+          backgroundColor: isSelected ? RIHLA.primary : colors.bg,
+          borderColor: isSelected ? RIHLA.accent : colors.border,
           transform: [{ scale: isSelected ? 1.25 : 1 }],
         },
       ]}
@@ -349,7 +349,7 @@ export default function BeachSatelliteMap({
                   onSelectAsset?.(selectedAsset);
                 }}
               >
-                <LinearGradient colors={[SAHEL.primary, SAHEL.accent]} style={styles.bookGradient}>
+                <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={styles.bookGradient}>
                   <Text style={styles.bookText}>
                     Reserve {selectedAsset.id} ·{' '}
                     {selectedAsset.price_dzd === 0 ? 'Free' : `${selectedAsset.price_dzd.toLocaleString()} DZD`}
@@ -386,8 +386,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: SAHEL.border,
-    backgroundColor: SAHEL.card,
+    borderColor: RIHLA.border,
+    backgroundColor: RIHLA.card,
   },
   map: { width: '100%', height: '100%' },
 
@@ -415,23 +415,23 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     shadowColor: '#000',
     shadowOpacity: 0.12,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  calloutTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  calloutZone: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.mutedText, marginTop: 2 },
-  calloutDetail: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 2 },
+  calloutTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  calloutZone: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText, marginTop: 2 },
+  calloutDetail: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
   calloutPriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
-  calloutPrice: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.primary },
+  calloutPrice: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.primary },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   statusText: { fontSize: 10, fontFamily: 'mon-sb', textTransform: 'capitalize' },
   calloutBtn: {
     marginTop: 8,
-    backgroundColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
     borderRadius: 8,
     paddingVertical: 8,
     alignItems: 'center',
@@ -466,11 +466,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
   },
   zoneFilterChipActive: {
-    backgroundColor: SAHEL.primary,
-    borderColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
+    borderColor: RIHLA.primary,
   },
   zoneFilterText: { fontSize: 11, fontFamily: 'mon-sb', color: '#475569' },
   zoneFilterTextActive: { color: '#fff' },
@@ -522,13 +522,13 @@ const styles = StyleSheet.create({
   },
   sheetContent: { padding: 16 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  sheetTitle: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.dark },
-  sheetSub: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText, marginTop: 2 },
+  sheetTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
+  sheetSub: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
   sheetClose: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: SAHEL.muted,
+    backgroundColor: RIHLA.muted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   sheetDetailText: { fontSize: 12, fontFamily: 'mon-sb' },
-  sheetPrice: { fontSize: 22, fontFamily: 'mon-b', color: SAHEL.primary },
+  sheetPrice: { fontSize: 22, fontFamily: 'mon-b', color: RIHLA.primary },
   bookButton: { marginTop: 14, borderRadius: 14, overflow: 'hidden' },
   bookGradient: { paddingVertical: 16, alignItems: 'center', borderRadius: 14 },
   bookText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: SAHEL.muted,
+    backgroundColor: RIHLA.muted,
   },
   unavailableText: { flex: 1, fontSize: 13, fontFamily: 'mon', color: '#64748B' },
 });

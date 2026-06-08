@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import StackHeader from '@/components/StackHeader';
-import ConfirmButton from '@/components/ConfirmButton';
+import StackHeader from '@/components/shared/StackHeader';
+import ConfirmButton from '@/components/shared/ConfirmButton';
 import { PartnerServiceCategory, usePartnerServices } from '@/store/usePartnerServices';
 
 const CATEGORIES: { id: PartnerServiceCategory; label: string; icon: string; color: string }[] = [

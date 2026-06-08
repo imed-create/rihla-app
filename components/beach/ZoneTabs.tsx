@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SandZoneId } from '@/constants/beachLayout';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { hapticLight } from '@/utils/haptics';
 
 const TABS: { id: SandZoneId; label: string; emoji: string }[] = [
@@ -57,23 +57,23 @@ export default function ZoneTabs({ active, onChange }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     marginBottom: 12,
     position: 'relative',
     overflow: 'hidden',
   },
   tab: { alignItems: 'center', paddingVertical: 12, gap: 2 },
   emoji: { fontSize: 16 },
-  label: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
-  labelActive: { fontFamily: 'mon-b', color: SAHEL.primary },
+  label: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  labelActive: { fontFamily: 'mon-b', color: RIHLA.primary },
   underline: {
     position: 'absolute',
     bottom: 0,
     height: 3,
-    backgroundColor: SAHEL.accent,
+    backgroundColor: RIHLA.accent,
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,
   },

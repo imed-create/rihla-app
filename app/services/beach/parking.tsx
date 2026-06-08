@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ConfirmButton from "@/components/ConfirmButton";
+import ConfirmButton from '@/components/shared/ConfirmButton';
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -66,7 +66,7 @@ export default function ParkingScreen() {
     setLoading(false);
     setSuccess(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setTimeout(() => router.push("/(tabs)/bookings"), 1500);
+    setTimeout(() => router.push("/(tabs)/trips"), 1500);
   };
 
   const topPad =

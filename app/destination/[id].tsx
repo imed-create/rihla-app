@@ -20,13 +20,13 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { getDestinationById } from '@/constants/destinations';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
 import { MARKETPLACE_CATEGORIES, getCategoryDef } from '@/constants/marketplaceCategories';
 import type { MarketplaceCategory, Listing } from '@/types/service';
 import { getServicesByCategory } from '@/constants/services';
-import EmptyState from '@/components/EmptyState';
+import EmptyState from '@/components/shared/EmptyState';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
 
@@ -69,7 +69,7 @@ export default function DestinationHubScreen() {
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <Pressable style={styles.backCircle} onPress={() => safeGoBack()}>
-          <Ionicons name="arrow-back" size={22} color={SAHEL.dark} />
+          <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
         </Pressable>
         <View style={styles.notFound}>
           <Ionicons name="alert-circle-outline" size={48} color="#94A3B8" />
@@ -83,7 +83,7 @@ export default function DestinationHubScreen() {
   const catDef = !isAll ? getCategoryDef(selectedCategory) : null;
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -124,7 +124,7 @@ export default function DestinationHubScreen() {
             style={[styles.tab, isAll && styles.tabActive]}
             onPress={() => { hapticLight(); setSelectedCategory('all'); }}
           >
-            <Ionicons name="grid-outline" size={14} color={isAll ? '#fff' : SAHEL.mutedText} />
+            <Ionicons name="grid-outline" size={14} color={isAll ? '#fff' : RIHLA.mutedText} />
             <Text style={[styles.tabText, isAll && styles.tabTextActive]}>All</Text>
           </Pressable>
           {MARKETPLACE_CATEGORIES.map((cat) => (
@@ -133,7 +133,7 @@ export default function DestinationHubScreen() {
               style={[styles.tab, selectedCategory === cat.key && { backgroundColor: cat.color, borderColor: cat.color }]}
               onPress={() => { hapticLight(); setSelectedCategory(selectedCategory === cat.key ? 'all' : cat.key); }}
             >
-              <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : SAHEL.mutedText} />
+              <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : RIHLA.mutedText} />
               <Text style={[styles.tabText, selectedCategory === cat.key && { color: '#fff' }]}>{cat.labelPlural}</Text>
             </Pressable>
           ))}
@@ -250,16 +250,16 @@ export default function DestinationHubScreen() {
 // ── Listing Card ──
 function getDetailRoute(item: Listing): string {
   switch (item.category) {
-    case 'hotel': return `/hotel/${item.id}`;
-    case 'restaurant': return `/restaurant/${item.id}`;
-    case 'beach': return `/beach-map/${item.id}`;
-    case 'rental': return `/rental/${item.id}`;
-    case 'activity': return `/activity/${item.id}`;
-    case 'event': return `/event/${item.id}`;
-    case 'guide': return `/guide/${item.id}`;
-    case 'photographer': return `/photographer/${item.id}`;
-    case 'driver': return `/driver/${item.id}`;
-    case 'experience': return `/experience/${item.id}`;
+    case 'hotel': return `/listing/hotel/${item.id}`;
+    case 'restaurant': return `/listing/restaurant/${item.id}`;
+    case 'beach': return `/listing/beach/${item.id}`;
+    case 'rental': return `/listing/rental/${item.id}`;
+    case 'activity': return `/listing/activity/${item.id}`;
+    case 'event': return `/listing/event/${item.id}`;
+    case 'guide': return `/listing/guide/${item.id}`;
+    case 'photographer': return `/listing/photographer/${item.id}`;
+    case 'driver': return `/listing/driver/${item.id}`;
+    case 'experience': return `/listing/experience/${item.id}`;
     default: return `/listing/${item.id}`;
   }
 }
@@ -323,58 +323,58 @@ const styles = StyleSheet.create({
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    borderWidth: 1, borderColor: SAHEL.border, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
   },
-  tabActive: { backgroundColor: SAHEL.primary, borderColor: SAHEL.primary },
-  tabText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  tabActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
+  tabText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
   tabTextActive: { color: '#fff' },
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 2 },
-  sectionSub: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText, marginBottom: 14 },
+  sectionTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 2 },
+  sectionSub: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, marginBottom: 14 },
 
   // Category grid (on "All" tab)
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   categoryCard: {
     width: '30%', minWidth: 100, alignItems: 'center', gap: 6,
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
     paddingVertical: 16, paddingHorizontal: 8,
   },
   categoryIconWrap: {
     width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
   },
-  categoryLabel: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.dark, textAlign: 'center' },
-  categoryCount: { fontSize: 10, fontFamily: 'mon', color: SAHEL.mutedText },
+  categoryLabel: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.dark, textAlign: 'center' },
+  categoryCount: { fontSize: 10, fontFamily: 'mon', color: RIHLA.mutedText },
 
   // Services grid (legacy beach/desert services)
   servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   serviceCard: {
     width: '47%', alignItems: 'flex-start', gap: 6,
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
     padding: 14,
   },
   serviceIconWrap: {
     width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
   },
-  serviceTitle: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark },
-  serviceTagline: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  serviceTitle: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
+  serviceTagline: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
 
   // Category header (when specific category selected)
   catHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#fff',
-    marginHorizontal: 20, borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    marginHorizontal: 20, borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
     marginBottom: 14,
   },
   catHeaderIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  catHeaderTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
-  catHeaderSub: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
+  catHeaderTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
+  catHeaderSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
 
   // Listing cards
   listingsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 12 },
   listingCard: {
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
     overflow: 'hidden', marginBottom: 4, width: '100%',
   },
   listingImage: { height: 110, alignItems: 'center', justifyContent: 'center' },
@@ -386,13 +386,13 @@ const styles = StyleSheet.create({
   },
   listingFeatText: { fontSize: 9, fontFamily: 'mon-b', color: '#fff' },
   listingInfo: { padding: 14, gap: 4 },
-  listingTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  listingDesc: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, lineHeight: 16 },
+  listingTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  listingDesc: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, lineHeight: 16 },
   listingBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
   listingRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  listingRatingText: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.dark },
-  listingReviewCount: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
-  listingPrice: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.primary },
+  listingRatingText: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.dark },
+  listingReviewCount: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
+  listingPrice: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
 
   // Empty
   emptyWrap: { paddingHorizontal: 20 },

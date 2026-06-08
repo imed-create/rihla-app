@@ -1,4 +1,4 @@
-/** SAHEL auth roles (Supabase-aligned) */
+/** RIHLA auth roles (Supabase-aligned) */
 export type Role = 'client' | 'provider';
 
 export type KYCStatus = 'approved' | 'pending_upload' | 'under_review' | 'rejected';
@@ -16,7 +16,7 @@ export type Profile = {
   updatedAt: string;
 };
 
-/** Maps legacy in-app roles to SAHEL domain roles */
+/** Maps legacy in-app roles to RIHLA domain roles */
 export type LegacyAppRole = 'traveler' | 'business' | 'partner';
 
 export function toSahelRole(legacy: LegacyAppRole | null): Role {

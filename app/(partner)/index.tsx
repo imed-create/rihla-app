@@ -5,17 +5,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '@/context/AppContext';
-import ProTabShell from '@/components/pro/ProTabShell';
-import ProMenuShortcuts from '@/components/pro/ProMenuShortcuts';
-import ProQRScanner from '@/components/pro/ProQRScanner';
+import ProTabShell from '@/components/dashboard/TabShell';
+import ProMenuShortcuts from '@/components/dashboard/MenuShortcuts';
+import ProQRScanner from '@/components/dashboard/QRScanner';
 import { PRO_THEME } from '@/constants/proNavigation';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { useTranslation } from '@/context/I18nContext';
 import { showToast } from '@/components/Toast';
 import {
   partnerEarningsDzd,
   partnerEarningsThisWeek,
 } from '@/lib/dashboardStats';
+import TransportPartnerOverview from '@/components/dashboard/partner/TransportPartnerOverview';
+import ActivityPartnerOverview from '@/components/dashboard/partner/ActivityPartnerOverview';
+
 
 export default function PartnerDashboard() {
   const { user, serviceRequests, partnerOnline, setPartnerOnline } = useApp();
@@ -38,19 +41,19 @@ export default function PartnerDashboard() {
         label: "Today's Requests",
         value: String(todayRequests.length),
         icon: 'mail-outline' as const,
-        color: SAHEL.accent,
+        color: RIHLA.accent,
       },
       {
         label: 'Week Earnings (DZD)',
         value: partnerEarningsThisWeek(serviceRequests).toLocaleString(),
         icon: 'cash-outline' as const,
-        color: SAHEL.highlight,
+        color: RIHLA.highlight,
       },
       {
         label: 'Total Earnings',
         value: partnerEarningsDzd(serviceRequests).toLocaleString(),
         icon: 'wallet-outline' as const,
-        color: SAHEL.primary,
+        color: RIHLA.primary,
       },
       {
         label: 'Pending',
@@ -73,6 +76,17 @@ export default function PartnerDashboard() {
     </Pressable>
   );
 
+  const renderAssetPanel = () => {
+    const assetType = (user?.kycData?.assetType || 'other').toLowerCase();
+    
+    // Differentiate between Transport Partner (Driver/Car/Transfer) and Activity/Photo Partner
+    if (assetType === 'driver' || assetType === 'car' || assetType === 'transfer') {
+      return <TransportPartnerOverview />;
+    }
+    
+    return <ActivityPartnerOverview />;
+  };
+
   return (
     <ProTabShell
       role="partner"
@@ -82,7 +96,11 @@ export default function PartnerDashboard() {
     >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={theme.gradient} style={styles.hero}>
-          <Text style={styles.heroGreeting}>Service Partner</Text>
+          <Text style={styles.heroGreeting}>
+            {user.kycData?.assetType
+              ? `${user.kycData.assetCount}x ${user.kycData.assetType.replace('-', ' ').toUpperCase()} Owner`
+              : 'Service Partner'}
+          </Text>
           <Text style={styles.heroName}>{user.name || user.kycData.fullName || 'Partner'}</Text>
         </LinearGradient>
 
@@ -90,7 +108,7 @@ export default function PartnerDashboard() {
           style={[styles.onlinePill, partnerOnline ? styles.onlineOn : styles.onlineOff]}
           onPress={toggleOnline}
         >
-          <View style={[styles.onlineDot, { backgroundColor: partnerOnline ? SAHEL.accent : SAHEL.mutedText }]} />
+          <View style={[styles.onlineDot, { backgroundColor: partnerOnline ? RIHLA.accent : RIHLA.mutedText }]} />
           <Text style={[styles.onlineText, partnerOnline ? styles.onlineTextOn : styles.onlineTextOff]}>
             {partnerOnline ? 'Online — accepting requests' : 'Offline'}
           </Text>
@@ -103,7 +121,7 @@ export default function PartnerDashboard() {
             setScannerOpen(true);
           }}
         >
-          <Ionicons name="qr-code-outline" size={20} color={SAHEL.highlight} />
+          <Ionicons name="qr-code-outline" size={20} color={RIHLA.highlight} />
           <Text style={styles.scanLinkText}>Scan traveler ticket →</Text>
         </Pressable>
 
@@ -119,6 +137,8 @@ export default function PartnerDashboard() {
             </View>
           ))}
         </View>
+
+        {renderAssetPanel()}
 
         <ProMenuShortcuts role="partner" />
       </ScrollView>
@@ -149,35 +169,40 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 2,
   },
-  onlineOn: { backgroundColor: '#E6FAF7', borderColor: SAHEL.accent },
-  onlineOff: { backgroundColor: SAHEL.muted, borderColor: SAHEL.border },
+  onlineOn: { backgroundColor: '#E6FAF7', borderColor: RIHLA.accent },
+  onlineOff: { backgroundColor: RIHLA.muted, borderColor: RIHLA.border },
   onlineDot: { width: 12, height: 12, borderRadius: 6 },
   onlineText: { fontSize: 15, fontFamily: 'mon-b' },
-  onlineTextOn: { color: SAHEL.primary },
-  onlineTextOff: { color: SAHEL.mutedText },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
+  onlineTextOn: { color: RIHLA.primary },
+  onlineTextOff: { color: RIHLA.mutedText },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   statCard: {
     width: '47%',
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 16,
     padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
   },
   statIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 20, fontFamily: 'mon-b', color: SAHEL.dark },
-  statLabel: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  statValue: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.dark },
+  statLabel: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
   scanLink: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
   },
-  scanLinkText: { fontFamily: 'mon-sb', fontSize: 14, color: SAHEL.highlight },
+  scanLinkText: { fontFamily: 'mon-sb', fontSize: 14, color: RIHLA.highlight },
+  panel: { backgroundColor: RIHLA.card, borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border, padding: 16, gap: 10, marginTop: 4 },
+  panelHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  panelTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  checklistRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
+  checklistText: { fontSize: 13, fontFamily: 'mon', color: RIHLA.dark, flex: 1 },
 });

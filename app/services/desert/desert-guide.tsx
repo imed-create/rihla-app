@@ -1,4 +1,4 @@
-import DesertBookingScreen from "@/components/DesertBookingScreen";
+import DesertBookingScreen from '@/components/shared/DesertBookingScreen';
 
 const GUIDES = [
   { id: "nomad", label: "Local Nomadic Guide", desc: "Expert in tracks, water wells and camel paths", price: 4000 },

@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FoodCartSheet, { CartLine } from '@/components/beach/FoodCartSheet';
 import DeliverySpotMatrix from '@/components/beach/DeliverySpotMatrix';
 import { FOOD_CATEGORIES, FOOD_MENU } from '@/constants/foodMenu';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { SandSpot, SandZoneId } from '@/constants/beachLayout';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import type { MenuCategory } from '@/types/order';
@@ -104,9 +104,9 @@ export default function FoodScreen() {
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <LinearGradient
-        colors={[SAHEL.primary, SAHEL.accent]}
+        colors={[RIHLA.primary, RIHLA.accent]}
         style={[styles.header, { paddingTop: topPad + 12 }]}
       >
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
@@ -164,7 +164,7 @@ export default function FoodScreen() {
                 {qty > 0 ? (
                   <>
                     <Pressable style={styles.minus} onPress={() => adjustCart(item.id, -1)}>
-                      <Ionicons name="remove" size={16} color={SAHEL.dark} />
+                      <Ionicons name="remove" size={16} color={RIHLA.dark} />
                     </Pressable>
                     <Text style={styles.qtyN}>{qty}</Text>
                   </>
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerTitle: { fontSize: 22, fontFamily: 'mon-b', color: '#fff' },
   cartBadge: {
-    backgroundColor: SAHEL.highlight,
+    backgroundColor: RIHLA.highlight,
     minWidth: 22,
     height: 22,
     borderRadius: 11,
@@ -219,45 +219,45 @@ const styles = StyleSheet.create({
   cartBadgeText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     marginBottom: 14,
     overflow: 'hidden',
     position: 'relative',
   },
   tab: { alignItems: 'center', paddingVertical: 10 },
   tabEmoji: { fontSize: 18 },
-  tabLabel: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
-  tabLabelOn: { fontFamily: 'mon-b', color: SAHEL.primary },
+  tabLabel: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  tabLabelOn: { fontFamily: 'mon-b', color: RIHLA.primary },
   tabLine: {
     position: 'absolute',
     bottom: 0,
     height: 3,
-    backgroundColor: SAHEL.accent,
+    backgroundColor: RIHLA.accent,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     padding: 14,
     marginBottom: 10,
   },
   emoji: { fontSize: 32 },
-  name: { fontSize: 15, fontFamily: 'mon-sb', color: SAHEL.dark },
-  nameAr: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
-  price: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.accent, marginTop: 4 },
+  name: { fontSize: 15, fontFamily: 'mon-sb', color: RIHLA.dark },
+  nameAr: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  price: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.accent, marginTop: 4 },
   qtyCol: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   minus: {
     width: 30,
     height: 30,
     borderRadius: 8,
-    backgroundColor: SAHEL.border,
+    backgroundColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -280,17 +280,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    shadowColor: SAHEL.primary,
+    shadowColor: RIHLA.primary,
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 8,
   },
   floatBadge: {
-    backgroundColor: SAHEL.highlight,
+    backgroundColor: RIHLA.highlight,
     minWidth: 24,
     height: 24,
     borderRadius: 12,

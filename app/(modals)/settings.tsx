@@ -74,7 +74,7 @@ export default function SettingsScreen() {
             /* noop */
           }
           appSignOut();
-          router.replace('/(modals)/login');
+          router.replace('/(auth)/login');
         },
       },
     ]);

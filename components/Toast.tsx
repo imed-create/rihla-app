@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -20,9 +20,9 @@ type ToastState = {
 };
 
 const TOAST_COLORS: Record<ToastType, string> = {
-  success: SAHEL.accent,
-  error: SAHEL.error,
-  info: SAHEL.highlight,
+  success: RIHLA.accent,
+  error: RIHLA.error,
+  info: RIHLA.highlight,
 };
 
 const TOAST_ICONS: Record<ToastType, keyof typeof Ionicons.glyphMap> = {

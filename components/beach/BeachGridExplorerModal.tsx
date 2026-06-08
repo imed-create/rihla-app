@@ -15,7 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import BeachSandGrid from './BeachSandGrid';
 import SpotHoldBanner from './SpotHoldBanner';
-import ConfirmButton from '@/components/ConfirmButton';
+import ConfirmButton from '@/components/shared/ConfirmButton';
 import { useApp } from '@/context/AppContext';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import { SandSpot, SandZoneId, ZONE_CONFIG } from '@/constants/beachLayout';

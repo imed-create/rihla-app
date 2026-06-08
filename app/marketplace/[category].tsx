@@ -24,14 +24,14 @@ import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
 import { getCategoryDef, MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
 import type { MarketplaceCategory, Listing } from '@/types/service';
 import { getListingWilayas } from '@/constants/mockListings';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
-import EmptyState from '@/components/EmptyState';
+import EmptyState from '@/components/shared/EmptyState';
 
 // ── Sort options ──
 type SortKey = 'recommended' | 'price_low' | 'price_high' | 'rating';
@@ -60,16 +60,16 @@ const CATEGORY_FILTERS: Record<MarketplaceCategory, string[]> = {
 
 function getDetailRoute(item: Listing): string {
   switch (item.category) {
-    case 'hotel': return `/hotel/${item.id}`;
-    case 'restaurant': return `/restaurant/${item.id}`;
-    case 'beach': return `/beach-map/${item.id}`;
-    case 'rental': return `/rental/${item.id}`;
-    case 'activity': return `/activity/${item.id}`;
-    case 'event': return `/event/${item.id}`;
-    case 'guide': return `/guide/${item.id}`;
-    case 'photographer': return `/photographer/${item.id}`;
-    case 'driver': return `/driver/${item.id}`;
-    case 'experience': return `/experience/${item.id}`;
+    case 'hotel': return `/listing/hotel/${item.id}`;
+    case 'restaurant': return `/listing/restaurant/${item.id}`;
+    case 'beach': return `/listing/beach/${item.id}`;
+    case 'rental': return `/listing/rental/${item.id}`;
+    case 'activity': return `/listing/activity/${item.id}`;
+    case 'event': return `/listing/event/${item.id}`;
+    case 'guide': return `/listing/guide/${item.id}`;
+    case 'photographer': return `/listing/photographer/${item.id}`;
+    case 'driver': return `/listing/driver/${item.id}`;
+    case 'experience': return `/listing/experience/${item.id}`;
     default: return `/listing/${item.id}`;
   }
 }
@@ -180,7 +180,7 @@ export default function MarketplaceCategoryScreen() {
         </View>
         <View style={styles.cardFooter}>
           <View style={styles.cardLocation}>
-            <Ionicons name="location-outline" size={12} color={SAHEL.mutedText} />
+            <Ionicons name="location-outline" size={12} color={RIHLA.mutedText} />
             <Text style={styles.cardLocationText}>{item.wilaya}</Text>
           </View>
           <View style={styles.cardTags}>
@@ -196,11 +196,11 @@ export default function MarketplaceCategoryScreen() {
   ), [isWide, catDef]);
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* ── HEADER ── */}
-      <LinearGradient colors={[catDef.color, SAHEL.primary]} style={[styles.header, { paddingTop: topPad + 12 }]}>
+      <LinearGradient colors={[catDef.color, RIHLA.primary]} style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </Pressable>
@@ -355,19 +355,19 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginTop: 12, marginBottom: 8,
     backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 16, height: 48,
-    borderWidth: 1, borderColor: SAHEL.border,
+    borderWidth: 1, borderColor: RIHLA.border,
   },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon', color: SAHEL.dark },
+  searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
 
   // Chips
   chipRow: { paddingHorizontal: 20, gap: 8, paddingVertical: 6 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    borderWidth: 1, borderColor: SAHEL.border, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
   },
-  chipActive: { backgroundColor: SAHEL.primary, borderColor: SAHEL.primary },
-  chipText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  chipActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
+  chipText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
   chipTextActive: { color: '#fff' },
 
   // Filter panel
@@ -375,37 +375,37 @@ const styles = StyleSheet.create({
   tagChipRow: { paddingHorizontal: 20, gap: 8, paddingVertical: 4 },
   tagChip: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
-    borderWidth: 1, borderColor: SAHEL.border, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
   },
-  tagChipText: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  tagChipText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText },
 
   // Sort
   sortChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: '#f0f0f0' },
-  sortChipActive: { backgroundColor: SAHEL.dark },
-  sortText: { fontSize: 11, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  sortChipActive: { backgroundColor: RIHLA.dark },
+  sortText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText },
   sortTextActive: { color: '#fff' },
 
   // Toggles
   toggleRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20 },
   toggle: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
-    borderWidth: 1, borderColor: SAHEL.border, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
   },
-  toggleActive: { backgroundColor: SAHEL.primary + '12', borderColor: SAHEL.primary },
-  toggleText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
-  toggleTextActive: { color: SAHEL.primary },
+  toggleActive: { backgroundColor: RIHLA.primary + '12', borderColor: RIHLA.primary },
+  toggleText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
+  toggleTextActive: { color: RIHLA.primary },
 
   // Results
   resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 8 },
-  resultsCount: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.mutedText },
-  clearAll: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.accent },
+  resultsCount: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
+  clearAll: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.accent },
 
   // List
   list: { paddingHorizontal: 20, gap: 12 },
 
   // Card
   card: {
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: SAHEL.border,
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
     overflow: 'hidden', marginBottom: 4,
   },
   cardImage: { height: 120, alignItems: 'center', justifyContent: 'center', position: 'relative' },
@@ -416,23 +416,23 @@ const styles = StyleSheet.create({
   featBadgeText: { fontSize: 9, fontFamily: 'mon-b', color: '#fff' },
   vipBadge: {
     position: 'absolute', top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4,
-    backgroundColor: SAHEL.highlight,
+    backgroundColor: RIHLA.highlight,
   },
   vipBadgeText: { fontSize: 9, fontFamily: 'mon-b', color: '#fff' },
   cardInfo: { padding: 14, gap: 4 },
-  cardTitle: { fontSize: 15, fontFamily: 'mon-b', color: SAHEL.dark },
-  cardDesc: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, lineHeight: 16 },
+  cardTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  cardDesc: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, lineHeight: 16 },
   cardMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   cardRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  cardRatingText: { fontSize: 13, fontFamily: 'mon-b', color: SAHEL.dark },
-  cardReviewCount: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
-  cardPrice: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.primary },
+  cardRatingText: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.dark },
+  cardReviewCount: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
+  cardPrice: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   cardLocation: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  cardLocationText: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  cardLocationText: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
   cardTags: { flexDirection: 'row', gap: 4 },
-  miniTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: SAHEL.muted },
-  miniTagText: { fontSize: 9, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  miniTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: RIHLA.muted },
+  miniTagText: { fontSize: 9, fontFamily: 'mon-sb', color: RIHLA.mutedText },
 
   // Empty
   emptyWrap: { paddingVertical: 40 },

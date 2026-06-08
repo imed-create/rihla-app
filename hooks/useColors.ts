@@ -1,5 +1,5 @@
 import { useColorScheme } from 'react-native';
-import colors, { categoryColors, SAHEL } from '@/constants/Colors';
+import colors, { categoryColors, RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
 
 export function useColors() {
@@ -20,6 +20,6 @@ export function useColors() {
     categoryPrimary: activeColor,
     tint: activeColor,
     radius: colors.light.radius,
-    sahel: SAHEL,
+    rihla: RIHLA,
   };
 }

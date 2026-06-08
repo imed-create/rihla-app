@@ -19,7 +19,7 @@ import ZoneTabs from '@/components/beach/ZoneTabs';
 import { showToast } from '@/components/Toast';
 import { SandSpot, SandZoneId, ZONE_CONFIG, makeZoneSpots } from '@/constants/beachLayout';
 import { sandIdToZoneType } from '@/types/beach';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import { bookingHref } from '@/utils/router';
@@ -75,7 +75,7 @@ export default function SpotsScreen() {
       type: 'spots',
       icon: 'umbrella-outline',
       iconFamily: 'Ionicons',
-      color: SAHEL.accent,
+      color: RIHLA.accent,
       title: `${ZONE_CONFIG[zone].label} · ${spot.id}`,
       subtitle: `${sandIdToZoneType(zone)} zone · Spot ${spot.id}`,
       price,
@@ -109,7 +109,7 @@ export default function SpotsScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={[SAHEL.primary, SAHEL.accent]}
+        colors={[RIHLA.primary, RIHLA.accent]}
         style={[styles.header, { paddingTop: topPad + 12 }]}
       >
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
@@ -137,9 +137,9 @@ export default function SpotsScreen() {
         <ZoneTabs active={zone} onChange={(z) => { setZone(z); setSpot(null); setHoldExpiresAt(null); }} />
 
         <View style={styles.legend}>
-          <Legend label="Available" color={SAHEL.card} border={SAHEL.border} />
-          <Legend label="Selected" color={SAHEL.primary} border={SAHEL.primary} />
-          <Legend label="Taken" color={SAHEL.border} border={SAHEL.border} text="#bbb" />
+          <Legend label="Available" color={RIHLA.card} border={RIHLA.border} />
+          <Legend label="Selected" color={RIHLA.primary} border={RIHLA.primary} />
+          <Legend label="Taken" color={RIHLA.border} border={RIHLA.border} text="#bbb" />
         </View>
 
         <FlatList
@@ -199,7 +199,7 @@ function Legend({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: SAHEL.background },
+  root: { flex: 1, backgroundColor: RIHLA.background },
   header: { paddingHorizontal: 20, paddingBottom: 24, alignItems: 'center' },
   backBtn: { position: 'absolute', left: 16, top: 16, padding: 8 },
   headerTitle: { fontSize: 24, fontFamily: 'mon-b', color: '#fff', marginTop: 8 },
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   legend: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 8 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendSwatch: { width: 14, height: 14, borderRadius: 4, borderWidth: 2 },
-  legendLabel: { fontSize: 11, fontFamily: 'mon', color: SAHEL.mutedText },
+  legendLabel: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
   gridRow: { gap: 8, marginBottom: 8 },
   bar: {
     position: 'absolute',
@@ -220,27 +220,27 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 16,
     paddingTop: 14,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderTopWidth: 1,
-    borderTopColor: SAHEL.border,
+    borderTopColor: RIHLA.border,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 12,
   },
   barLeft: { flex: 1, gap: 4 },
-  barSpot: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark },
+  barSpot: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: SAHEL.muted,
+    backgroundColor: RIHLA.muted,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  badgeText: { fontSize: 10, fontFamily: 'mon-sb', color: SAHEL.primary },
-  barPrice: { fontSize: 14, fontFamily: 'mon-b', color: SAHEL.primary },
+  badgeText: { fontSize: 10, fontFamily: 'mon-sb', color: RIHLA.primary },
+  barPrice: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
   bookBtn: {
-    backgroundColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 12,

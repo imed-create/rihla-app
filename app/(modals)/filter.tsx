@@ -1,5 +1,5 @@
 /**
- * SAHEL — Dedicated Filter Screen
+ * RIHLA — Dedicated Filter Screen
  * ──────────────────────────────────
  * Full-screen filter experience based on the StaysFilters template.
  * Sections: Environment, Geo-Region, Service Category, Price Range, Rating, Region (wilaya).
@@ -19,7 +19,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import {
   GeoRegion,
   Environment,
@@ -39,7 +39,7 @@ const GEO_REGIONS: { key: GeoRegion; label: string; icon: string }[] = [
 ];
 
 const ENVIRONMENTS: { key: Environment; label: string; emoji: string; color: string }[] = [
-  { key: 'beach', label: 'Beach', emoji: '🏖️', color: SAHEL.accent },
+  { key: 'beach', label: 'Beach', emoji: '🏖️', color: RIHLA.accent },
   { key: 'desert', label: 'Desert', emoji: '🏜️', color: '#C56A39' },
 ];
 
@@ -132,9 +132,9 @@ export default function FilterScreen() {
     (selectedRegion === 'All regions' ? null : selectedRegion) !== store.region;
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       {/* Header */}
-      <LinearGradient colors={[SAHEL.primary, SAHEL.accent]} style={[styles.header, { paddingTop: topPad + 12 }]}>
+      <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
           <Ionicons name="close" size={24} color="#fff" />
         </Pressable>
@@ -205,7 +205,7 @@ export default function FilterScreen() {
                 <Ionicons
                   name={gr.icon as any}
                   size={14}
-                  color={geoRegion === gr.key ? '#FFFFFF' : SAHEL.mutedText}
+                  color={geoRegion === gr.key ? '#FFFFFF' : RIHLA.mutedText}
                 />
                 <Text style={[styles.chipText, geoRegion === gr.key && styles.chipTextActive]}>
                   {gr.label}
@@ -232,7 +232,7 @@ export default function FilterScreen() {
                 <Ionicons
                   name={sc.icon as any}
                   size={14}
-                  color={serviceCategory === sc.key ? '#FFFFFF' : SAHEL.mutedText}
+                  color={serviceCategory === sc.key ? '#FFFFFF' : RIHLA.mutedText}
                 />
                 <Text style={[styles.chipText, serviceCategory === sc.key && styles.chipTextActive]}>
                   {sc.label}
@@ -293,7 +293,7 @@ export default function FilterScreen() {
                           key={i}
                           name={i < Math.floor(opt.value) ? 'star' : 'star-half'}
                           size={12}
-                          color={SAHEL.highlight}
+                          color={RIHLA.highlight}
                         />
                       ))}
                     </View>
@@ -365,9 +365,9 @@ const styles = StyleSheet.create({
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 4 },
-  sectionLabel: { fontSize: 11, fontFamily: 'mon-b', color: SAHEL.mutedText, letterSpacing: 1, marginBottom: 10, marginTop: 8 },
-  sectionSub: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText, marginBottom: 10, marginTop: -4 },
-  divider: { height: 1, backgroundColor: SAHEL.border, marginTop: 16 },
+  sectionLabel: { fontSize: 11, fontFamily: 'mon-b', color: RIHLA.mutedText, letterSpacing: 1, marginBottom: 10, marginTop: 8 },
+  sectionSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginBottom: 10, marginTop: -4 },
+  divider: { height: 1, backgroundColor: RIHLA.border, marginTop: 16 },
 
   // Environment cards
   envRow: { flexDirection: 'row', gap: 12 },
@@ -376,14 +376,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderWidth: 1.5,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     borderRadius: 16,
     padding: 14,
   },
   envEmoji: { fontSize: 24 },
-  envLabel: { flex: 1, fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
+  envLabel: { flex: 1, fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
   envCheck: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
 
   // Chips grid
@@ -396,11 +396,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: SAHEL.border,
-    backgroundColor: SAHEL.card,
+    borderColor: RIHLA.border,
+    backgroundColor: RIHLA.card,
   },
-  chipActive: { backgroundColor: SAHEL.primary, borderColor: SAHEL.primary },
-  chipText: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.mutedText },
+  chipActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
+  chipText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.mutedText },
   chipTextActive: { color: '#FFFFFF' },
 
   // Filter rows (radio)
@@ -412,15 +412,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderWidth: 1,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     marginBottom: 6,
   },
-  filterRowActive: { borderColor: SAHEL.primary, backgroundColor: SAHEL.primary + '08' },
+  filterRowActive: { borderColor: RIHLA.primary, backgroundColor: RIHLA.primary + '08' },
   filterRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  filterRowLabel: { fontSize: 14, fontFamily: 'mon', color: SAHEL.dark },
-  filterRowLabelActive: { fontFamily: 'mon-b', color: SAHEL.primary },
+  filterRowLabel: { fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
+  filterRowLabelActive: { fontFamily: 'mon-b', color: RIHLA.primary },
   ratingStars: { flexDirection: 'row', gap: 2 },
 
   // Radio
@@ -429,12 +429,12 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: SAHEL.border,
+    borderColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioActive: { borderColor: SAHEL.primary },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: SAHEL.primary },
+  radioActive: { borderColor: RIHLA.primary },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: RIHLA.primary },
 
   // Footer
   footer: {
@@ -448,9 +448,9 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingHorizontal: 20,
     paddingTop: 16,
-    backgroundColor: SAHEL.card,
+    backgroundColor: RIHLA.card,
     borderTopWidth: 1,
-    borderTopColor: SAHEL.border,
+    borderTopColor: RIHLA.border,
   },
   footerShadow: {
     position: 'absolute',
@@ -461,13 +461,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.05)',
   },
   footerInfo: {},
-  footerReset: { fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.mutedText, textDecorationLine: 'underline' },
+  footerReset: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.mutedText, textDecorationLine: 'underline' },
   applyBtn: {
-    backgroundColor: SAHEL.primary,
+    backgroundColor: RIHLA.primary,
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 14,
-    shadowColor: SAHEL.primary,
+    shadowColor: RIHLA.primary,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },

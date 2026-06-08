@@ -19,7 +19,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SAHEL } from '@/constants/Colors';
+import { RIHLA } from '@/constants/theme';
 import { getListingById } from '@/constants/mockListings';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import { getListingUIConfig } from '@/types/listing';
@@ -55,7 +55,7 @@ export default function ListingDetailScreen() {
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <TouchableOpacity style={styles.backCircle} onPress={() => safeGoBack()}>
-          <Ionicons name="arrow-back" size={22} color={SAHEL.dark} />
+          <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
         </TouchableOpacity>
         <View style={styles.notFound}>
           <Ionicons name="alert-circle-outline" size={48} color="#94A3B8" />
@@ -69,12 +69,12 @@ export default function ListingDetailScreen() {
   const uiConfig = getListingUIConfig(listing.category);
 
   return (
-    <View style={[styles.root, { backgroundColor: SAHEL.background }]}>
+    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
         {/* ── HERO IMAGE ── */}
         <View style={[styles.heroWrap, { paddingTop: topPad }]}>
-          <LinearGradient colors={[catDef.color + 'CC', SAHEL.primary]} style={styles.hero}>
+          <LinearGradient colors={[catDef.color + 'CC', RIHLA.primary]} style={styles.hero}>
             <View style={styles.heroNav}>
               <TouchableOpacity style={styles.backCircle} onPress={() => safeGoBack()}>
                 <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -116,12 +116,12 @@ export default function ListingDetailScreen() {
           <View style={styles.heroRating}>
             {listing.is_featured && (
               <View style={styles.featPill}>
-                <Ionicons name="star" size={12} color={SAHEL.highlight} />
+                <Ionicons name="star" size={12} color={RIHLA.highlight} />
                 <Text style={styles.featText}>Featured</Text>
               </View>
             )}
             {listing.is_vip && (
-              <View style={[styles.featPill, { backgroundColor: SAHEL.highlight + '20' }]}>
+              <View style={[styles.featPill, { backgroundColor: RIHLA.highlight + '20' }]}>
                 <Text style={styles.featText}>VIP</Text>
               </View>
             )}
@@ -172,7 +172,7 @@ export default function ListingDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Location</Text>
             <View style={styles.mapPlaceholder}>
-              <Ionicons name="map-outline" size={32} color={SAHEL.mutedText} />
+              <Ionicons name="map-outline" size={32} color={RIHLA.mutedText} />
               <Text style={styles.mapPlaceholderText}>{listing.wilaya}, Algeria</Text>
               <Text style={styles.mapCoord}>
                 {listing.coordinates.latitude.toFixed(4)}, {listing.coordinates.longitude.toFixed(4)}
@@ -307,7 +307,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   return (
     <View style={infoStyles.row}>
       <View style={infoStyles.iconWrap}>
-        <Ionicons name={icon as any} size={16} color={SAHEL.primary} />
+        <Ionicons name={icon as any} size={16} color={RIHLA.primary} />
       </View>
       <Text style={infoStyles.label}>{label}</Text>
       <Text style={infoStyles.value} numberOfLines={1}>{value}</Text>
@@ -325,10 +325,10 @@ function getPriceUnit(category: string): string {
 }
 
 const infoStyles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: SAHEL.border },
-  iconWrap: { width: 32, height: 32, borderRadius: 8, backgroundColor: SAHEL.primary + '10', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  label: { flex: 1, fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText },
-  value: { fontSize: 13, fontFamily: 'mon-sb', color: SAHEL.dark, textAlign: 'right', maxWidth: '50%' },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: RIHLA.border },
+  iconWrap: { width: 32, height: 32, borderRadius: 8, backgroundColor: RIHLA.primary + '10', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  label: { flex: 1, fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
+  value: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark, textAlign: 'right', maxWidth: '50%' },
 });
 
 const styles = StyleSheet.create({
@@ -354,46 +354,46 @@ const styles = StyleSheet.create({
   heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
 
   // Price bar
-  priceBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: SAHEL.border },
-  priceValue: { fontSize: 22, fontFamily: 'mon-b', color: SAHEL.primary },
-  priceUnit: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText },
-  featPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: SAHEL.highlight + '20' },
-  featText: { fontSize: 11, fontFamily: 'mon-b', color: SAHEL.highlight },
+  priceBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: RIHLA.border },
+  priceValue: { fontSize: 22, fontFamily: 'mon-b', color: RIHLA.primary },
+  priceUnit: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
+  featPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: RIHLA.highlight + '20' },
+  featText: { fontSize: 11, fontFamily: 'mon-b', color: RIHLA.highlight },
 
   // Sections
   section: { paddingHorizontal: 20, paddingTop: 20 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: SAHEL.dark, marginBottom: 10 },
-  description: { fontSize: 14, fontFamily: 'mon', color: SAHEL.mutedText, lineHeight: 22 },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 10 },
+  description: { fontSize: 14, fontFamily: 'mon', color: RIHLA.mutedText, lineHeight: 22 },
 
   // Info grid
-  infoGrid: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, padding: 4, paddingHorizontal: 12 },
+  infoGrid: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 4, paddingHorizontal: 12 },
 
   // Tags
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: SAHEL.primary + '10', borderWidth: 1, borderColor: SAHEL.primary + '20' },
-  tagText: { fontSize: 12, fontFamily: 'mon-sb', color: SAHEL.primary },
+  tag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: RIHLA.primary + '10', borderWidth: 1, borderColor: RIHLA.primary + '20' },
+  tagText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.primary },
 
   // Reviews
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  reviewPlaceholder: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, padding: 20, alignItems: 'center' },
-  reviewPlaceholderText: { fontSize: 13, fontFamily: 'mon', color: SAHEL.mutedText },
+  reviewPlaceholder: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 20, alignItems: 'center' },
+  reviewPlaceholderText: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
 
   // Map
-  mapPlaceholder: { height: 140, borderRadius: 14, borderWidth: 1, borderColor: SAHEL.border, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  mapPlaceholderText: { fontSize: 14, fontFamily: 'mon-sb', color: SAHEL.dark },
-  mapCoord: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
+  mapPlaceholder: { height: 140, borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  mapPlaceholderText: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
+  mapCoord: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
 
   // Bottom bar
   bottomBar: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16,
     paddingHorizontal: 20, paddingTop: 14,
-    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: SAHEL.border,
+    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: RIHLA.border,
     shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12,
   },
   bottomInfo: {},
-  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: SAHEL.primary },
-  bottomUnit: { fontSize: 12, fontFamily: 'mon', color: SAHEL.mutedText },
-  bookBtn: { backgroundColor: SAHEL.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14, shadowColor: SAHEL.primary, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+  bottomUnit: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  bookBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14, shadowColor: RIHLA.primary, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
 });

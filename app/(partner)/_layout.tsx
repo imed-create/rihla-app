@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ProNavProvider } from '@/components/pro/ProNavProvider';
+import { ProNavProvider } from '@/components/dashboard/NavProvider';
 import { PRO_THEME } from '@/constants/proNavigation';
 
 const theme = PRO_THEME.partner;

@@ -6,7 +6,7 @@ import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
-import CountdownTimer from "@/components/CountdownTimer";
+import CountdownTimer from '@/components/shared/CountdownTimer';
 
 function BookingIcon({ icon, iconFamily, color, size = 22 }: { icon: string; iconFamily: string; color: string; size?: number }) {
   if (iconFamily === "MaterialCommunityIcons")

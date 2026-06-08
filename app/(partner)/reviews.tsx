@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ProScreenChrome from '@/components/pro/ProScreenChrome';
+import ProScreenChrome from '@/components/dashboard/ScreenChrome';
 
 const MOCK_REVIEWS = [
   {
