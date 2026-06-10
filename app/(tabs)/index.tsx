@@ -1,82 +1,101 @@
 /**
- * RIHLA — Discover Screen (Traveler Home)
- * ────────────────────────────────────────
- * Personalized greeting → Search → Wilaya grid → Marketplace categories → Destinations
+ * RIHLA — Discover Screen (Traveler Home - Uber Style)
+ * ─────────────────────────────────────────────────────
+ * Clean, premium layout: Greeting → Search → Featured listings →
+ * Marketplace categories → Top destinations suggestions
  */
 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  Animated,
   FlatList,
-  Platform,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
-import DestinationCard from '@/components/shared/DestinationCard';
-import SkeletonCard from '@/components/shared/SkeletonCard';
 import { RIHLA } from '@/constants/theme';
-import { DESTINATIONS, getDestinationsByType } from '@/constants/destinations';
-import { FEATURED_WILAYAS, WILAYAS, type Wilaya } from '@/constants/wilayas';
-import { MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
+import { DESTINATIONS } from '@/constants/destinations';
+import { MARKETPLACE_CATEGORIES, getCategoryDef } from '@/constants/marketplaceCategories';
+import { MOCK_LISTINGS } from '@/constants/mockListings';
 import { useApp } from '@/context/AppContext';
-import { useTranslation } from '@/context/I18nContext';
 
-// ── REGION TABS ─────────────────────────────────────────────────────
-const REGION_TABS = ['All', 'Coast', 'East', 'West', 'Sahara'] as const;
-type RegionTab = typeof REGION_TABS[number];
-
-function getWilayasForRegion(tab: RegionTab): Wilaya[] {
-  const featured = FEATURED_WILAYAS.map((id) => WILAYAS.find((w) => w.id === id)).filter(Boolean) as Wilaya[];
-  if (tab === 'All') return featured;
-  if (tab === 'Coast') return WILAYAS.filter((w) => w.hasBeach).slice(0, 12);
-  if (tab === 'East') return WILAYAS.filter((w) => w.region === 'North East' || w.id === 25 || w.id === 23).slice(0, 12);
-  if (tab === 'West') return WILAYAS.filter((w) => w.region === 'North West').slice(0, 12);
-  if (tab === 'Sahara') return WILAYAS.filter((w) => w.hasDesert).slice(0, 12);
-  return featured;
-}
-
-// ── WILAYA CHIP ──────────────────────────────────────────────────────
-function WilayaChip({ wilaya, onPress }: { wilaya: Wilaya; onPress: () => void }) {
+// ── FEATURED LISTING CARD ──────────────────────────────────────────
+function FeaturedListingCard({ listing }: { listing: any }) {
+  const catDef = getCategoryDef(listing.category as any);
+  const catColor = catDef?.color || RIHLA.primary;
   return (
-    <TouchableOpacity style={styles.wilayaChip} onPress={onPress} activeOpacity={0.75}>
-      <Text style={styles.wilayaEmoji}>{wilaya.emoji}</Text>
-      <Text style={styles.wilayaName}>{wilaya.name}</Text>
-      {wilaya.hasBeach && <View style={styles.beachDot} />}
+    <TouchableOpacity
+      style={styles.featuredCard}
+      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/listing/${listing.id}` as any); }}
+      activeOpacity={0.85}
+    >
+      <View style={[styles.featuredImageWrap]}>
+        {listing.cover_image_url ? (
+          <Image source={{ uri: listing.cover_image_url }} style={styles.featuredImage} />
+        ) : (
+          <View style={[styles.featuredImagePlaceholder, { backgroundColor: catColor + '20' }]}>
+            <Ionicons name={(catDef?.icon || 'image-outline') as any} size={28} color={catColor} />
+          </View>
+        )}
+        <View style={[styles.featuredBadge, { backgroundColor: catColor }]}>
+          <Ionicons name={(catDef?.icon || 'location') as any} size={10} color="#fff" />
+          <Text style={styles.featuredBadgeText}>{catDef?.label || listing.category}</Text>
+        </View>
+        {listing.is_vip && (
+          <View style={styles.featuredVipBadge}>
+            <Ionicons name="diamond" size={10} color="#FFFFFF" />
+            <Text style={styles.featuredVipText}>VIP</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.featuredInfo}>
+        <Text style={styles.featuredTitle} numberOfLines={1}>{listing.title}</Text>
+        <Text style={styles.featuredSubtitle} numberOfLines={1}>{listing.wilaya}</Text>
+        <View style={styles.featuredMeta}>
+          <View style={styles.featuredRating}>
+            <Ionicons name="star" size={12} color="#FFD166" />
+            <Text style={styles.featuredRatingText}>{listing.rating}</Text>
+          </View>
+          <Text style={styles.featuredPrice}>
+            {listing.price_dzd.toLocaleString()} <Text style={styles.featuredPriceUnit}>DZD</Text>
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
 
-// ── MARKETPLACE CATEGORY CARD ─────────────────────────────────────────
-function MarketplaceCard({
-  icon,
-  label,
-  color,
-  onPress,
-}: {
-  icon: string;
-  label: string;
-  color: string;
-  onPress: () => void;
-}) {
+// ── DESTINATION SUGGESTION CARD ─────────────────────────────────────
+function DestinationSuggestCard({ dest }: { dest: any }) {
+  const gradientColors = dest.gradient || ['#0a2540', '#061422'];
   return (
-    <TouchableOpacity style={styles.marketCard} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.marketIconWrap, { backgroundColor: color + '18' }]}>
-        <Ionicons name={icon as any} size={22} color={color} />
-      </View>
-      <Text style={styles.marketLabel} numberOfLines={1}>{label}</Text>
+    <TouchableOpacity
+      style={styles.destCard}
+      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/destination/${dest.id}` as any); }}
+      activeOpacity={0.85}
+    >
+      <LinearGradient colors={gradientColors as [string, string]} style={styles.destGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        <View style={styles.destContent}>
+          <Text style={styles.destEmoji}>{dest.type === 'beach' ? '🏖️' : dest.type === 'desert' ? '🏜️' : dest.type === 'mountain' ? '⛰️' : dest.type === 'city' ? '🏙️' : '🏛️'}</Text>
+          <Text style={styles.destName}>{dest.name}</Text>
+          <Text style={styles.destRegion}>{dest.region} · {dest.distance}</Text>
+          <View style={styles.destRatingRow}>
+            <Ionicons name="star" size={11} color="#FFD166" />
+            <Text style={styles.destRatingText}>{dest.rating}</Text>
+          </View>
+        </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
@@ -84,27 +103,12 @@ function MarketplaceCard({
 // ── MAIN SCREEN ───────────────────────────────────────────────────────
 export default function DiscoverScreen() {
   const { user } = useApp();
-  const { t } = useTranslation();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeRegion, setActiveRegion] = useState<RegionTab>('All');
-
-  const scrollY = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 900);
-    return () => clearTimeout(timer);
-  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setRefreshing(false);
-    }, 900);
+    setTimeout(() => setRefreshing(false), 600);
   }, []);
 
   // Greeting
@@ -113,185 +117,16 @@ export default function DiscoverScreen() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const greetingText = firstName ? `${greeting}, ${firstName}! 👋` : `${greeting}! 👋`;
 
-  // Wilayas for current region tab
-  const displayedWilayas = useMemo(() => getWilayasForRegion(activeRegion), [activeRegion]);
+  // Featured listings (active and featured, up to 8)
+  const featuredListings = useMemo(
+    () => MOCK_LISTINGS.filter(l => l.is_active && l.is_featured).slice(0, 8),
+    []
+  );
 
-  // Filtered destinations
-  const filteredDestinations = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return DESTINATIONS.sort((a, b) => b.rating - a.rating);
-    return DESTINATIONS.filter(
-      (d) =>
-        d.name.toLowerCase().includes(q) ||
-        d.region.toLowerCase().includes(q) ||
-        d.tagline.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
-
-  // ── HEADER (renders inside FlatList ListHeaderComponent) ──────────
-  const ListHeader = (
-    <View>
-      {/* ── TOP BAR ─────────────────────────────────────── */}
-      <View style={styles.topBar}>
-        <View style={styles.brandLockup}>
-          <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={styles.logoMark}>
-            <Ionicons name="airplane" size={16} color="#FFFFFF" />
-          </LinearGradient>
-          <Text style={styles.brandText}>RIHLA</Text>
-        </View>
-        <View style={styles.topBarRight}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.push('/(tabs)/wishlists' as any)}
-          >
-            <Ionicons name="heart-outline" size={20} color="#1a1a1a" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={20} color="#1a1a1a" />
-            <View style={[styles.notifDot, { backgroundColor: RIHLA.accent }]} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.push('/(modals)/settings' as any)}
-          >
-            <Ionicons name="menu" size={22} color="#1a1a1a" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ── PERSONALIZED GREETING ────────────────────────── */}
-      {!loading && (
-        <View style={styles.greetingWrap}>
-          <Text style={styles.greetingText}>{greetingText}</Text>
-          <Text style={styles.greetingSubtext}>Where are you going in Algeria?</Text>
-        </View>
-      )}
-
-      {/* ── SEARCH BAR ─────────────────────────────────────── */}
-      <Pressable
-        style={styles.searchBar}
-        onPress={() => router.push('/search' as any)}
-      >
-        <View style={styles.searchInner}>
-          <Ionicons name="search" size={18} color="#888888" />
-          <Text style={styles.searchPlaceholder}>
-            {searchQuery || 'Search wilayas, destinations...'}
-          </Text>
-        </View>
-        <View style={styles.searchFilter}>
-          <Ionicons name="options-outline" size={16} color={RIHLA.accent} />
-        </View>
-      </Pressable>
-
-      {/* ── BROWSE BY WILAYA ─────────────────────────────── */}
-      {!loading && (
-        <View style={styles.wilayaSection}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Browse by Wilaya</Text>
-            <Text style={styles.wilayaCount}>{WILAYAS.length} wilayas</Text>
-          </View>
-
-          {/* Region filter tabs */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.regionTabs}
-          >
-            {REGION_TABS.map((tab) => (
-              <Pressable
-                key={tab}
-                style={[styles.regionTab, activeRegion === tab && styles.regionTabActive]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setActiveRegion(tab);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.regionTabText,
-                    activeRegion === tab && styles.regionTabTextActive,
-                  ]}
-                >
-                  {tab}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          {/* Wilaya chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.wilayaScroll}
-          >
-            {displayedWilayas.map((w) => (
-              <WilayaChip
-                key={w.id}
-                wilaya={w}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/wilaya/${w.code}` as any);
-                }}
-              />
-            ))}
-            {/* "All Wilayas" chip */}
-            <TouchableOpacity
-              style={[styles.wilayaChip, styles.wilayaChipAll]}
-              onPress={() => router.push('/search' as any)}
-            >
-              <Ionicons name="grid-outline" size={16} color={RIHLA.accent} />
-              <Text style={[styles.wilayaName, { color: RIHLA.accent }]}>All 58</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      )}
-
-      {/* ── MARKETPLACE CATEGORIES ─────────────────────── */}
-      {!loading && (
-        <View style={styles.marketSection}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>What are you looking for?</Text>
-            <Pressable onPress={() => router.push('/search' as any)}>
-              <Text style={styles.seeAll}>See all →</Text>
-            </Pressable>
-          </View>
-          <FlatList
-            data={MARKETPLACE_CATEGORIES}
-            keyExtractor={(item) => item.key}
-            numColumns={5}
-            scrollEnabled={false}
-            renderItem={({ item }) => (
-              <MarketplaceCard
-                icon={item.icon}
-                label={item.label}
-                color={item.color}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/marketplace/${item.key}` as any);
-                }}
-              />
-            )}
-            contentContainerStyle={styles.marketGrid}
-          />
-        </View>
-      )}
-
-      {/* ── TOP DESTINATIONS HEADER ─────────────────────── */}
-      <View style={styles.sectionHeaderRow2}>
-        <Text style={styles.sectionTitle}>
-          {searchQuery ? `Results for "${searchQuery}"` : 'Top Destinations'}
-        </Text>
-        <Text style={styles.sectionCount2}>{filteredDestinations.length} places</Text>
-      </View>
-
-      {loading && (
-        <View style={styles.skeletonWrap}>
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
-      )}
-    </View>
+  // Top destinations (by rating, up to 6)
+  const topDestinations = useMemo(
+    () => [...DESTINATIONS].sort((a, b) => b.rating - a.rating).slice(0, 6),
+    []
   );
 
   return (
@@ -300,28 +135,165 @@ export default function DiscoverScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <FlatList
-        data={loading ? [] : filteredDestinations}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        data={[]}
+        keyExtractor={(_, i) => i.toString()}
+        renderItem={() => null}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={RIHLA.accent} colors={[RIHLA.accent]} />
         }
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={
-          loading ? null : (
-            <View style={styles.emptyWrap}>
-              <Ionicons name="map-outline" size={48} color={RIHLA.border} />
-              <Text style={styles.emptyText}>No destinations found</Text>
+        ListHeaderComponent={
+          <>
+            {/* ── TOP BAR ── */}
+            <View style={styles.topBar}>
+              <View style={styles.brandLockup}>
+                <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={styles.logoMark}>
+                  <Ionicons name="airplane" size={14} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={styles.brandText}>RIHLA</Text>
+              </View>
+              <View style={styles.topBarRight}>
+                <View style={styles.iconBtn}>
+                  <Ionicons name="notifications-outline" size={20} color="#1a1a1a" />
+                  <View style={[styles.notifDot, { backgroundColor: RIHLA.accent }]} />
+                </View>
+                <TouchableOpacity
+                  style={styles.iconBtn}
+                  onPress={() => router.push('/(modals)/settings' as any)}
+                >
+                  <Ionicons name="menu" size={22} color="#1a1a1a" />
+                </TouchableOpacity>
+              </View>
             </View>
-          )
+
+            {/* ── GREETING HERO ── */}
+            <View style={styles.heroSection}>
+              <Text style={styles.greetingText}>{greetingText}</Text>
+              <Text style={styles.heroTitle}>Where would you{'\n'}like to go?</Text>
+            </View>
+
+            {/* ── UBER-STYLE SEARCH ── */}
+            <Pressable
+              style={styles.searchBar}
+              onPress={() => router.push('/search' as any)}
+            >
+              <View style={styles.searchIconWrap}>
+                <Ionicons name="search" size={18} color="#FFFFFF" />
+              </View>
+              <View style={styles.searchContent}>
+                <Text style={styles.searchPlaceholder}>Search destinations, wilayas...</Text>
+                <Text style={styles.searchHint}>Hotels, restaurants, guides & more</Text>
+              </View>
+              <View style={styles.searchDivider} />
+              <View style={styles.searchFilter}>
+                <Ionicons name="options-outline" size={18} color={RIHLA.accent} />
+              </View>
+            </Pressable>
+
+            {/* ── FEATURED LISTINGS ── */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Featured Stays</Text>
+                <TouchableOpacity onPress={() => router.push('/search' as any)}>
+                  <Text style={styles.sectionLink}>See all</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.featuredScroll}
+              >
+                {featuredListings.slice(0, 5).map((listing) => (
+                  <FeaturedListingCard key={listing.id} listing={listing} />
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* ── QUICK CATEGORIES ── */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>What are you looking for?</Text>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesScroll}
+              >
+                {MARKETPLACE_CATEGORIES.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.key}
+                    style={[styles.categoryChip, { backgroundColor: cat.color + '12', borderColor: cat.color + '30' }]}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/marketplace/${cat.key}` as any); }}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[styles.categoryIconWrap, { backgroundColor: cat.color + '20' }]}>
+                      <Ionicons name={cat.icon as any} size={18} color={cat.color} />
+                    </View>
+                    <View style={styles.categoryInfo}>
+                      <Text style={[styles.categoryLabel, { color: cat.color }]}>{cat.labelPlural}</Text>
+                      <Text style={styles.categoryDesc}>{cat.description}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={14} color={cat.color} />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* ── SUGGESTED DESTINATIONS ── */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Top Destinations</Text>
+                <Text style={styles.sectionCount}>{topDestinations.length} places</Text>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.destScroll}
+              >
+                {topDestinations.map((dest) => (
+                  <DestinationSuggestCard key={dest.id} dest={dest} />
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* ── QUICK ACTIONS ── */}
+            <View style={[styles.section, { marginBottom: 20 }]}>
+              <View style={styles.quickActions}>
+                <TouchableOpacity
+                  style={styles.quickAction}
+                  onPress={() => { Haptics.selectionAsync(); router.push('/(tabs)/explore' as any); }}
+                >
+                  <View style={[styles.quickActionIcon, { backgroundColor: '#0a2540' }]}>
+                    <Ionicons name="map" size={22} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.quickActionTitle}>Explore Map</Text>
+                  <Text style={styles.quickActionDesc}>Find places on map</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.quickAction}
+                  onPress={() => { Haptics.selectionAsync(); router.push('/search' as any); }}
+                >
+                  <View style={[styles.quickActionIcon, { backgroundColor: '#00a896' }]}>
+                    <Ionicons name="search" size={22} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.quickActionTitle}>Search All</Text>
+                  <Text style={styles.quickActionDesc}>Browse 70+ listings</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.quickAction}
+                  onPress={() => { Haptics.selectionAsync(); router.push('/services/find-providers' as any); }}
+                >
+                  <View style={[styles.quickActionIcon, { backgroundColor: '#6C63FF' }]}>
+                    <Ionicons name="car" size={22} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.quickActionTitle}>Find Ride</Text>
+                  <Text style={styles.quickActionDesc}>Nearby drivers</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
         }
-        renderItem={({ item }) => <DestinationCard destination={item} />}
+        contentContainerStyle={styles.listContent}
       />
     </SafeAreaView>
   );
@@ -337,126 +309,212 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-    backgroundColor: '#F8FAFC',
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   brandLockup: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logoMark: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 32, height: 32, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
   },
-  brandText: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.primary, letterSpacing: 1.5 },
-  topBarRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  brandText: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary, letterSpacing: 1.5 },
+  topBarRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 38, height: 38, borderRadius: 19,
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1, borderColor: '#E2E8F0',
     position: 'relative',
   },
   notifDot: {
-    position: 'absolute', top: 8, right: 9,
-    width: 8, height: 8, borderRadius: 4,
+    position: 'absolute', top: 7, right: 8,
+    width: 7, height: 7, borderRadius: 4,
     borderWidth: 1.5, borderColor: '#FFFFFF',
   },
 
-  // Greeting
-  greetingWrap: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4, gap: 3 },
-  greetingText: { fontSize: 24, fontFamily: 'mon-b', color: '#0F172A', letterSpacing: -0.3 },
-  greetingSubtext: { fontSize: 14, fontFamily: 'mon', color: '#64748B' },
+  // Hero
+  heroSection: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
+  greetingText: { fontSize: 15, fontFamily: 'mon-sb', color: '#64748B', marginBottom: 4 },
+  heroTitle: { fontSize: 30, fontFamily: 'mon-b', color: '#0F172A', lineHeight: 36, letterSpacing: -0.5 },
 
-  // Search bar (tap to navigate)
+  // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: 20, marginTop: 14, marginBottom: 4,
+    marginHorizontal: 20, marginTop: 12, marginBottom: 8,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1, borderColor: '#E2E8F0',
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.06, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    height: 60,
+  },
+  searchIconWrap: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: RIHLA.primary,
+    alignItems: 'center', justifyContent: 'center',
+    marginLeft: 10,
+  },
+  searchContent: { flex: 1, paddingLeft: 10, gap: 2 },
+  searchPlaceholder: { fontSize: 14, fontFamily: 'mon-sb', color: '#0F172A' },
+  searchHint: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
+  searchDivider: { width: 1, height: 36, backgroundColor: '#E2E8F0' },
+  searchFilter: { width: 50, height: 60, alignItems: 'center', justifyContent: 'center' },
+
+  // Sections
+  section: { paddingTop: 20 },
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, marginBottom: 12,
+  },
+  sectionTitle: { fontSize: 17, fontFamily: 'mon-b', color: '#0F172A' },
+  sectionLink: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
+  sectionCount: { fontSize: 12, fontFamily: 'mon-sb', color: '#94A3B8' },
+
+  // Featured listings
+  featuredScroll: { paddingLeft: 20, paddingRight: 8, gap: 12 },
+  featuredCard: {
+    width: 200,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
-  searchInner: {
-    flex: 1, flexDirection: 'row', alignItems: 'center',
-    gap: 10, paddingHorizontal: 16, height: 52,
+  featuredImageWrap: {
+    width: '100%',
+    height: 120,
+    position: 'relative',
   },
-  searchPlaceholder: { fontSize: 14, fontFamily: 'mon', color: '#94A3B8' },
-  searchFilter: {
-    width: 52, height: 52,
-    alignItems: 'center', justifyContent: 'center',
-    borderLeftWidth: 1, borderLeftColor: '#E2E8F0',
+  featuredImage: {
+    width: '100%',
+    height: 120,
   },
+  featuredImagePlaceholder: {
+    width: '100%',
+    height: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featuredBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  featuredBadgeText: { fontSize: 9, fontFamily: 'mon-b', color: '#FFFFFF' },
+  featuredVipBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  featuredVipText: { fontSize: 8, fontFamily: 'mon-b', color: '#FFFFFF' },
+  featuredInfo: { padding: 10, gap: 3 },
+  featuredTitle: { fontSize: 13, fontFamily: 'mon-b', color: '#0F172A' },
+  featuredSubtitle: { fontSize: 11, fontFamily: 'mon', color: '#64748B' },
+  featuredMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  featuredRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  featuredRatingText: { fontSize: 12, fontFamily: 'mon-b', color: '#0F172A' },
+  featuredPrice: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.primary },
+  featuredPriceUnit: { fontSize: 9, fontFamily: 'mon', color: '#94A3B8' },
 
-  // Wilaya section
-  wilayaSection: { paddingTop: 20 },
-  sectionHeaderRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, marginBottom: 10,
+  // Categories
+  categoriesScroll: { paddingLeft: 20, paddingRight: 8, gap: 10 },
+  categoryChip: {
+    width: 200,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
   },
-  sectionTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#0F172A' },
-  wilayaCount: { fontSize: 12, fontFamily: 'mon-sb', color: '#94A3B8' },
-
-  // Region tabs
-  regionTabs: { paddingHorizontal: 20, gap: 8, marginBottom: 12 },
-  regionTab: {
-    paddingHorizontal: 14, paddingVertical: 7,
-    borderRadius: 999, borderWidth: 1.5, borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+  categoryIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  regionTabActive: { borderColor: RIHLA.primary, backgroundColor: RIHLA.primary + '10' },
-  regionTabText: { fontSize: 13, fontFamily: 'mon-sb', color: '#94A3B8' },
-  regionTabTextActive: { color: RIHLA.primary },
+  categoryInfo: { flex: 1, gap: 2 },
+  categoryLabel: { fontSize: 13, fontFamily: 'mon-b' },
+  categoryDesc: { fontSize: 10, fontFamily: 'mon', color: '#64748B' },
 
-  // Wilaya chips
-  wilayaScroll: { paddingHorizontal: 20, gap: 10, paddingBottom: 4 },
-  wilayaChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 14, paddingVertical: 10,
+  // Destinations
+  destScroll: { paddingLeft: 20, paddingRight: 8, gap: 12 },
+  destCard: {
+    width: 160,
+    height: 190,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  destGradient: {
+    flex: 1,
+    padding: 14,
+    justifyContent: 'flex-end',
+  },
+  destContent: { gap: 3 },
+  destEmoji: { fontSize: 24, marginBottom: 4 },
+  destName: { fontSize: 16, fontFamily: 'mon-b', color: '#FFFFFF' },
+  destRegion: { fontSize: 11, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+  destRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
+  destRatingText: { fontSize: 12, fontFamily: 'mon-b', color: '#FFD166' },
+
+  // Quick actions
+  quickActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  quickAction: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    borderWidth: 1, borderColor: '#E2E8F0',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 6,
+    alignItems: 'center',
   },
-  wilayaChipAll: { borderColor: RIHLA.accent + '40', borderStyle: 'dashed' },
-  wilayaEmoji: { fontSize: 18 },
-  wilayaName: { fontSize: 13, fontFamily: 'mon-sb', color: '#0F172A' },
-  beachDot: {
-    width: 6, height: 6, borderRadius: 3,
-    backgroundColor: RIHLA.accent,
+  quickActionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
-  // Marketplace categories
-  marketSection: { paddingTop: 24 },
-  seeAll: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
-  marketGrid: { paddingHorizontal: 16, paddingTop: 8 },
-  marketCard: {
-    flex: 1, alignItems: 'center', gap: 6,
-    paddingVertical: 12, margin: 4,
-  },
-  marketIconWrap: {
-    width: 48, height: 48, borderRadius: 14,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  marketLabel: { fontSize: 10, fontFamily: 'mon-sb', color: '#475569', textAlign: 'center' },
-
-  // Section header (destinations)
-  sectionHeaderRow2: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8,
-  },
-  sectionCount2: { fontSize: 12, fontFamily: 'mon-sb', color: '#94A3B8' },
+  quickActionTitle: { fontSize: 12, fontFamily: 'mon-b', color: '#0F172A' },
+  quickActionDesc: { fontSize: 10, fontFamily: 'mon', color: '#94A3B8' },
 
   // List
-  listContent: { paddingHorizontal: 16, paddingBottom: 40 },
-
-  // Skeleton
-  skeletonWrap: { gap: 16, paddingTop: 8 },
-
-  // Empty
-  emptyWrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 12 },
-  emptyText: { fontSize: 14, color: '#888888', fontFamily: 'mon-sb' },
+  listContent: { paddingBottom: 40 },
 });

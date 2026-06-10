@@ -1,3 +1,8 @@
+/**
+ * RIHLA — Role Select (Uber-Style Redesign)
+ * Gradient hero header with clean role cards
+ */
+
 import React from 'react';
 import {
   View,
@@ -9,8 +14,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useApp, UserRole } from '@/context/AppContext';
-import { StyleSheet as RNStyleSheet } from 'react-native';
+import { RIHLA } from '@/constants/theme';
 
 const ROLES: {
   id: UserRole;
@@ -19,7 +25,6 @@ const ROLES: {
   desc: string;
   icon: string;
   accentColor: string;
-  bgColor: string;
   perks: string[];
 }[] = [
   {
@@ -29,17 +34,15 @@ const ROLES: {
     desc: 'Discover beaches, deserts, mountains and historic cities. Book experiences instantly.',
     icon: 'compass-outline',
     accentColor: '#00a896',
-    bgColor: '#EFF6FF',
     perks: ['Browse all destinations', 'Book services instantly', 'Track your trips'],
   },
   {
     id: 'business',
     title: 'Business Owner',
     subtitle: 'List your business',
-    desc: 'Hotel, restaurant, resort or venue — list it on TourDZ and reach thousands of tourists.',
+    desc: 'Hotel, restaurant, resort or venue — list it on RIHLA and reach thousands of tourists.',
     icon: 'storefront-outline',
-    accentColor: '#0a2540',
-    bgColor: '#F5F3FF',
+    accentColor: RIHLA.primary,
     perks: ['List your business', 'Manage bookings', 'Track revenue'],
   },
   {
@@ -49,7 +52,6 @@ const ROLES: {
     desc: 'Jet skis, camels, buggies, quads — list your rentals and earn with every booking.',
     icon: 'flash-outline',
     accentColor: '#f4a261',
-    bgColor: '#ECFDF5',
     perks: ['List your services', 'Manage active rentals', 'Track your earnings'],
   },
 ];
@@ -65,38 +67,34 @@ export default function RoleSelectScreen() {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* ── HEADER ── */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Choose your role</Text>
-      </View>
+      {/* Gradient Hero */}
+      <LinearGradient colors={[RIHLA.primary, '#0d3b66']} style={styles.hero}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.heroEmoji}>🇩🇿</Text>
+        <Text style={styles.heroTitle}>Who are you?</Text>
+        <Text style={styles.heroSub}>
+          Select the role that best describes you. You'll get a personalized dashboard and features tailored to your needs.
+        </Text>
+      </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Welcome copy */}
-        <View style={styles.welcomeBlock}>
-          <Text style={styles.mainTitle}>Who are you? 🇩🇿</Text>
-          <Text style={styles.mainSub}>
-            Select the role that best describes you. You'll get a personalized dashboard and features tailored to your needs.
-          </Text>
-        </View>
-
-        {/* Role cards */}
+      {/* Role Cards */}
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {ROLES.map((role) => (
           <TouchableOpacity
             key={role.id}
             style={styles.roleCard}
             onPress={() => handleSelect(role.id)}
-            activeOpacity={0.75}
+            activeOpacity={0.85}
           >
-            {/* Icon */}
-            <View style={[styles.iconWrap, { backgroundColor: role.bgColor }]}>
-              <Ionicons name={role.icon as any} size={28} color={role.accentColor} />
+            <View style={[styles.iconWrap, { backgroundColor: role.accentColor + '12', borderColor: role.accentColor + '25' }]}>
+              <Ionicons name={role.icon as any} size={26} color={role.accentColor} />
             </View>
-
-            {/* Text */}
             <View style={styles.roleInfo}>
               <View style={styles.roleTitleRow}>
                 <Text style={styles.roleTitle}>{role.title}</Text>
-                <View style={[styles.badge, { backgroundColor: role.bgColor }]}>
+                <View style={[styles.badge, { backgroundColor: role.accentColor + '12' }]}>
                   <Text style={[styles.badgeText, { color: role.accentColor }]}>{role.subtitle}</Text>
                 </View>
               </View>
@@ -104,15 +102,15 @@ export default function RoleSelectScreen() {
               <View style={styles.perksRow}>
                 {role.perks.map((p) => (
                   <View key={p} style={styles.perkItem}>
-                    <Ionicons name="checkmark-circle" size={13} color={role.accentColor} />
+                    <Ionicons name="checkmark-circle" size={12} color={role.accentColor} />
                     <Text style={styles.perkText}>{p}</Text>
                   </View>
                 ))}
               </View>
             </View>
-
-            {/* Arrow */}
-            <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
+            <View style={[styles.arrowCircle, { backgroundColor: role.accentColor + '10' }]}>
+              <Ionicons name="arrow-forward" size={16} color={role.accentColor} />
+            </View>
           </TouchableOpacity>
         ))}
 
@@ -126,106 +124,56 @@ export default function RoleSelectScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E2E8F0',
-    alignItems: 'center',
+
+  // Hero
+  hero: {
+    paddingHorizontal: 24, paddingTop: 8, paddingBottom: 28,
+    borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+    gap: 8,
   },
-  headerTitle: {
-    fontFamily: 'mon-sb',
-    fontSize: 16,
-    color: '#000000',
+  backBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 4,
   },
-  content: {
-    padding: 24,
-    paddingBottom: 48,
-    gap: 16,
-  },
-  welcomeBlock: {
-    gap: 6,
-    marginBottom: 8,
-  },
-  mainTitle: {
-    fontSize: 26,
-    fontFamily: 'mon-b',
-    color: '#000000',
-    letterSpacing: -0.5,
-  },
-  mainSub: {
-    fontSize: 14,
-    fontFamily: 'mon',
-    color: '#64748B',
-    lineHeight: 21,
-  },
+  heroEmoji: { fontSize: 36, marginTop: 4 },
+  heroTitle: { fontSize: 28, fontFamily: 'mon-b', color: '#FFFFFF', letterSpacing: -0.5 },
+  heroSub: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.8)', lineHeight: 20 },
+
+  scroll: { padding: 20, gap: 14, paddingBottom: 40 },
+
+  // Role cards
   roleCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 14,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 16,
-    padding: 16,
+    borderWidth: 1, borderColor: '#E2E8F0',
+    borderRadius: 16, padding: 16,
+    shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   iconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+    width: 50, height: 50, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, flexShrink: 0,
   },
-  roleInfo: {
-    flex: 1,
-    gap: 6,
-  },
-  roleTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  roleTitle: {
-    fontSize: 16,
-    fontFamily: 'mon-b',
-    color: '#0F172A',
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 20,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontFamily: 'mon-sb',
-  },
-  roleDesc: {
-    fontSize: 13,
-    fontFamily: 'mon',
-    color: '#64748B',
-    lineHeight: 18,
-  },
-  perksRow: {
-    gap: 4,
+  roleInfo: { flex: 1, gap: 6 },
+  roleTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  roleTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 },
+  badgeText: { fontSize: 11, fontFamily: 'mon-sb' },
+  roleDesc: { fontSize: 13, fontFamily: 'mon', color: '#64748B', lineHeight: 18 },
+  perksRow: { gap: 3, marginTop: 2 },
+  perkItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  perkText: { fontSize: 12, fontFamily: 'mon', color: '#475569' },
+  arrowCircle: {
+    width: 32, height: 32, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center',
     marginTop: 4,
   },
-  perkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  perkText: {
-    fontSize: 12,
-    fontFamily: 'mon',
-    color: '#475569',
-  },
+
   footerNote: {
-    fontSize: 12,
-    fontFamily: 'mon',
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginTop: 8,
+    fontSize: 12, fontFamily: 'mon', color: '#94A3B8',
+    textAlign: 'center', marginTop: 8,
   },
 });

@@ -17,7 +17,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -28,6 +27,7 @@ import { MOCK_LISTINGS, getListingWilayas } from '@/constants/mockListings';
 import type { MarketplaceCategory, Listing } from '@/types/service';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
+import GooglePlacesInput from '@/components/shared/GooglePlacesInput';
 
 type SortOption = 'recommended' | 'price_low' | 'price_high' | 'rating' | 'distance';
 
@@ -192,22 +192,17 @@ export default function SearchScreen() {
         )}
       </LinearGradient>
 
-      {/* Search Bar */}
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={18} color="#888" />
-        <TextInput
+      {/* Google Places Autocomplete (Uber-style) */}
+      <View style={styles.placesContainer}>
+        <GooglePlacesInput
+          icon="search"
           placeholder="Where do you want to go?"
-          placeholderTextColor="#888"
-          style={styles.searchInput}
-          value={query}
-          onChangeText={setQuery}
-          autoFocus
+          backgroundColor="#FFFFFF"
+          onPlaceSelected={(params) => {
+            setQuery(params.address);
+          }}
+          containerStyle={{ borderRadius: 999 }}
         />
-        {query !== '' && (
-          <Pressable onPress={() => setQuery('')}>
-            <Ionicons name="close-circle" size={18} color="#888" />
-          </Pressable>
-        )}
       </View>
 
       {/* Category Chips */}
@@ -321,9 +316,11 @@ const styles = StyleSheet.create({
   resetText: { fontSize: 14, fontFamily: 'mon-sb', color: '#fff' },
 
   // Search
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginTop: 12, marginBottom: 8,
-    backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 16, height: 48, borderWidth: 1, borderColor: RIHLA.border,
+  placesContainer: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 4,
+    zIndex: 100,
   },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
 

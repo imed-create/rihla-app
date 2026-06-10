@@ -29,6 +29,7 @@ import { getServicesByCategory } from '@/constants/services';
 import EmptyState from '@/components/shared/EmptyState';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
+import MapWithDirections from '@/components/shared/MapWithDirections';
 
 const DESTINATION_IMAGES: Record<string, string> = {
   beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400',
@@ -116,6 +117,24 @@ export default function DestinationHubScreen() {
               <Text style={styles.heroTagline}>{destination.tagline}</Text>
             </View>
           </LinearGradient>
+        </View>
+
+        {/* ── DESTINATION MAP ── */}
+        <View style={styles.section}>
+          <MapWithDirections
+            height={180}
+            markers={[]}
+            showDirections={false}
+            showUserLocation={false}
+            autoCalculateTimes={false}
+            initialRegion={{
+              latitude: destination.lat,
+              longitude: destination.lng,
+              latitudeDelta: 0.15,
+              longitudeDelta: 0.15,
+            }}
+            customMapStyle={undefined}
+          />
         </View>
 
         {/* ── CATEGORY TABS (always show ALL 10) ── */}

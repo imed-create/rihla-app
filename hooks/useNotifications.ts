@@ -77,14 +77,18 @@ async function registerForPushNotificationsAsync() {
       console.log('Failed to get push token for push notification!');
       return;
     }
-    // Note: To use push notifications, you need an Expo project ID.
-    // We are wrapping this in a try-catch so it doesn't crash if unconfigured.
+    // Note: To use push notifications, you need an Expo EAS project ID.
+    // Run `npx eas init` to create one, then copy the projectId into app.json.
+    // Until then, this is expected to fail quietly.
     try {
-      const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+      if (!projectId || projectId === '00000000-0000-0000-0000-000000000000') {
+        console.log('Push notifications: No EAS project configured. Run `npx eas init` to set one up.');
+        return;
+      }
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-      console.log('Expo Push Token:', token);
     } catch (e) {
-      console.log('Error getting push token, likely missing projectId:', e);
+      // Silently ignore — push tokens aren't critical for app functionality
     }
   } else {
     console.log('Must use physical device for Push Notifications');

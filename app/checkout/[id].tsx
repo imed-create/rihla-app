@@ -41,6 +41,8 @@ import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticSuccess } from '@/utils/haptics';
 import { showToast } from '@/components/Toast';
 import * as Haptics from 'expo-haptics';
+import MapWithDirections from '@/components/shared/MapWithDirections';
+import UberButton from '@/components/shared/UberButton';
 
 // ─────────────────────────────────────────────
 // PAYMENT METHOD SELECTOR
@@ -408,6 +410,25 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
+        {/* ── DESTINATION MAP ── */}
+        <View style={styles.formSection}>
+          <Text style={styles.formLabel}>Location</Text>
+          <MapWithDirections
+            height={160}
+            markers={[]}
+            showDirections={false}
+            showUserLocation={false}
+            autoCalculateTimes={false}
+            initialRegion={{
+              latitude: 36.75,
+              longitude: 3.05,
+              latitudeDelta: 0.15,
+              longitudeDelta: 0.15,
+            }}
+            customMapStyle={undefined}
+          />
+        </View>
+
         {/* ── BOOKING FORM ── */}
         <BookingForm listing={listing} />
 
@@ -477,17 +498,13 @@ export default function CheckoutScreen() {
           <Text style={styles.bottomPrice}>{total.toLocaleString()} DZD</Text>
           <Text style={styles.bottomUnit}>Total · {paymentMethod === 'chargily' ? 'Online payment' : 'Pay on arrival'}</Text>
         </View>
-        <Pressable
-          style={[styles.confirmBtn, loading && { opacity: 0.7 }]}
+        <UberButton
+          title="Confirm Booking"
+          bgVariant="secondary"
           onPress={handleConfirm}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.confirmText}>Confirm Booking</Text>
-          )}
-        </Pressable>
+          loading={loading}
+          style={{ paddingHorizontal: 24, paddingVertical: 16, minWidth: 140 }}
+        />
       </View>
     </View>
   );

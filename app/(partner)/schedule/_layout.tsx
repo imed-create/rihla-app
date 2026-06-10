@@ -1,14 +1,39 @@
+/**
+ * RIHLA — Partner Schedule Layout
+ * ─────────────────────────────────
+ * Serves as the default schedule route (availability settings)
+ * with navigation to the day-view for live task management.
+ */
+
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import ProScreenChrome from '@/components/dashboard/ScreenChrome';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export default function PartnerSchedule() {
+export default function PartnerScheduleLayout() {
   return (
     <ProScreenChrome role="partner" title="Schedule" subtitle="Set your availability">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
+        {/* Live Dispatch CTA */}
+        <TouchableOpacity
+          style={styles.liveCta}
+          activeOpacity={0.85}
+          onPress={() => router.push('/(partner)/dispatch' as any)}
+        >
+          <View style={styles.liveCtaLeft}>
+            <View style={styles.liveDot} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.liveCtaTitle}>Live Dispatch</Text>
+              <Text style={styles.liveCtaSub}>Today's tasks, pickups & departures</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#00a896" />
+        </TouchableOpacity>
+
         <View style={styles.panel}>
           <View style={styles.panelTop}>
             <Text style={styles.panelTitle}>This week</Text>
@@ -18,7 +43,7 @@ export default function PartnerSchedule() {
             </View>
           </View>
           <Text style={styles.muted}>
-            This is a clean UI placeholder. Next we’ll connect it to each service (per‑day hours + blackout dates).
+            Set your weekly availability windows. Clients can only book during these hours.
           </Text>
         </View>
 
@@ -56,6 +81,28 @@ export default function PartnerSchedule() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fafbfc' },
   content: { padding: 20, paddingBottom: 40, gap: 12 },
+
+  // Live CTA
+  liveCta: {
+    backgroundColor: '#E6FAF7',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  liveCtaLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  liveDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#EF4444',
+  },
+  liveCtaTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A' },
+  liveCtaSub: { fontSize: 12, fontFamily: 'mon', color: '#64748B', marginTop: 1 },
+
   panel: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
@@ -106,4 +153,3 @@ const styles = StyleSheet.create({
   ctaTitle: { fontSize: 13, fontFamily: 'mon-b', color: '#0F172A' },
   ctaSub: { fontSize: 11, fontFamily: 'mon', color: '#64748B', marginTop: 2 },
 });
-

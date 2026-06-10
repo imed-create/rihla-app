@@ -1,10 +1,10 @@
 /**
  * RIHLA — Premium Login / Sign Up Screen
  * ─────────────────────────────────────────
- * Dark gradient hero • Glassmorphism inputs • Smooth tab transitions
+ * Uber-style design with InputField, UberButton, tab switcher, OAuth
  */
 
-import Colors, { RIHLA } from '@/constants/theme';
+import { RIHLA } from '@/constants/theme';
 import { useOAuth } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,11 +14,9 @@ import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
-  TextInput,
   Text,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -29,6 +27,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWarmUpBrowser } from '@/hooks/useWarmUpBrowser';
 import { useApp } from '@/context/AppContext';
+import InputField from '@/components/shared/InputField';
+import UberButton from '@/components/shared/UberButton';
 
 enum Strategy {
   Google = 'oauth_google',
@@ -79,7 +79,7 @@ export default function LoginScreen() {
     const selectedAuth = {
       [Strategy.Google]: googleAuth,
       [Strategy.Apple]: appleAuth,
-      [Strategy.Facebook]: googleAuth, // fallback
+      [Strategy.Facebook]: googleAuth,
     }[strategy];
 
     try {
@@ -134,28 +134,28 @@ export default function LoginScreen() {
     >
       <StatusBar barStyle="light-content" />
 
-      {/* ── HERO GRADIENT HEADER ── */}
+      {/* ── UBER-STYLE HERO ── */}
       <LinearGradient
         colors={['#061422', '#0a2540', '#0d3b6e']}
         style={[styles.hero, { paddingTop: insets.top + 12 }]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        {/* Back Button */}
         <TouchableOpacity onPress={handleBack} style={styles.backBtn} activeOpacity={0.8}>
           <Ionicons name="arrow-back" size={20} color="rgba(255,255,255,0.9)" />
         </TouchableOpacity>
 
-        {/* Brand */}
         <View style={styles.brandRow}>
           <View style={styles.brandIcon}>
-            <Ionicons name="airplane" size={22} color="#fff" />
+            <View style={styles.brandIconInner}>
+              <Text style={styles.brandLogoText}>R</Text>
+            </View>
           </View>
           <Text style={styles.brandName}>RIHLA</Text>
         </View>
 
         <Text style={styles.heroTitle}>
-          {activeTab === 'signin' ? 'Welcome back 👋' : 'Join Rihla 🇩🇿'}
+          {activeTab === 'signin' ? 'Welcome back' : 'Join Rihla'}
         </Text>
         <Text style={styles.heroSub}>
           {activeTab === 'signin'
@@ -164,107 +164,82 @@ export default function LoginScreen() {
         </Text>
       </LinearGradient>
 
-      {/* ── FORM CARD ── */}
+      {/* ── UBER-STYLE FORM CARD ── */}
       <ScrollView
         contentContainerStyle={[styles.formScroll, { paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-
-          {/* Tab Switcher */}
+          {/* Uber-style Tab Switcher */} 
           <View style={styles.tabTrack}>
-            <Animated.View style={[styles.tabIndicator, { left: tabIndicatorLeft, width: (width - 96) / 2 }]} />
+            <Animated.View style={[styles.tabIndicator, { left: tabIndicatorLeft }]} />
             <TouchableOpacity style={styles.tabBtn} onPress={() => switchTab('signin')} activeOpacity={0.8}>
-              <Text style={[styles.tabBtnText, activeTab === 'signin' && styles.tabBtnTextActive]}>Sign In</Text>
+              <Text style={[styles.tabBtnText, activeTab === 'signin' && styles.tabBtnTextActive]}>
+                Sign In
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.tabBtn} onPress={() => switchTab('signup')} activeOpacity={0.8}>
-              <Text style={[styles.tabBtnText, activeTab === 'signup' && styles.tabBtnTextActive]}>Sign Up</Text>
+              <Text style={[styles.tabBtnText, activeTab === 'signup' && styles.tabBtnTextActive]}>
+                Sign Up
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Inputs */}
+          {/* Uber-style Input Fields */}
           <View style={styles.inputsWrap}>
             {activeTab === 'signup' && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Full Name</Text>
-                <View style={styles.inputBox}>
-                  <Ionicons name="person-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ahmed Bouzid"
-                    placeholderTextColor="#CBD5E1"
-                    value={fullName}
-                    onChangeText={setFullName}
-                    autoCapitalize="words"
-                  />
-                </View>
-              </View>
+              <InputField
+                label="Full Name"
+                icon="person-outline"
+                placeholder="Ahmed Bouzid"
+                value={fullName}
+                onChangeText={setFullName}
+                autoCapitalize="words"
+              />
             )}
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={styles.inputBox}>
-                <Ionicons name="mail-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="you@example.com"
-                  placeholderTextColor="#CBD5E1"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </View>
-            </View>
+            <InputField
+              label="Email Address"
+              icon="mail-outline"
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-            <View style={styles.inputGroup}>
-              <View style={styles.inputLabelRow}>
-                <Text style={styles.inputLabel}>Password</Text>
-                {activeTab === 'signin' && (
-                  <TouchableOpacity><Text style={styles.forgotText}>Forgot?</Text></TouchableOpacity>
-                )}
-              </View>
-              <View style={styles.inputBox}>
-                <Ionicons name="lock-closed-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder={activeTab === 'signup' ? 'Min 8 characters' : '••••••••'}
-                  placeholderTextColor="#CBD5E1"
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                />
+            <InputField
+              label="Password"
+              icon="lock-closed-outline"
+              placeholder={activeTab === 'signup' ? 'Min 8 characters' : 'Enter your password'}
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              rightIcon={
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
                   <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color="#94A3B8" />
                 </TouchableOpacity>
-              </View>
-            </View>
+              }
+            />
+
+            {activeTab === 'signin' && (
+              <TouchableOpacity
+                onPress={() => Alert.alert('Reset Password', 'Password reset coming soon.')}
+                style={styles.forgotRow}
+              >
+                <Text style={styles.forgotLink}>Forgot?</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* CTA Button */}
-          <TouchableOpacity
-            style={[styles.ctaBtn, loading && { opacity: 0.75 }]}
+          {/* UberButton CTA */}
+          <UberButton
+            title={activeTab === 'signin' ? 'Sign In' : 'Create Account'}
             onPress={handleContinue}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={['#0a2540', '#1a4a7a']}
-              style={styles.ctaBtnGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Text style={styles.ctaBtnText}>{activeTab === 'signin' ? 'Sign In' : 'Create Account'}</Text>
-                  <Ionicons name="arrow-forward" size={18} color="#fff" />
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+            loading={loading}
+            style={{ marginBottom: 20, height: 56 }}
+            IconRight={() => <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />}
+          />
 
           {/* Divider */}
           <View style={styles.dividerRow}>
@@ -276,28 +251,32 @@ export default function LoginScreen() {
           {/* Social Auth */}
           <View style={styles.socialRow}>
             <TouchableOpacity style={styles.socialBtn} onPress={() => onSelectAuth(Strategy.Google)} activeOpacity={0.8}>
-              <Ionicons name="logo-google" size={20} color="#EA4335" />
+              <View style={[styles.socialIconBg, { backgroundColor: '#FEF2F2' }]}>
+                <Ionicons name="logo-google" size={18} color="#EA4335" />
+              </View>
               <Text style={styles.socialBtnText}>Google</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialBtn} onPress={() => onSelectAuth(Strategy.Apple)} activeOpacity={0.8}>
-              <Ionicons name="logo-apple" size={20} color="#1F2937" />
+              <View style={[styles.socialIconBg, { backgroundColor: '#F3F4F6' }]}>
+                <Ionicons name="logo-apple" size={18} color="#1F2937" />
+              </View>
               <Text style={styles.socialBtnText}>Apple</Text>
             </TouchableOpacity>
           </View>
 
           {/* Quick demo */}
-          <TouchableOpacity
-            style={styles.quickBtn}
+          <UberButton
+            title="Quick Demo Access"
+            bgVariant="outline"
             onPress={() => {
               Haptics.selectionAsync();
               updateUser({ email: 'demo@rihla.dz', name: 'Demo User' });
               router.replace('/');
             }}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="flash-outline" size={16} color={RIHLA.accent} />
-            <Text style={styles.quickBtnText}>Quick Demo Access</Text>
-          </TouchableOpacity>
+            IconLeft={() => <Ionicons name="flash-outline" size={16} color={RIHLA.accent} />}
+            style={{ height: 44, marginTop: 8 }}
+            textStyle={{ color: RIHLA.accent, fontSize: 13 }}
+          />
         </View>
 
         <Text style={styles.legalText}>
@@ -336,12 +315,23 @@ const styles = StyleSheet.create({
   brandIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  brandIconInner: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandLogoText: {
+    fontSize: 16,
+    fontFamily: 'mon-b',
+    color: '#0a2540',
   },
   brandName: {
     fontSize: 20,
@@ -375,7 +365,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 20,
     elevation: 8,
-    gap: 0,
   },
 
   // Tabs
@@ -390,6 +379,7 @@ const styles = StyleSheet.create({
   tabIndicator: {
     position: 'absolute',
     top: 4,
+    width: (width - 96) / 2,
     height: 36,
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -404,39 +394,17 @@ const styles = StyleSheet.create({
   tabBtnTextActive: { color: '#0a2540' },
 
   // Inputs
-  inputsWrap: { gap: 16, marginBottom: 20 },
-  inputGroup: { gap: 6 },
-  inputLabel: { fontSize: 12, fontFamily: 'mon-sb', color: '#374151', letterSpacing: 0.3 },
-  inputLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  forgotText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.accent },
-  inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 54,
+  inputsWrap: { marginBottom: 4 },
+  forgotRow: {
+    alignSelf: 'flex-end',
+    marginTop: -8,
+    marginBottom: 4,
   },
-  inputIcon: { marginRight: 10 },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: 'mon',
-    color: '#1F2937',
+  forgotLink: {
+    fontSize: 12,
+    fontFamily: 'mon-sb',
+    color: RIHLA.accent,
   },
-
-  // CTA
-  ctaBtn: { borderRadius: 16, overflow: 'hidden', marginBottom: 20 },
-  ctaBtnGradient: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  ctaBtnText: { fontSize: 16, fontFamily: 'mon-sb', color: '#fff' },
 
   // Divider
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
@@ -444,7 +412,7 @@ const styles = StyleSheet.create({
   dividerText: { fontSize: 12, fontFamily: 'mon', color: '#94A3B8', paddingHorizontal: 12 },
 
   // Social
-  socialRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  socialRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   socialBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -452,22 +420,19 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  socialBtnText: { fontSize: 14, fontFamily: 'mon-sb', color: '#374151' },
-
-  // Quick
-  quickBtn: {
-    flexDirection: 'row',
+  socialIconBg: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
   },
-  quickBtnText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
+  socialBtnText: { fontSize: 14, fontFamily: 'mon-sb', color: '#374151' },
 
   // Legal
   legalText: {

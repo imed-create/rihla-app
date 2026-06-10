@@ -70,11 +70,22 @@ export default function PartnerLayout() {
           }}
         />
 
-        <Tabs.Screen name="schedule" options={{ href: null }} />
-        <Tabs.Screen name="earnings" options={{ href: null }} />
-        <Tabs.Screen name="reviews" options={{ href: null }} />
-        <Tabs.Screen name="services/new" options={{ href: null }} />
-        <Tabs.Screen name="services/[id]" options={{ href: null }} />
+        <Tabs.Screen name="schedule"              options={{ href: null }} />
+        <Tabs.Screen name="earnings"               options={{ href: null }} />
+        <Tabs.Screen name="reviews"                options={{ href: null }} />
+        <Tabs.Screen name="services/new"           options={{ href: null }} />
+        <Tabs.Screen name="services/[id]"          options={{ href: null }} />
+        {/* ── Expanded menu routes ── */}
+        <Tabs.Screen name="dispatch"               options={{ href: null }} />
+        <Tabs.Screen name="tasks"                  options={{ href: null }} />
+        <Tabs.Screen name="payouts"                options={{ href: null }} />
+        <Tabs.Screen name="tax"                    options={{ href: null }} />
+        <Tabs.Screen name="analytics"              options={{ href: null }} />
+        <Tabs.Screen name="notifications"          options={{ href: null }} />
+        <Tabs.Screen name="edit-profile"           options={{ href: null }} />
+        <Tabs.Screen name="verification"           options={{ href: null }} />
+        <Tabs.Screen name="help"                   options={{ href: null }} />
+        <Tabs.Screen name="community"              options={{ href: null }} />
       </Tabs>
     </ProNavProvider>
   );

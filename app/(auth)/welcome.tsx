@@ -1,7 +1,8 @@
 /**
- * RIHLA — Premium Onboarding / Welcome Screen
- * ─────────────────────────────────────────────
- * Immersive full-screen dark slides • Animated dots • Bottom-sheet demo chooser
+ * RIHLA — Uber-Style Onboarding / Welcome Screen
+ * ────────────────────────────────────────────────
+ * Clean swiper slides • Uber-style dot indicators • Minimal UI
+ * Premium gradients • Demo bottom-sheet chooser
  */
 
 import React, { useState, useRef } from 'react';
@@ -24,7 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RIHLA } from '@/constants/theme';
 import { useApp, UserRole } from '@/context/AppContext';
 import * as Haptics from 'expo-haptics';
-import { MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
+import UberButton from '@/components/shared/UberButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,7 +33,7 @@ interface Slide {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   emoji: string;
   gradient: [string, string, string];
   tag: string;
@@ -213,60 +214,78 @@ export default function WelcomeScreen() {
         renderItem={({ item }) => <Slide slide={item} />}
       />
 
-      {/* ── FLOATING TOP BAR ── */}
+      {/* ── UBER-STYLE TOP BAR ── */}
       <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
-        <Text style={styles.brandLogo}>RIHLA</Text>
-        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
-          <Text style={styles.skipTxt}>Browse</Text>
-          <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.7)" />
+        <View style={styles.brandBadge}>
+          <View style={styles.brandIcon}>
+            <Text style={styles.brandIconText}>R</Text>
+          </View>
+          <Text style={styles.brandLogo}>RIHLA</Text>
+        </View>
+        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.8}>
+          <Text style={styles.skipTxt}>Skip</Text>
+          <Ionicons name="chevron-forward" size={12} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
       </View>
 
-      {/* ── BOTTOM PANEL ── */}
+      {/* ── UBER-STYLE BOTTOM PANEL ── */}
       <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 24 }]}>
-        {/* Slide text */}
-        <View style={styles.slideText}>
-          <View style={styles.tagPill}>
-            <Ionicons name="sparkles" size={11} color={RIHLA.accent} />
-            <Text style={styles.tagTxt}>{currentSlide.tag}</Text>
-          </View>
-          <Text style={styles.slideTitle}>{currentSlide.title}</Text>
-          <Text style={styles.slideSub}>{currentSlide.subtitle}</Text>
-        </View>
-
-        {/* Dots */}
+        {/* Uber-style dot indicators */}
         <View style={styles.dotsRow}>
           {SLIDES.map((_, i) => {
             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-            const dotWidth = scrollX.interpolate({ inputRange, outputRange: [6, 22, 6], extrapolate: 'clamp' });
+            const scale = scrollX.interpolate({ inputRange, outputRange: [1, 1.3, 1], extrapolate: 'clamp' });
             const op = scrollX.interpolate({ inputRange, outputRange: [0.3, 1, 0.3], extrapolate: 'clamp' });
             return (
               <Animated.View
                 key={i}
-                style={[styles.dot, { width: dotWidth, opacity: op }]}
+                style={[
+                  styles.dot,
+                  { opacity: op, transform: [{ scale }] },
+                ]}
               />
             );
           })}
         </View>
 
-        {/* CTA Row */}
+        {/* Slide text */}
+        <View style={styles.slideText}>
+          <Text style={styles.slideTitle}>{currentSlide.title}</Text>
+          <Text style={styles.slideSub}>{currentSlide.subtitle}</Text>
+        </View>
+
+        {/* Uber-style CTA Row */} 
         <View style={styles.ctaRow}>
           <TouchableOpacity
-            style={styles.ctaDemo}
+            style={styles.demoBtn}
             onPress={() => { Haptics.selectionAsync(); setDemoVisible(true); }}
             activeOpacity={0.8}
           >
             <Ionicons name="flash-outline" size={16} color="#fff" />
-            <Text style={styles.ctaDemoTxt}>Demo</Text>
+            <Text style={styles.demoBtnTxt}>Demo</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.ctaMain} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); goNext(); }} activeOpacity={0.85}>
-            <LinearGradient colors={['#ffffff', '#E8F4FF']} style={styles.ctaMainInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-              <Text style={styles.ctaMainTxt}>{isLast ? 'Get Started' : 'Next'}</Text>
+          <UberButton
+            title={isLast ? 'Get Started' : 'Next'}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); goNext(); }}
+            IconRight={() => (
               <Ionicons name={isLast ? 'arrow-forward-circle' : 'chevron-forward'} size={20} color="#0a2540" />
-            </LinearGradient>
-          </TouchableOpacity>
+            )}
+            bgVariant="outline"
+            textVariant="secondary"
+            style={styles.ctaMain}
+            textStyle={styles.ctaMainTxt}
+          />
         </View>
+
+        {/* Uber-style sign-in prompt */}
+        <TouchableOpacity
+          style={styles.signinRow}
+          onPress={() => { Haptics.selectionAsync(); router.push('/(auth)/login'); }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.signinText}>Already have an account?</Text>
+          <Text style={styles.signinLink}> Sign In</Text>
+        </TouchableOpacity>
       </View>
 
       {/* ── DEMO MODAL ── */}
@@ -275,11 +294,22 @@ export default function WelcomeScreen() {
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setDemoVisible(false)} />
           <View style={styles.modalSheet}>
             <View style={styles.modalKnob} />
-            <Text style={styles.modalTitle}>Choose Demo Profile 🇩🇿</Text>
-            <Text style={styles.modalSub}>
-              Jump into any role instantly — no KYC required.
-            </Text>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: height * 0.55 }}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Jump In</Text>
+                <Text style={styles.modalSub}>Choose a demo profile to explore RIHLA</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.modalDemoBtn}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  selectDemo('traveler');
+                }}
+              >
+                <Text style={styles.modalDemoBtnText}>Quick Try</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: height * 0.5 }}>
               {DEMO_ACCOUNTS.map((acc) => (
                 <TouchableOpacity
                   key={acc.title}
@@ -311,20 +341,21 @@ export default function WelcomeScreen() {
 function Slide({ slide }: { slide: Slide }) {
   return (
     <LinearGradient colors={slide.gradient} style={styles.slide} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-      {/* Central visual */}
       <View style={styles.slideVisual}>
+        {/* Uber-style central icon ring */}
         <View style={styles.outerRing}>
           <View style={styles.innerRing}>
             <Text style={styles.slideEmoji}>{slide.emoji}</Text>
           </View>
         </View>
-        <View style={[styles.iconBubble, styles.iconBubbleTop]}>
-          <Ionicons name="star" size={14} color="#FFD700" />
-          <Text style={styles.iconBubbleTxt}>4.9 Rating</Text>
+        {/* Uber-style floating badges */}
+        <View style={[styles.floatingBadge, styles.floatingBadgeTop]}>
+          <View style={styles.floatingBadgeDot} />
+          <Text style={styles.floatingBadgeText}>Live</Text>
         </View>
-        <View style={[styles.iconBubble, styles.iconBubbleBottom]}>
-          <Ionicons name={slide.icon as any} size={14} color={RIHLA.accent} />
-          <Text style={styles.iconBubbleTxt}>Live Booking</Text>
+        <View style={[styles.floatingBadge, styles.floatingBadgeBottom]}>
+          <Ionicons name="star" size={11} color="#FFD700" />
+          <Text style={styles.floatingBadgeText}>4.9</Text>
         </View>
       </View>
     </LinearGradient>
@@ -344,43 +375,47 @@ const styles = StyleSheet.create({
   slideVisual: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -120,
+    marginTop: -100,
   },
   outerRing: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   innerRing: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  slideEmoji: { fontSize: 64 },
-  iconBubble: {
+  slideEmoji: { fontSize: 56 },
+  floatingBadge: {
     position: 'absolute',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
-  iconBubbleTop: { top: 10, right: -20 },
-  iconBubbleBottom: { bottom: 10, left: -20 },
-  iconBubbleTxt: { fontSize: 11, fontFamily: 'mon-sb', color: '#fff' },
+  floatingBadgeTop: { top: 16, right: -10 },
+  floatingBadgeBottom: { bottom: 16, left: -10 },
+  floatingBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  floatingBadgeText: { fontSize: 10, fontFamily: 'mon-sb', color: '#fff' },
 
   // Top bar
   topBar: {
@@ -394,24 +429,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     zIndex: 10,
   },
+  brandBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  brandIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandIconText: {
+    fontSize: 14,
+    fontFamily: 'mon-b',
+    color: '#0a2540',
+  },
   brandLogo: {
-    fontSize: 24,
+    fontSize: 18,
     fontFamily: 'mon-b',
     color: '#fff',
-    letterSpacing: 4,
+    letterSpacing: 3,
   },
   skipBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    gap: 2,
     paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  skipTxt: { fontSize: 13, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.8)' },
+  skipTxt: {
+    fontSize: 13,
+    fontFamily: 'mon-sb',
+    color: 'rgba(255,255,255,0.7)',
+  },
 
   // Bottom panel
   bottomPanel: {
@@ -419,68 +474,85 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 24,
-    gap: 20,
+    paddingHorizontal: 28,
+    gap: 16,
   },
-  slideText: { gap: 10 },
-  tagPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  tagTxt: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.accent },
+  slideText: { gap: 8 },
   slideTitle: {
-    fontSize: 40,
+    fontSize: 34,
     fontFamily: 'mon-b',
     color: '#fff',
-    letterSpacing: -1,
-    lineHeight: 46,
+    letterSpacing: -0.5,
+    lineHeight: 40,
   },
   slideSub: {
     fontSize: 14,
     fontFamily: 'mon',
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255,255,255,0.6)',
     lineHeight: 22,
   },
 
-  // Dots
-  dotsRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+  // Uber-style dots
+  dotsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+  },
   dot: {
+    width: 6,
     height: 6,
-    backgroundColor: '#fff',
     borderRadius: 3,
+    backgroundColor: '#FFFFFF',
   },
 
   // CTA
-  ctaRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  ctaDemo: {
+  ctaRow: { flexDirection: 'row', gap: 12, alignItems: 'center', marginTop: 4 },
+  demoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     height: 56,
     paddingHorizontal: 18,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
-  ctaDemoTxt: { fontSize: 14, fontFamily: 'mon-sb', color: '#fff' },
-  ctaMain: { flex: 1, borderRadius: 16, overflow: 'hidden' },
-  ctaMainInner: {
+  demoBtnTxt: {
+    fontSize: 14,
+    fontFamily: 'mon-sb',
+    color: '#fff',
+  },
+  ctaMain: {
+    flex: 1,
     height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
   },
-  ctaMainTxt: { fontSize: 16, fontFamily: 'mon-b', color: '#0a2540' },
+  ctaMainTxt: {
+    fontSize: 17,
+    fontFamily: 'mon-b',
+    color: '#0a2540',
+  },
+
+  // Sign-in prompt
+  signinRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  signinText: {
+    fontSize: 13,
+    fontFamily: 'mon',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  signinLink: {
+    fontSize: 13,
+    fontFamily: 'mon-sb',
+    color: '#FFFFFF',
+  },
 
   // Modal
   modalBackdrop: {
@@ -496,15 +568,28 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   modalKnob: {
-    width: 44,
-    height: 5,
+    width: 36,
+    height: 4,
     backgroundColor: '#E2E8F0',
-    borderRadius: 3,
+    borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 16,
   },
-  modalTitle: { fontSize: 22, fontFamily: 'mon-b', color: '#0F172A', marginBottom: 4 },
-  modalSub: { fontSize: 13, fontFamily: 'mon', color: '#64748B', lineHeight: 18, marginBottom: 16 },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  modalTitle: { fontSize: 22, fontFamily: 'mon-b', color: '#0F172A' },
+  modalSub: { fontSize: 13, fontFamily: 'mon', color: '#64748B', lineHeight: 18, marginTop: 2 },
+  modalDemoBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+  },
+  modalDemoBtnText: { fontSize: 12, fontFamily: 'mon-b', color: RIHLA.primary },
   demoCard: {
     flexDirection: 'row',
     alignItems: 'center',

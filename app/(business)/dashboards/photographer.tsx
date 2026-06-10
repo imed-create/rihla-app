@@ -1,323 +1,187 @@
 /**
- * RIHLA — Photographer Dashboard
- * ─────────────────────────────────────
- * Identity: Hot Pink #FF499E — creative, editorial, energetic
- * Tabs: Shoots (calendar) · Portfolio (package perf) · Deliverables · Earnings
- *
- * A photographer sees: upcoming shoot calendar, gallery portfolio metrics,
- * pending photo delivery queue, and earnings by package. Zero hotel content.
+ * RIHLA — Photography & Creative Services Hub
+ * ──────────────────────────────────────────────
+ * Tabs: Overview · Shoots Ledger · Digital Delivery
+ * Store-backed CRUD: packages → usePartnerServices, shoots → usePartnerDispatches.
+ * Full edit/delete on all items.
  */
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { RIHLA } from '@/constants/theme';
+import { usePartnerServices } from '@/store/usePartnerServices';
+import { usePartnerDispatches } from '@/store/usePartnerDispatches';
+import type { PartnerService } from '@/store/usePartnerServices';
+import type { PartnerDispatch } from '@/store/usePartnerDispatches';
 
-// ── Brand colours ────────────────────────────────────────────
-const P = {
-  brand:   '#FF499E',
-  brandLt: '#FFF0F7',
-  purple:  '#A855F7',
-  purpleLt:'#F3E8FF',
-  gold:    '#F59E0B',
-  green:   '#10B981',
-  navy:    '#0a2540',
-};
+const PH = { brand: '#7C3AED', brandLt: '#EDE9FE', green: '#10B981', amber: '#F59E0B', red: '#EF4444', blue: '#3B82F6' };
 
-// ── Mock data ────────────────────────────────────────────────
-const SHOOTS = [
-  { id: 'p1', client: 'Amina Boudiaf', date: 'Today',     time: '16:30', location: 'Tipaza Ruins',      pkg: 'Sunset Portrait',  status: 'upcoming',  priceDZD: 8000,  paid: true },
-  { id: 'p2', client: 'Karim Ferhat',  date: 'Tomorrow',  time: '10:00', location: 'Botanical Garden',  pkg: 'Family Session',   status: 'upcoming',  priceDZD: 12000, paid: false },
-  { id: 'p3', client: 'Nadia Sahraoui',date: 'Jun 15',    time: '09:00', location: 'Casbah d\'Alger',   pkg: 'Drone + Video',    status: 'pending',   priceDZD: 25000, paid: false },
-  { id: 'p4', client: 'Yasmine Krim',  date: 'Jun 18',    time: '17:00', location: 'El Hamdania Beach', pkg: 'Sunset Portrait',  status: 'confirmed', priceDZD: 8000,  paid: true },
-];
-
-const PACKAGES = [
-  { id: 'pkg1', name: 'Sunset Portrait', bookings: 12, revenue: 96000,  deliveryTime: '3 days',  rating: 4.9 },
-  { id: 'pkg2', name: 'Family Session',  bookings: 8,  revenue: 96000,  deliveryTime: '5 days',  rating: 4.7 },
-  { id: 'pkg3', name: 'Drone + Video',   bookings: 3,  revenue: 75000,  deliveryTime: '7 days',  rating: 5.0 },
-  { id: 'pkg4', name: 'Event Coverage',  bookings: 5,  revenue: 125000, deliveryTime: '14 days', rating: 4.8 },
-];
-
-const DELIVERABLES = [
-  { id: 'd1', client: 'Houria Malek',   pkg: 'Family Session',  shots: 87,  edited: 52,  dueDate: 'Jun 09', status: 'editing' },
-  { id: 'd2', client: 'Sami Taibi',     pkg: 'Event Coverage',  shots: 234, edited: 234, dueDate: 'Jun 11', status: 'review' },
-  { id: 'd3', client: 'Djamila Arous',  pkg: 'Sunset Portrait', shots: 45,  edited: 0,   dueDate: 'Jun 14', status: 'pending' },
-];
-
-const TABS = ['Shoots', 'Portfolio', 'Deliverables', 'Earnings'] as const;
-type Tab = typeof TABS[number];
-
-// ═══════════════════════════════════════════════════════════════
 export default function PhotographerDashboard() {
-  const [tab, setTab] = useState<Tab>('Shoots');
+  const { services, addService, updateService, removeService } = usePartnerServices();
+  const { dispatches: shoots, addDispatch, updateDispatch, removeDispatch } = usePartnerDispatches();
+  const [tab, setTab] = useState<'Overview' | 'Shoots Ledger' | 'Digital Delivery'>('Overview');
 
-  const upcomingCount  = SHOOTS.filter(s => s.status !== 'pending').length;
-  const totalRevenue   = PACKAGES.reduce((s, p) => s + p.revenue, 0);
-  const editingCount   = DELIVERABLES.filter(d => d.status === 'editing' || d.status === 'pending').length;
-  const avgRating      = (PACKAGES.reduce((s, p) => s + p.rating, 0) / PACKAGES.length).toFixed(1);
+  const [showAddPackage, setShowAddPackage] = useState(false);
+  const [editPackage, setEditPackage] = useState<PartnerService | null>(null);
+  const [showDeletePackage, setShowDeletePackage] = useState<string | null>(null);
+  const [showDeleteShoot, setShowDeleteShoot] = useState<string | null>(null);
+  const [newPkg, setNewPkg] = useState({ name: '', desc: '', price: '15000' });
+  const [editPriceVal, setEditPriceVal] = useState('');
+
+  // Delivery state
+  const [deliveries, setDeliveries] = useState<{ id: string; shoot: string; proofUrl: string; accessCode: string; delivered: boolean }[]>([
+    { id: 'dl1', shoot: 'Wedding - Rania & Amir', proofUrl: 'gallery/rania-wedding', accessCode: 'RNW23', delivered: false },
+    { id: 'dl2', shoot: 'Portrait - Malik', proofUrl: 'gallery/malik-portrait', accessCode: 'MLK19', delivered: true },
+  ]);
+
+  const myServices = services.filter(s => s.category === 'other' || s.assetType === 'photography');
+  const myShoots = shoots.filter(s => s.jobType === 'photoshoot');
+
+  const handleAddPkg = useCallback(() => {
+    if (!newPkg.name) return;
+    addService({ title: newPkg.name, category: 'other', assetType: 'photography', pricePerHourDzd: parseInt(newPkg.price) || 15000, notes: newPkg.desc, status: 'published' });
+    setNewPkg({ name: '', desc: '', price: '15000' }); setShowAddPackage(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [addService, newPkg]);
+  const handleEditPkg = useCallback(() => {
+    if (!editPackage) return; const val = parseInt(editPriceVal);
+    if (!isNaN(val) && val > 0) updateService(editPackage.id, { pricePerHourDzd: val });
+    setEditPackage(null); setEditPriceVal(''); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [editPackage, editPriceVal, updateService]);
+  const handleDeletePkg = useCallback((id: string) => { removeService(id); setShowDeletePackage(null); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }, [removeService]);
+  const handleDeleteShoot = useCallback((id: string) => { removeDispatch(id); setShowDeleteShoot(null); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }, [removeDispatch]);
+  const advanceShoot = useCallback((id: string) => {
+    const sm: Record<string, string> = { pending: 'accepted', accepted: 'in-progress', 'in-progress': 'completed' };
+    const s = myShoots.find(x => x.id === id); const ns = s ? sm[s.status] : undefined;
+    if (ns) updateDispatch(id, { status: ns as any }); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [myShoots, updateDispatch]);
+  const deliverProofs = useCallback((id: string) => {
+    setDeliveries(p => p.map(d => d.id === id ? { ...d, delivered: true, accessCode: Math.random().toString(36).slice(2, 7).toUpperCase() } : d));
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
+  const formatDZD = (v: number) => v.toLocaleString() + ' DZD';
+
+  const statusColors: Record<string, string> = { pending: PH.amber, accepted: PH.blue, 'in-progress': PH.green, completed: '#94A3B8' };
 
   return (
     <View style={styles.root}>
-      {/* ── KPI strip ── */}
-      <View style={styles.kpiRow}>
-        <View style={[styles.kpi, { backgroundColor: P.brandLt }]}>
-          <Text style={[styles.kpiVal, { color: P.brand }]}>{upcomingCount}</Text>
-          <Text style={styles.kpiLbl}>Shoots</Text>
-        </View>
-        <View style={[styles.kpi, { backgroundColor: P.purpleLt }]}>
-          <Text style={[styles.kpiVal, { color: P.purple }]}>{editingCount}</Text>
-          <Text style={styles.kpiLbl}>In Edit</Text>
-        </View>
-        <View style={[styles.kpi, { backgroundColor: '#FFFBEB' }]}>
-          <Text style={[styles.kpiVal, { color: P.gold }]}>{avgRating}★</Text>
-          <Text style={styles.kpiLbl}>Rating</Text>
-        </View>
-        <View style={[styles.kpi, { backgroundColor: '#F0FDF4' }]}>
-          <Text style={[styles.kpiVal, { color: P.green }]}>{(totalRevenue / 1000).toFixed(0)}K</Text>
-          <Text style={styles.kpiLbl}>Earned</Text>
-        </View>
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kpiRow}>
+        <View style={[styles.kpi, { backgroundColor: PH.brandLt }]}><Text style={[styles.kpiVal, { color: PH.brand }]}>{myServices.length}</Text><Text style={styles.kpiLbl}>Packages</Text></View>
+        <View style={[styles.kpi, { backgroundColor: '#F0FDF4' }]}><Text style={[styles.kpiVal, { color: PH.green }]}>{myShoots.length}</Text><Text style={styles.kpiLbl}>Shoots</Text></View>
+        <View style={[styles.kpi, { backgroundColor: '#EFF6FF' }]}><Text style={[styles.kpiVal, { color: PH.blue }]}>{deliveries.filter(d => d.delivered).length}</Text><Text style={styles.kpiLbl}>Delivered</Text></View>
+        <View style={[styles.kpi, { backgroundColor: '#FFFBEB' }]}><Text style={[styles.kpiVal, { color: PH.amber }]}>{myShoots.filter(s => s.status === 'pending').length}</Text><Text style={styles.kpiLbl}>Pending</Text></View>
+      </ScrollView>
 
-      {/* ── Internal tab bar ── */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabContent}>
-        {TABS.map(t => (
-          <Pressable
-            key={t}
-            style={[styles.tabPill, tab === t && { backgroundColor: P.brand }]}
-            onPress={() => { Haptics.selectionAsync(); setTab(t); }}
-          >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContent}>
+        {['Overview', 'Shoots Ledger', 'Digital Delivery'].map(t => (
+          <Pressable key={t} style={[styles.tabPill, tab === t && { backgroundColor: PH.brand }]} onPress={() => { Haptics.selectionAsync(); setTab(t as any); }}>
             <Text style={[styles.tabText, tab === t && { color: '#fff' }]}>{t}</Text>
           </Pressable>
         ))}
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
-        {/* ── SHOOTS TAB ── Upcoming shoot calendar ── */}
-        {tab === 'Shoots' && (
+        {tab === 'Overview' && (
           <>
-            <Text style={styles.sectionTitle}>📸 Upcoming Shoots</Text>
-            <Text style={styles.sectionSub}>Your photography schedule</Text>
-            {SHOOTS.map(shoot => (
-              <Pressable
-                key={shoot.id}
-                style={styles.shootCard}
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-              >
-                <View style={[styles.shootDateBadge, {
-                  backgroundColor: shoot.status === 'upcoming' ? P.brandLt : shoot.status === 'confirmed' ? '#F0FDF4' : '#FFFBEB',
-                }]}>
-                  <Text style={[styles.shootDateDay, {
-                    color: shoot.status === 'upcoming' ? P.brand : shoot.status === 'confirmed' ? P.green : P.gold,
-                  }]}>
-                    {shoot.date === 'Today' ? '🔴' : shoot.date === 'Tomorrow' ? '🟡' : '📅'}
-                  </Text>
-                  <Text style={[styles.shootDateText, {
-                    color: shoot.status === 'upcoming' ? P.brand : shoot.status === 'confirmed' ? P.green : P.gold,
-                  }]}>{shoot.date}</Text>
-                </View>
-                <View style={styles.shootInfo}>
-                  <Text style={styles.shootClient}>{shoot.client}</Text>
-                  <Text style={styles.shootMeta}>{shoot.time} · {shoot.location}</Text>
-                  <View style={styles.shootPkgRow}>
-                    <View style={styles.pkgTag}>
-                      <Text style={styles.pkgTagText}>{shoot.pkg}</Text>
-                    </View>
-                    {!shoot.paid && (
-                      <View style={styles.unpaidTag}>
-                        <Text style={styles.unpaidText}>Unpaid</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-                <Text style={styles.shootPrice}>{shoot.priceDZD.toLocaleString()}{'\n'}DZD</Text>
-              </Pressable>
-            ))}
-          </>
-        )}
-
-        {/* ── PORTFOLIO TAB ── Package performance ── */}
-        {tab === 'Portfolio' && (
-          <>
-            <Text style={styles.sectionTitle}>🖼 Package Performance</Text>
-            <Text style={styles.sectionSub}>Your studio's bestsellers</Text>
-            {PACKAGES.map((pkg, i) => (
-              <View key={pkg.id} style={styles.pkgCard}>
-                <View style={[styles.pkgRankBadge, { backgroundColor: i === 0 ? P.brand : i === 1 ? P.purple : '#6B7280' }]}>
-                  <Text style={styles.pkgRankText}>#{i + 1}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.pkgName}>{pkg.name}</Text>
-                  <Text style={styles.pkgMeta}>{pkg.bookings} bookings · {pkg.deliveryTime} delivery</Text>
-                  <View style={styles.pkgBarWrap}>
-                    <View style={[styles.pkgBarFill, {
-                      width: `${(pkg.bookings / PACKAGES[0].bookings) * 100}%`,
-                      backgroundColor: i === 0 ? P.brand : P.purple,
-                    }]} />
-                  </View>
-                </View>
-                <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                  <Text style={styles.pkgRevenue}>{(pkg.revenue / 1000).toFixed(0)}K DZD</Text>
-                  <Text style={styles.pkgRating}>{'★'.repeat(Math.round(pkg.rating))} {pkg.rating}</Text>
-                </View>
-              </View>
-            ))}
-          </>
-        )}
-
-        {/* ── DELIVERABLES TAB ── Photo delivery queue ── */}
-        {tab === 'Deliverables' && (
-          <>
-            <Text style={styles.sectionTitle}>💾 Delivery Queue</Text>
-            <Text style={styles.sectionSub}>Photo editing & delivery pipeline</Text>
-            {DELIVERABLES.map(d => {
-              const pct = Math.round((d.edited / d.shots) * 100);
-              const statusColor = d.status === 'review' ? P.green : d.status === 'editing' ? P.brand : '#94A3B8';
-              return (
-                <View key={d.id} style={styles.delivCard}>
-                  <View style={styles.delivTop}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.delivClient}>{d.client}</Text>
-                      <Text style={styles.delivPkg}>{d.pkg}</Text>
-                    </View>
-                    <View style={[styles.delivBadge, { backgroundColor: statusColor + '18' }]}>
-                      <Text style={[styles.delivBadgeText, { color: statusColor }]}>
-                        {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.delivProgress}>
-                    <View style={styles.delivProgressTrack}>
-                      <View style={[styles.delivProgressFill, { width: `${pct}%`, backgroundColor: statusColor }]} />
-                    </View>
-                    <Text style={styles.delivProgressText}>{d.edited}/{d.shots} edited ({pct}%)</Text>
-                  </View>
-                  <View style={styles.delivFooter}>
-                    <Ionicons name="time-outline" size={12} color="#94A3B8" />
-                    <Text style={styles.delivDue}>Due {d.dueDate}</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </>
-        )}
-
-        {/* ── EARNINGS TAB ── Revenue breakdown ── */}
-        {tab === 'Earnings' && (
-          <>
-            <View style={styles.earningsHero}>
-              <Text style={styles.earningsTotal}>{(totalRevenue / 1000).toFixed(0)}K DZD</Text>
-              <Text style={styles.earningsLabel}>Total Studio Revenue</Text>
-              <View style={styles.earningsRow}>
-                <View style={styles.earningsItem}>
-                  <Text style={styles.earningsItemVal}>28</Text>
-                  <Text style={styles.earningsItemLbl}>Total Sessions</Text>
-                </View>
-                <View style={styles.earningsDivider} />
-                <View style={styles.earningsItem}>
-                  <Text style={styles.earningsItemVal}>4.85★</Text>
-                  <Text style={styles.earningsItemLbl}>Avg Rating</Text>
-                </View>
-                <View style={styles.earningsDivider} />
-                <View style={styles.earningsItem}>
-                  <Text style={styles.earningsItemVal}>96%</Text>
-                  <Text style={styles.earningsItemLbl}>On-time</Text>
-                </View>
+            <View style={[styles.heroCard, { backgroundColor: PH.brandLt }]}>
+              <Ionicons name="camera-outline" size={28} color={PH.brand} />
+              <Text style={styles.heroTitle}>📸 Photography Overview</Text>
+              <Text style={styles.heroSub}>{myShoots.filter(s => s.status === 'in-progress' || s.status === 'accepted').length} active shoots · {deliveries.filter(d => !d.delivered).length} pending delivery</Text>
+              <View style={styles.heroStats}>
+                <HeroStat label="Packages" value={String(myServices.length)} color={PH.brand} />
+                <HeroStat label="Active Shoots" value={String(myShoots.filter(s => s.status !== 'completed').length)} color={PH.blue} />
+                <HeroStat label="Delivered" value={String(deliveries.filter(d => d.delivered).length)} color={PH.green} />
+                <HeroStat label="Revenue" value={`${(myShoots.filter(s => s.status === 'completed').reduce((a, s) => a + s.priceDZD, 0) / 1000).toFixed(0)}K`} color={PH.amber} />
               </View>
             </View>
-            <Text style={styles.sectionTitle}>Revenue by Package</Text>
-            {PACKAGES.map((pkg, i) => (
-              <View key={pkg.id} style={styles.earningPkgRow}>
-                <View style={[styles.earningColorDot, { backgroundColor: i === 0 ? P.brand : i === 1 ? P.purple : i === 2 ? P.gold : P.green }]} />
-                <Text style={styles.earningPkgName}>{pkg.name}</Text>
-                <View style={styles.earningPkgBar}>
-                  <View style={[styles.earningPkgFill, {
-                    width: `${(pkg.revenue / totalRevenue) * 100}%`,
-                    backgroundColor: i === 0 ? P.brand : i === 1 ? P.purple : i === 2 ? P.gold : P.green,
-                  }]} />
+            <View style={styles.quickGrid}>
+              <QuickStat icon="camera-outline" value={String(myServices.length)} label="Packages" color={PH.brand} />
+              <QuickStat icon="calendar-outline" value={String(myShoots.filter(s => s.status !== 'completed').length)} label="Active" color={PH.blue} />
+              <QuickStat icon="checkmark-done-outline" value={String(deliveries.filter(d => d.delivered).length)} label="Delivered" color={PH.green} />
+              <QuickStat icon="cloud-upload-outline" value={String(deliveries.filter(d => !d.delivered).length)} label="Pending" color={PH.amber} />
+            </View>
+          </>
+        )}
+
+        {tab === 'Shoots Ledger' && (
+          <>
+            <Text style={styles.sectionTitle}>📋 Shoots Ledger</Text>
+            {myShoots.map(shoot => (
+              <View key={shoot.id} style={styles.shootCard}>
+                <View style={styles.shootTop}>
+                  <Text style={styles.shootName}>{shoot.title}</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <View style={[styles.statusBadge, { backgroundColor: (statusColors[shoot.status] || '#94A3B8') + '20' }]}><Text style={[styles.statusText, { color: statusColors[shoot.status] || '#94A3B8' }]}>{shoot.status}</Text></View>
+                    <Pressable onPress={() => setShowDeleteShoot(shoot.id)}><Ionicons name="trash-outline" size={14} color={PH.red} /></Pressable>
+                  </View>
                 </View>
-                <Text style={styles.earningPkgVal}>{(pkg.revenue / 1000).toFixed(0)}K</Text>
+                <Text style={styles.shootMeta}>👤 {shoot.customerName} · {shoot.location}</Text>
+                <Text style={styles.shootPrice}>{formatDZD(shoot.priceDZD)}</Text>
+                {shoot.status !== 'completed' && shoot.status !== 'cancelled' && (
+                  <Pressable style={[styles.advBtn, { backgroundColor: statusColors[shoot.status] || PH.brand }]} onPress={() => advanceShoot(shoot.id)}>
+                    <Text style={styles.advBtnText}>{shoot.status === 'pending' ? 'Accept' : shoot.status === 'accepted' ? 'Start Shoot' : 'Complete'}</Text>
+                  </Pressable>
+                )}
+              </View>
+            ))}
+          </>
+        )}
+
+        {tab === 'Digital Delivery' && (
+          <>
+            <Text style={styles.sectionTitle}>📤 Digital Proofing & Delivery</Text>
+            {deliveries.map(d => (
+              <View key={d.id} style={[styles.deliveryCard, { backgroundColor: d.delivered ? '#F0FDF4' : '#fff', borderColor: d.delivered ? '#86EFAC' : '#E5E7EB' }]}>
+                <Ionicons name={d.delivered ? 'checkmark-circle' : 'cloud-upload-outline'} size={22} color={d.delivered ? PH.green : PH.amber} />
+                <View style={{ flex: 1 }}><Text style={styles.delName}>{d.shoot}</Text><Text style={styles.delMeta}>Gallery: {d.proofUrl}</Text></View>
+                <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                  <Text style={[styles.delCode, { color: d.delivered ? PH.green : '#94A3B8' }]}>{d.accessCode}</Text>
+                  {!d.delivered && <Pressable style={[styles.delBtn, { backgroundColor: PH.brand }]} onPress={() => deliverProofs(d.id)}><Text style={{ fontSize: 10, fontFamily: 'mon-b', color: '#fff' }}>Send</Text></Pressable>}
+                </View>
               </View>
             ))}
           </>
         )}
       </ScrollView>
+
+      <Modal visible={showAddPackage} transparent animationType="fade" onRequestClose={() => setShowAddPackage(false)}>
+        <View style={styles.modalBg}><View style={styles.modalBox}><Text style={styles.modalTitle}>Add Package</Text><TextInput style={styles.input} placeholder="Package name" value={newPkg.name} onChangeText={t => setNewPkg(p => ({ ...p, name: t }))} placeholderTextColor="#94A3B8" /><TextInput style={styles.input} placeholder="Description" value={newPkg.desc} onChangeText={t => setNewPkg(p => ({ ...p, desc: t }))} placeholderTextColor="#94A3B8" /><TextInput style={styles.input} placeholder="Price (DZD)" value={newPkg.price} onChangeText={t => setNewPkg(p => ({ ...p, price: t }))} keyboardType="numeric" placeholderTextColor="#94A3B8" /><View style={styles.modalActions}><Pressable style={[styles.modalBtn, { backgroundColor: '#F1F5F9' }]} onPress={() => setShowAddPackage(false)}><Text>Cancel</Text></Pressable><Pressable style={[styles.modalBtn, { backgroundColor: PH.brand }]} onPress={handleAddPkg}><Text style={{ color: '#fff', fontFamily: 'mon-sb' }}>Add</Text></Pressable></View></View></View>
+      </Modal>
+      <Modal visible={!!editPackage} transparent animationType="fade" onRequestClose={() => setEditPackage(null)}>
+        <View style={styles.modalBg}><View style={styles.modalBox}><Text style={styles.modalTitle}>Edit Price</Text><TextInput style={styles.input} placeholder="Price (DZD)" value={editPriceVal} onChangeText={setEditPriceVal} keyboardType="numeric" placeholderTextColor="#94A3B8" /><View style={styles.modalActions}><Pressable style={[styles.modalBtn, { backgroundColor: '#F1F5F9' }]} onPress={() => setEditPackage(null)}><Text>Cancel</Text></Pressable><Pressable style={[styles.modalBtn, { backgroundColor: PH.brand }]} onPress={handleEditPkg}><Text style={{ color: '#fff', fontFamily: 'mon-sb' }}>Update</Text></Pressable></View></View></View>
+      </Modal>
+      <Modal visible={!!showDeletePackage} transparent animationType="fade" onRequestClose={() => setShowDeletePackage(null)}>
+        <View style={styles.modalBg}><View style={styles.modalBox}><Text style={styles.modalTitle}>Delete Package?</Text><View style={styles.modalActions}><Pressable style={[styles.modalBtn, { backgroundColor: '#F1F5F9' }]} onPress={() => setShowDeletePackage(null)}><Text>Cancel</Text></Pressable><Pressable style={[styles.modalBtn, { backgroundColor: PH.red }]} onPress={() => showDeletePackage && handleDeletePkg(showDeletePackage)}><Text style={{ color: '#fff', fontFamily: 'mon-sb' }}>Delete</Text></Pressable></View></View></View>
+      </Modal>
+      <Modal visible={!!showDeleteShoot} transparent animationType="fade" onRequestClose={() => setShowDeleteShoot(null)}>
+        <View style={styles.modalBg}><View style={styles.modalBox}><Text style={styles.modalTitle}>Cancel Shoot?</Text><View style={styles.modalActions}><Pressable style={[styles.modalBtn, { backgroundColor: '#F1F5F9' }]} onPress={() => setShowDeleteShoot(null)}><Text>Cancel</Text></Pressable><Pressable style={[styles.modalBtn, { backgroundColor: PH.red }]} onPress={() => showDeleteShoot && handleDeleteShoot(showDeleteShoot)}><Text style={{ color: '#fff', fontFamily: 'mon-sb' }}>Delete</Text></Pressable></View></View></View>
+      </Modal>
     </View>
   );
 }
-
+function HeroStat({ label, value, color }: { label: string; value: string; color: string }) { return <View style={styles.heroStat}><Text style={[styles.heroStatVal, { color }]}>{value}</Text><Text style={styles.heroStatLbl}>{label}</Text></View>; }
+function QuickStat({ icon, value, label, color }: { icon: string; value: string; label: string; color: string }) { return <View style={styles.qStat}><Ionicons name={icon as any} size={16} color={color} /><Text style={styles.qVal}>{value}</Text><Text style={styles.qLbl}>{label}</Text></View>; }
 const styles = StyleSheet.create({
-  root: { gap: 0 },
-
-  kpiRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  kpi: { flex: 1, borderRadius: 14, padding: 10, alignItems: 'center', gap: 2 },
-  kpiVal: { fontSize: 18, fontFamily: 'mon-b' },
-  kpiLbl: { fontSize: 9, fontFamily: 'mon-sb', color: '#6B7280' },
-
-  tabBar: { marginBottom: 16 },
-  tabContent: { gap: 8, paddingRight: 8 },
-  tabPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F1F5F9' },
-  tabText: { fontSize: 13, fontFamily: 'mon-sb', color: '#6B7280' },
-
-  content: { gap: 12, paddingBottom: 32 },
+  root: {}, kpiRow: { gap: 8, marginBottom: 12, flexDirection: 'row' }, kpi: { borderRadius: 14, padding: 10, alignItems: 'center', gap: 2, minWidth: 68 },
+  kpiVal: { fontSize: 18, fontFamily: 'mon-b' }, kpiLbl: { fontSize: 9, fontFamily: 'mon-sb', color: '#6B7280' },
+  tabContent: { gap: 8, paddingRight: 8, paddingVertical: 4 }, tabPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F1F5F9' },
+  tabText: { fontSize: 12, fontFamily: 'mon-sb', color: '#6B7280' }, content: { gap: 14, paddingBottom: 48 },
+  heroCard: { borderRadius: 20, padding: 20, gap: 8 }, heroTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#111827' }, heroSub: { fontSize: 13, fontFamily: 'mon', color: '#6B7280' },
+  heroStats: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 12, padding: 10 }, heroStat: { flex: 1, alignItems: 'center', gap: 2 },
+  heroStatVal: { fontSize: 14, fontFamily: 'mon-b' }, heroStatLbl: { fontSize: 9, fontFamily: 'mon', color: '#6B7280' },
+  quickGrid: { flexDirection: 'row', gap: 10 }, qStat: { flex: 1, backgroundColor: '#fff', borderRadius: 14, padding: 14, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: '#E5E7EB' },
+  qVal: { fontSize: 18, fontFamily: 'mon-b', color: '#0F172A' }, qLbl: { fontSize: 9, fontFamily: 'mon', color: '#6B7280' },
   sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#111827' },
-  sectionSub: { fontSize: 12, fontFamily: 'mon', color: '#6B7280', marginTop: -8 },
-
-  // Shoots tab
-  shootCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', padding: 14 },
-  shootDateBadge: { width: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingVertical: 10, gap: 2 },
-  shootDateDay: { fontSize: 20 },
-  shootDateText: { fontSize: 9, fontFamily: 'mon-sb' },
-  shootInfo: { flex: 1, gap: 3 },
-  shootClient: { fontSize: 14, fontFamily: 'mon-sb', color: '#111827' },
-  shootMeta: { fontSize: 11, fontFamily: 'mon', color: '#6B7280' },
-  shootPkgRow: { flexDirection: 'row', gap: 6, marginTop: 2 },
-  pkgTag: { backgroundColor: P.brandLt, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  pkgTagText: { fontSize: 10, fontFamily: 'mon-sb', color: P.brand },
-  unpaidTag: { backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  unpaidText: { fontSize: 10, fontFamily: 'mon-sb', color: '#B45309' },
-  shootPrice: { fontSize: 12, fontFamily: 'mon-b', color: '#111827', textAlign: 'right', lineHeight: 18 },
-
-  // Portfolio tab
-  pkgCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', padding: 14 },
-  pkgRankBadge: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  pkgRankText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
-  pkgName: { fontSize: 13, fontFamily: 'mon-sb', color: '#111827' },
-  pkgMeta: { fontSize: 11, fontFamily: 'mon', color: '#6B7280', marginTop: 2 },
-  pkgBarWrap: { height: 4, backgroundColor: '#F1F5F9', borderRadius: 2, marginTop: 6, overflow: 'hidden' },
-  pkgBarFill: { height: '100%', borderRadius: 2 },
-  pkgRevenue: { fontSize: 12, fontFamily: 'mon-b', color: P.brand },
-  pkgRating: { fontSize: 11, fontFamily: 'mon-sb', color: P.gold },
-
-  // Deliverables tab
-  delivCard: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, gap: 10 },
-  delivTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  delivClient: { fontSize: 14, fontFamily: 'mon-sb', color: '#111827' },
-  delivPkg: { fontSize: 11, fontFamily: 'mon', color: '#6B7280', marginTop: 2 },
-  delivBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  delivBadgeText: { fontSize: 11, fontFamily: 'mon-sb' },
-  delivProgress: { gap: 4 },
-  delivProgressTrack: { height: 8, backgroundColor: '#F1F5F9', borderRadius: 4, overflow: 'hidden' },
-  delivProgressFill: { height: '100%', borderRadius: 4 },
-  delivProgressText: { fontSize: 11, fontFamily: 'mon', color: '#6B7280' },
-  delivFooter: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  delivDue: { fontSize: 11, fontFamily: 'mon-sb', color: '#94A3B8' },
-
-  // Earnings tab
-  earningsHero: { backgroundColor: P.brandLt, borderRadius: 20, padding: 20, alignItems: 'center', gap: 8 },
-  earningsTotal: { fontSize: 36, fontFamily: 'mon-b', color: P.brand },
-  earningsLabel: { fontSize: 13, fontFamily: 'mon', color: '#6B7280' },
-  earningsRow: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 14, padding: 12, gap: 0, alignItems: 'center', width: '100%', marginTop: 4 },
-  earningsItem: { flex: 1, alignItems: 'center', gap: 2 },
-  earningsItemVal: { fontSize: 15, fontFamily: 'mon-b', color: '#111827' },
-  earningsItemLbl: { fontSize: 9, fontFamily: 'mon', color: '#6B7280' },
-  earningsDivider: { width: 1, height: 28, backgroundColor: '#E5E7EB' },
-  earningPkgRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  earningColorDot: { width: 10, height: 10, borderRadius: 5 },
-  earningPkgName: { width: 115, fontSize: 12, fontFamily: 'mon-sb', color: '#111827' },
-  earningPkgBar: { flex: 1, height: 8, backgroundColor: '#F1F5F9', borderRadius: 4, overflow: 'hidden' },
-  earningPkgFill: { height: '100%', borderRadius: 4 },
-  earningPkgVal: { width: 36, fontSize: 12, fontFamily: 'mon-b', color: '#6B7280', textAlign: 'right' },
+  shootCard: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, gap: 6 },
+  shootTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, shootName: { fontSize: 15, fontFamily: 'mon-b', color: '#111827' },
+  shootMeta: { fontSize: 12, fontFamily: 'mon', color: '#6B7280' }, shootPrice: { fontSize: 14, fontFamily: 'mon-b', color: PH.brand },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }, statusText: { fontSize: 10, fontFamily: 'mon-b' },
+  advBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, alignSelf: 'flex-start' }, advBtnText: { fontSize: 11, fontFamily: 'mon-sb', color: '#fff' },
+  deliveryCard: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, borderWidth: 1, padding: 14 },
+  delName: { fontSize: 14, fontFamily: 'mon-b', color: '#111827' }, delMeta: { fontSize: 11, fontFamily: 'mon', color: '#6B7280' },
+  delCode: { fontSize: 12, fontFamily: 'mon-b', letterSpacing: 1 }, delBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24 }, modalBox: { backgroundColor: '#fff', borderRadius: 20, padding: 20, width: '100%', gap: 12 },
+  modalTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#111827' }, input: { height: 44, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 10, paddingHorizontal: 12, fontFamily: 'mon', fontSize: 13, color: '#111827' },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 4 }, modalBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
 });

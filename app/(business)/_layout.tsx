@@ -162,17 +162,38 @@ export default function BusinessLayout() {
         />
 
         {/* Hidden screens */}
-        <Tabs.Screen name="promotions"         options={{ href: null }} />
-        <Tabs.Screen name="analytics"          options={{ href: null }} />
-        <Tabs.Screen name="reviews"            options={{ href: null }} />
-        <Tabs.Screen name="orders"             options={{ href: null }} />
-        <Tabs.Screen name="listings/new"       options={{ href: null }} />
-        <Tabs.Screen name="listings/[id]"      options={{ href: null }} />
-        <Tabs.Screen name="manage/[category]"  options={{ href: null }} />
-        <Tabs.Screen name="dashboards/driver"       options={{ href: null }} />
-        <Tabs.Screen name="dashboards/experience"   options={{ href: null }} />
-        <Tabs.Screen name="dashboards/photographer" options={{ href: null }} />
-        <Tabs.Screen name="dashboards/rental"       options={{ href: null }} />
+        <Tabs.Screen name="promotions"              options={{ href: null }} />
+        <Tabs.Screen name="analytics"               options={{ href: null }} />
+        <Tabs.Screen name="reviews"                 options={{ href: null }} />
+        <Tabs.Screen name="orders"                  options={{ href: null }} />
+        <Tabs.Screen name="listings/new"            options={{ href: null }} />
+        <Tabs.Screen name="listings/[id]"           options={{ href: null }} />
+        <Tabs.Screen name="manage/[category]"       options={{ href: null }} />
+        {/* ── Old dashboard screens (legacy) ── */}
+        <Tabs.Screen name="dashboards/driver"        options={{ href: null }} />
+        <Tabs.Screen name="dashboards/experience"    options={{ href: null }} />
+        <Tabs.Screen name="dashboards/rental"        options={{ href: null }} />
+        {/* ── PROMPTFULL SaaS dashboards ── */}
+        <Tabs.Screen name="dashboards/hotel"          options={{ href: null }} />
+        <Tabs.Screen name="dashboards/restaurant"     options={{ href: null }} />
+        <Tabs.Screen name="dashboards/beach-club"     options={{ href: null }} />
+        <Tabs.Screen name="dashboards/parking"        options={{ href: null }} />
+        <Tabs.Screen name="dashboards/water-sports"   options={{ href: null }} />
+        <Tabs.Screen name="dashboards/wellness"       options={{ href: null }} />
+        <Tabs.Screen name="dashboards/games"          options={{ href: null }} />
+        <Tabs.Screen name="dashboards/photographer"   options={{ href: null }} />
+        <Tabs.Screen name="dashboards/events"         options={{ href: null }} />
+        <Tabs.Screen name="dashboards/desert-experience" options={{ href: null }} />
+        {/* ── Expanded menu routes ── */}
+        <Tabs.Screen name="staff"                 options={{ href: null }} />
+        <Tabs.Screen name="inventory"             options={{ href: null }} />
+        <Tabs.Screen name="earnings"              options={{ href: null }} />
+        <Tabs.Screen name="reports"               options={{ href: null }} />
+        <Tabs.Screen name="settings"              options={{ href: null }} />
+        <Tabs.Screen name="network"               options={{ href: null }} />
+        <Tabs.Screen name="marketplace"           options={{ href: null }} />
+        <Tabs.Screen name="help"                  options={{ href: null }} />
+        <Tabs.Screen name="changelog"             options={{ href: null }} />
       </Tabs>
     </ProNavProvider>
   );
