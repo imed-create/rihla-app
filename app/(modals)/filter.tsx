@@ -7,7 +7,6 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -133,10 +132,10 @@ export default function FilterScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
-      {/* Header */}
-      <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={[styles.header, { paddingTop: topPad + 12 }]}>
+      {/* Uber Dark Header */}
+      <View style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
-          <Ionicons name="close" size={24} color="#fff" />
+          <Ionicons name="close" size={22} color="#FFFFFF" />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Filters</Text>
@@ -144,7 +143,7 @@ export default function FilterScreen() {
         <Pressable onPress={handleReset} style={styles.resetBtn}>
           <Text style={styles.resetBtnText}>Reset</Text>
         </Pressable>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
@@ -352,13 +351,13 @@ export default function FilterScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  // Header
-  header: { paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  // Uber Dark Header
+  header: { backgroundColor: '#0d0d0d', paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#fff' },
+  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#FFFFFF' },
   resetBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  resetBtnText: { fontSize: 14, fontFamily: 'mon-sb', color: '#FFFFFF' },
+  resetBtnText: { fontSize: 14, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.7)' },
 
   // Scroll
   scrollContent: { paddingTop: 8 },

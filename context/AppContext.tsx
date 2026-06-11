@@ -38,6 +38,8 @@ interface AppContextType {
   rejectKyc: (reason: string) => Promise<void>;
   resubmitKyc: (data: Partial<KycData>) => Promise<void>;
   signOut: () => void;
+  reviews: AppReview[];
+  addReview: (review: Omit<AppReview, 'id' | 'createdAt'>) => void;
   bookings: AppBooking[];
   addBooking: (booking: Omit<AppBooking, 'id' | 'createdAt' | 'status'>) => AppBooking;
   updateBookingStatus: (id: string, status: AppBookingStatus) => void;
@@ -46,6 +48,9 @@ interface AppContextType {
   getBookingById: (id: string) => AppBooking | undefined;
   activeBookings: AppBooking[];
   pastBookings: AppBooking[];
+  upcomingBookings: AppBooking[];
+  completedBookings: AppBooking[];
+  cancelledBookings: AppBooking[];
   orders: Order[];
   addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Order;
   updateOrderStatus: (id: string, status: OrderStatus) => void;
@@ -66,6 +71,16 @@ const USER_KEY = '@tourdz_user';
 const ORDERS_KEY = '@sahel_orders';
 const REQUESTS_KEY = '@sahel_service_requests';
 const PARTNER_ONLINE_KEY = '@sahel_partner_online';
+const REVIEWS_KEY = '@rihla_reviews';
+
+export interface AppReview {
+  id: string;
+  bookingId: string;
+  providerName: string;
+  rating: number;
+  text: string;
+  createdAt: string;
+}
 
 const DEFAULT_USER: UserProfile = {
   name: '',
@@ -80,6 +95,111 @@ const DEFAULT_USER: UserProfile = {
 
 function uid() {
   return Date.now().toString() + Math.random().toString(36).slice(2, 8);
+}
+
+/** Seed demo bookings so the Trips tab is never empty on first launch */
+function getSeedBookings(): AppBooking[] {
+  const now = Date.now();
+  const DAY = 86400000;
+  return [
+    // ── ACTIVE bookings ──
+    {
+      id: 'seed-1', type: 'hotel', icon: 'bed', iconFamily: 'Ionicons',
+      color: '#0a2540', title: 'Hotel El Djazair', subtitle: 'Algiers · Seafront Suite',
+      price: 14000, status: 'active', createdAt: new Date(now - 2 * DAY).toISOString(),
+      expiresAt: new Date(now + 4 * DAY).toISOString(),
+      details: { check_in: '2026-06-10', check_out: '2026-06-14', room_type: 'Seafront Suite', nights: 4, guests: 2, breakfast: 'Included' },
+    },
+    {
+      id: 'seed-2', type: 'beach', icon: 'umbrella', iconFamily: 'Ionicons',
+      color: '#00a896', title: 'Sidi Fredj Family Zone', subtitle: 'Tipaza · Spot A3 · Family Zone',
+      price: 1500, status: 'active', createdAt: new Date(now - 3 * 3600000).toISOString(),
+      expiresAt: new Date(now + 2 * 3600000).toISOString(),
+      details: { spot: 'A3', zone: 'Family', rows: '4x6 grid', services: 'Parking, Food, Showers', hold_time: '20 min' },
+    },
+    {
+      id: 'seed-3', type: 'driver', icon: 'car', iconFamily: 'Ionicons',
+      color: '#3B82F6', title: 'Youcef — Airport Transfer', subtitle: 'Algiers Airport → City Center',
+      price: 3000, status: 'active', createdAt: new Date(now - 25 * 60000).toISOString(),
+      expiresAt: new Date(now + 15 * 60000).toISOString(),
+      details: { vehicle: 'Toyota Camry 2024', pickup: 'Houari Boumediene Airport', dropoff: 'Algiers City Center', eta: '18 min', driver_rating: '4.7★' },
+    },
+    // ── UPCOMING (pending/confirmed) bookings ──
+    {
+      id: 'seed-4', type: 'experience', icon: 'compass', iconFamily: 'Ionicons',
+      color: '#8B5CF6', title: '3-Day Sahara Expedition', subtitle: 'Tamanrasset → Hoggar Mountains',
+      price: 35000, status: 'confirmed', createdAt: new Date(now - 5 * DAY).toISOString(),
+      details: { duration: '3 days', departure: '2026-07-01', group_size: '8 max', includes: 'Transport, Meals, Camp, Guide', difficulty: 'Moderate' },
+    },
+    {
+      id: 'seed-5', type: 'event', icon: 'musical-notes', iconFamily: 'Ionicons',
+      color: '#EC4899', title: 'Rai Night Oran', subtitle: 'Oran Arena · 15 Jul 2026',
+      price: 3500, status: 'confirmed', createdAt: new Date(now - 3 * DAY).toISOString(),
+      details: { venue: 'Oran Arena', date: '15 Jul 2026', time: '21:00', ticket_type: 'General', age_restriction: '16+' },
+    },
+    {
+      id: 'seed-6', type: 'guide', icon: 'map', iconFamily: 'Ionicons',
+      color: '#F59E0B', title: 'Karim — Casbah Expert Guide', subtitle: 'Algiers · Full Day Tour',
+      price: 4000, status: 'confirmed', createdAt: new Date(now - 2 * DAY).toISOString(),
+      details: { guide: 'Karim (15 yrs exp)', languages: 'Arabic, French, English', duration: 'Full day (8h)', group_size: '12 max', includes: 'Walking tour, lunch' },
+    },
+    // ── COMPLETED bookings ──
+    {
+      id: 'seed-7', type: 'restaurant', icon: 'restaurant', iconFamily: 'Ionicons',
+      color: '#EF4444', title: 'Le Saveur de Constantine', subtitle: 'Constantine · Couscous Royal',
+      price: 2500, status: 'completed', createdAt: new Date(now - 7 * DAY).toISOString(),
+      details: { cuisine: 'Traditional Algerian', meal: 'Couscous Royal + Mint Tea', guests: 4, total: '10,000 DA', rating: '4.6★' },
+    },
+    {
+      id: 'seed-8', type: 'activity', icon: 'bicycle', iconFamily: 'Ionicons',
+      color: '#10B981', title: 'Tandem Paragliding Djurdjura', subtitle: 'Bejaia · Mountain Flight',
+      price: 8000, status: 'completed', createdAt: new Date(now - 14 * DAY).toISOString(),
+      details: { activity: 'Tandem Paragliding', duration: '45 min', difficulty: 'Moderate', equipment: 'Included', rating: '4.9★' },
+    },
+    {
+      id: 'seed-9', type: 'rental', icon: 'home', iconFamily: 'Ionicons',
+      color: '#6366F1', title: 'Algiers Downtown Apartment', subtitle: 'Algiers · 2BR Modern',
+      price: 6500, status: 'completed', createdAt: new Date(now - 21 * DAY).toISOString(),
+      details: { bedrooms: 2, bathrooms: 1, max_guests: 4, amenities: 'WiFi, AC, Kitchen', nights: 3, property: 'Apartment' },
+    },
+    {
+      id: 'seed-10', type: 'photographer', icon: 'camera', iconFamily: 'Ionicons',
+      color: '#F97316', title: 'Amina — Sunset Photography', subtitle: 'Tipaza · Beach Session',
+      price: 5000, status: 'completed', createdAt: new Date(now - 10 * DAY).toISOString(),
+      details: { package: 'Quick Shoot (30 min)', deliverables: '20 edited photos', style: 'Beach & Sunset', turnaround: '3 days', rating: '4.8★' },
+    },
+    {
+      id: 'seed-11', type: 'guide', icon: 'map', iconFamily: 'Ionicons',
+      color: '#F59E0B', title: 'Fatima — Sahara Desert Guide', subtitle: 'Tamanrasset · Desert Trek',
+      price: 5500, status: 'completed', createdAt: new Date(now - 30 * DAY).toISOString(),
+      details: { guide: 'Fatima (10 yrs exp)', specialization: 'Desert Expeditions', languages: 'Arabic, French, Tamazight', duration: '2 days', rating: '5.0★' },
+    },
+    {
+      id: 'seed-12', type: 'beach', icon: 'umbrella', iconFamily: 'Ionicons',
+      color: '#00a896', title: 'Oran VIP Beach Club', subtitle: 'Oran · VIP Cabana B1',
+      price: 3500, status: 'completed', createdAt: new Date(now - 18 * DAY).toISOString(),
+      details: { spot: 'B1', zone: 'VIP', services: 'Pool, Bar, Towels, Massage', duration: 'Full day', rating: '4.8★' },
+    },
+    // ── CANCELLED bookings ──
+    {
+      id: 'seed-13', type: 'hotel', icon: 'bed', iconFamily: 'Ionicons',
+      color: '#0a2540', title: 'Tlemcen Palace Hotel', subtitle: 'Tlemcen · Double Room',
+      price: 6500, status: 'cancelled', createdAt: new Date(now - 25 * DAY).toISOString(),
+      details: { room_type: 'Double', nights: 2, reason: 'Schedule conflict' },
+    },
+    {
+      id: 'seed-14', type: 'event', icon: 'musical-notes', iconFamily: 'Ionicons',
+      color: '#EC4899', title: 'Algiers Jazz Festival', subtitle: 'Algiers Opera House',
+      price: 5000, status: 'cancelled', createdAt: new Date(now - 20 * DAY).toISOString(),
+      details: { venue: 'Algiers Opera House', ticket: '3-Day Pass', reason: 'Travel plans changed' },
+    },
+    {
+      id: 'seed-15', type: 'driver', icon: 'car', iconFamily: 'Ionicons',
+      color: '#3B82F6', title: 'Bilal — Inter-City Luxury', subtitle: 'Algiers → Oran · Mercedes E-Class',
+      price: 12000, status: 'cancelled', createdAt: new Date(now - 15 * DAY).toISOString(),
+      details: { vehicle: 'Mercedes E-Class 2024', from: 'Algiers', to: 'Oran', reason: 'Found alternative transport' },
+    },
+  ];
 }
 
 function mapPartnerType(type: string): ServiceType {
@@ -100,6 +220,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [bookings, setBookings] = useState<AppBooking[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [reviews, setReviews] = useState<AppReview[]>([]);
   const [partnerOnline, setPartnerOnlineState] = useState(true);
   const [activeCategory, setActiveCategory] = useState<DestinationType>('beach');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -107,18 +228,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const [bookingsRaw, userRaw, ordersRaw, requestsRaw, onlineRaw] = await Promise.all([
+        const [bookingsRaw, userRaw, ordersRaw, requestsRaw, onlineRaw, reviewsRaw] = await Promise.all([
           AsyncStorage.getItem(BOOKINGS_KEY),
           AsyncStorage.getItem(USER_KEY),
           AsyncStorage.getItem(ORDERS_KEY),
           AsyncStorage.getItem(REQUESTS_KEY),
           AsyncStorage.getItem(PARTNER_ONLINE_KEY),
+          AsyncStorage.getItem(REVIEWS_KEY),
         ]);
-        if (bookingsRaw) setBookings(JSON.parse(bookingsRaw));
+        if (bookingsRaw) {
+          setBookings(JSON.parse(bookingsRaw));
+        } else {
+          // First launch — seed demo bookings
+          const seed = getSeedBookings();
+          setBookings(seed);
+          await AsyncStorage.setItem(BOOKINGS_KEY, JSON.stringify(seed));
+        }
         if (userRaw) setUser({ ...DEFAULT_USER, ...JSON.parse(userRaw) });
         if (ordersRaw) setOrders(JSON.parse(ordersRaw));
         if (requestsRaw) setServiceRequests(JSON.parse(requestsRaw));
         if (onlineRaw != null) setPartnerOnlineState(onlineRaw === 'true');
+        if (reviewsRaw) setReviews(JSON.parse(reviewsRaw));
       } catch {
         /* ignore */
       } finally {
@@ -241,6 +371,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [user, saveUser]);
 
+  const saveReviews = useCallback(async (updated: AppReview[]) => {
+    setReviews(updated);
+    await AsyncStorage.setItem(REVIEWS_KEY, JSON.stringify(updated));
+  }, []);
+
+  const addReview = useCallback(
+    (review: Omit<AppReview, 'id' | 'createdAt'>) => {
+      const newReview: AppReview = {
+        ...review,
+        id: uid(),
+        createdAt: new Date().toISOString(),
+      };
+      saveReviews([newReview, ...reviews]);
+    },
+    [reviews, saveReviews]
+  );
+
   const signOut = useCallback(async () => {
     await AsyncStorage.removeItem(USER_KEY);
     setUser(DEFAULT_USER);
@@ -361,6 +508,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     (b) => b.status === 'active' || b.status === 'confirmed' || b.status === 'pending'
   );
   const pastBookings = bookings.filter((b) => b.status === 'completed' || b.status === 'cancelled');
+  const upcomingBookings = bookings.filter(
+    (b) => b.status === 'confirmed' || b.status === 'pending'
+  );
+  const completedBookings = bookings.filter((b) => b.status === 'completed');
+  const cancelledBookings = bookings.filter((b) => b.status === 'cancelled');
 
   return (
     <AppContext.Provider
@@ -373,6 +525,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         rejectKyc,
         resubmitKyc,
         signOut,
+        reviews,
+        addReview,
         bookings,
         addBooking,
         updateBookingStatus,
@@ -381,6 +535,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getBookingById,
         activeBookings,
         pastBookings,
+        upcomingBookings,
+        completedBookings,
+        cancelledBookings,
         orders,
         addOrder,
         updateOrderStatus,

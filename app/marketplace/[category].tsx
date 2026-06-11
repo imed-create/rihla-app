@@ -22,7 +22,6 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RIHLA } from '@/constants/theme';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
@@ -200,7 +199,7 @@ export default function MarketplaceCategoryScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* ── HEADER ── */}
-      <LinearGradient colors={[catDef.color, RIHLA.primary]} style={[styles.header, { paddingTop: topPad + 12 }]}>
+      <View style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </Pressable>
@@ -221,7 +220,7 @@ export default function MarketplaceCategoryScreen() {
             </Pressable>
           )}
         </View>
-      </LinearGradient>
+      </View>
 
       {/* ── SEARCH BAR ── */}
       <View style={styles.searchBar}>
@@ -320,7 +319,7 @@ export default function MarketplaceCategoryScreen() {
         numColumns={isWide ? 2 : 1}
         key={isWide ? 'wide' : 'narrow'}
         columnWrapperStyle={isWide ? { gap: 16 } : undefined}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 40, maxWidth: 1180, alignSelf: 'center', width: '100%' }]}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100, maxWidth: 1180, alignSelf: 'center', width: '100%' }]}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
@@ -340,8 +339,8 @@ export default function MarketplaceCategoryScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  // Header
-  header: { paddingHorizontal: 16, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  // Header (Uber dark solid)
+  header: { paddingHorizontal: 16, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0d0d0d' },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#fff' },

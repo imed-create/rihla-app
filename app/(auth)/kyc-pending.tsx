@@ -3,6 +3,7 @@
  * ───────────────────────────────────────────────────────
  * Shows document-level verification progress with per-doc status.
  * Includes simulated admin approval/rejection for demo purposes.
+ * Updated for Uber-style consistency: gradient header, UberButton.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -20,8 +21,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '@/context/AppContext';
 import type { DocStatus } from '@/types/app';
+import { RIHLA } from '@/constants/theme';
+import UberButton from '@/components/shared/UberButton';
 import * as Haptics from 'expo-haptics';
 
 const DOC_LABELS: Record<string, string> = {
@@ -38,7 +42,7 @@ const DOC_ICONS: Record<string, string> = {
 
 export default function KycPendingScreen() {
   const insets = useSafeAreaInsets();
-  const { user, simulateKycApproval, rejectKyc, resubmitKyc } = useApp();
+  const { user, simulateKycApproval, rejectKyc } = useApp();
   const [adminModal, setAdminModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -72,13 +76,13 @@ export default function KycPendingScreen() {
   const anyRejected = docs.some(d => user.kycData[d]?.status === 'rejected');
   const pendingCount = docs.filter(d => user.kycData[d]?.status === 'pending').length;
 
-  const ROLE_META = {
+  const ROLE_META: Record<string, { color: string; icon: string; label: string; bgColor: string }> = {
     traveler: { color: '#00a896', icon: 'compass-outline', label: 'Traveler', bgColor: '#F0F9FF' },
-    business: { color: '#0a2540', icon: 'storefront-outline', label: 'Business Owner', bgColor: '#F5F3FF' },
+    business: { color: RIHLA.primary, icon: 'storefront-outline', label: 'Business Owner', bgColor: '#F5F3FF' },
     partner: { color: '#f4a261', icon: 'flash-outline', label: 'Service Partner', bgColor: '#ECFDF5' },
   };
 
-  const meta = ROLE_META[user.role ?? 'traveler'];
+  const meta = ROLE_META[user.role ?? 'traveler'] ?? ROLE_META.traveler;
 
   const handleAdminApprove = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -98,13 +102,20 @@ export default function KycPendingScreen() {
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom + 24 }]}>
-      {/* ── HEADER ── */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          {user.kycStatus === 'rejected' ? 'Application Reverted' : 'Application Submitted'}
-        </Text>
-      </View>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      {/* ── Gradient Header ── */}
+      <LinearGradient colors={[meta.color, '#0d3b66']} style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Verification</Text>
+          <Text style={styles.headerSub}>
+            {user.kycStatus === 'rejected' ? 'Documents need attention' : 'Application status'}
+          </Text>
+        </View>
+        <View style={{ width: 36 }} />
+      </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.content, { opacity: fadeIn }]}>
@@ -112,7 +123,7 @@ export default function KycPendingScreen() {
           <Animated.View style={[styles.iconRing, { borderColor: meta.color + '30', transform: [{ scale: pulse }] }]}>
             <View style={[styles.iconCircle, { backgroundColor: meta.bgColor }]}>
               <Ionicons
-                name={user.kycStatus === 'rejected' ? 'close-circle-outline' : meta.icon as any}
+                name={user.kycStatus === 'rejected' ? 'close-circle-outline' : (meta.icon as any)}
                 size={44}
                 color={user.kycStatus === 'rejected' ? '#EF4444' : meta.color}
               />
@@ -187,16 +198,16 @@ export default function KycPendingScreen() {
 
           {/* Action buttons */}
           {user.kycStatus === 'rejected' ? (
-            <Pressable
-              style={styles.resubmitBtn}
+            <UberButton
+              title="Resubmit Documents"
+              bgVariant="primary"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 router.back();
               }}
-            >
-              <Ionicons name="refresh-outline" size={18} color="#fff" />
-              <Text style={styles.resubmitText}>Resubmit Documents</Text>
-            </Pressable>
+              IconLeft={() => <Ionicons name="refresh-outline" size={18} color="#FFFFFF" />}
+              style={{ width: '100%' }}
+            />
           ) : user.kycStatus !== 'approved' ? (
             <View style={styles.pendingInfo}>
               <Ionicons name="time-outline" size={18} color={meta.color} />
@@ -247,7 +258,7 @@ export default function KycPendingScreen() {
             })}
 
             {/* Approve button */}
-            <Pressable style={styles.approveBtn} onPress={handleAdminApprove}>
+            <Pressable style={[styles.approveBtn, { backgroundColor: meta.color }]} onPress={handleAdminApprove}>
               <Ionicons name="checkmark-circle" size={18} color="#fff" />
               <Text style={styles.approveText}>Approve All Documents</Text>
             </Pressable>
@@ -310,8 +321,19 @@ function Step({ done, loading, label, color }: { done: boolean; loading?: boolea
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
 
-  header: { paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E2E8F0', alignItems: 'center' },
-  headerTitle: { fontFamily: 'mon-sb', fontSize: 16, color: '#000000' },
+  // Gradient header
+  header: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 14,
+  },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerTitle: { fontSize: 17, fontFamily: 'mon-b', color: '#FFFFFF' },
+  headerSub: { fontSize: 11, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)', marginTop: 1 },
 
   scroll: { flexGrow: 1 },
   content: { alignItems: 'center', paddingHorizontal: 28, gap: 24, paddingTop: 32, paddingBottom: 40 },
@@ -344,10 +366,6 @@ const styles = StyleSheet.create({
   // Pending info
   pendingInfo: { flexDirection: 'row', gap: 10, backgroundColor: '#F8FAFC', borderRadius: 14, padding: 16, width: '100%', borderWidth: 1, borderColor: '#E2E8F0' },
   pendingInfoText: { flex: 1, fontSize: 13, fontFamily: 'mon', lineHeight: 18 },
-
-  // Resubmit
-  resubmitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0a2540', paddingVertical: 14, borderRadius: 14, width: '100%' },
-  resubmitText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
 
   // Admin toggle
   adminToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10 },

@@ -1,60 +1,52 @@
 /**
- * RIHLA — Profile Tab (Uber-Style Redesign)
- * Premium layout: Gradient guest hero → signed-in profile with stats, info, settings
+ * RIHLA — Profile Tab (Uber Style — Full Featured)
+ * ──────────────────────────────────────────────────
+ * Rich profile with avatar, stats, personal info sections,
+ * travel preferences preview, documents, emergency contact,
+ * and navigation to edit screen.
  */
 
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useApp, UserRole } from '@/context/AppContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { router, Stack } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { useTranslation } from '@/context/I18nContext';
 import UberButton from '@/components/shared/UberButton';
 import { RIHLA } from '@/constants/theme';
 
 export default function ProfileScreen() {
   const { user, signOut, activeBookings, pastBookings, updateUser } = useApp();
-  const { signOut: clerkSignOut, isSignedIn: clerkSignedIn } = useAuth();
-  const { t } = useTranslation();
-
-  const isSignedIn = clerkSignedIn || !!user.email;
+  const { signOut: clerkSignOut } = useAuth();
+  const isSignedIn = !!user.email;
 
   const handleRoleSwitch = (role: UserRole, businessType?: string) => {
     updateUser({
       email: `${role}${businessType ? `-${businessType}` : ''}@demo.com`,
-      name: `Demo ${role.charAt(0).toUpperCase() + role.slice(1)} ${businessType ? `(${businessType})` : ''}`,
+      name: `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       role: role,
       kycStatus: 'approved',
       isOnboarded: true,
       kycData: {
-        fullName: `Demo ${role.charAt(0).toUpperCase() + role.slice(1)} ${businessType ? `(${businessType})` : ''}`,
+        fullName: `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`,
         phone: '+213 555 12 34 56',
         nationality: 'Algerian',
         ...(role === 'business' && { businessType: businessType || 'hotel' }),
         ...(role === 'partner' && { serviceType: 'jetski' }),
       }
     });
-    Alert.alert('Demo Role Active', `Switched to ${role} ${businessType ? `(${businessType})` : ''} mode!`);
+    Alert.alert('Demo Role Active', `Switched to ${role} mode!`);
   };
 
-  const handleSignOut = async () => {
-    Alert.alert(t('profile.signOut'), t('profile.signOutConfirm'), [
-      { text: t('common.cancel'), style: 'cancel' },
+  const handleSignOut = () => {
+    Alert.alert('Sign Out', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: t('profile.signOut'),
-        style: 'destructive',
+        text: 'Sign Out', style: 'destructive',
         onPress: async () => {
           try { await clerkSignOut(); } catch { /* noop */ }
           signOut();
@@ -64,114 +56,76 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const pickAvatar = async () => {
-    await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-  };
-
   const avatarLetter = user?.kycData?.fullName
     ? user.kycData.fullName[0].toUpperCase()
-    : user?.name
-      ? user.name[0].toUpperCase()
-      : 'S';
+    : user?.name ? user.name[0].toUpperCase() : 'S';
 
-  // ── GUEST STATE ──
+  const displayName = user.kycData.fullName || user.name || 'Traveler';
+  const displayPhone = user.phone || user.kycData.phone || '';
+  const displayNationality = user.nationality || user.kycData.nationality || '';
+  const displayWilaya = user.wilaya || '';
+  const hasExtendedProfile = user.dateOfBirth || user.passportNumber || user.emergencyContact || user.travelPreferences;
+
   if (!isSignedIn) {
     return (
       <SafeAreaView style={styles.root} edges={['top']}>
         <Stack.Screen options={{ headerShown: false }} />
-        <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
-          {/* Gradient Hero */}
-          <LinearGradient colors={[RIHLA.primary, '#0d3b66']} style={styles.guestHero}>
-            <View style={styles.guestHeroContent}>
-              <View style={styles.guestAvatarCircle}>
-                <Ionicons name="person-outline" size={36} color="#FFFFFF" />
-              </View>
-              <Text style={styles.guestHeroTitle}>Your Account</Text>
-              <Text style={styles.guestHeroSub}>Sign in to access your trips, bookings, and more.</Text>
-              <UberButton
-                title="Sign In"
-                bgVariant="primary"
-                onPress={() => router.push('/(auth)/login')}
-                style={{ width: '100%', maxWidth: 280, marginTop: 8 }}
-              />
+        <ScrollView contentContainerStyle={styles.guestScroll}>
+          <View style={styles.guestHero}>
+            <View style={styles.guestAvatar}>
+              <Ionicons name="person-outline" size={36} color="#FFFFFF" />
             </View>
-          </LinearGradient>
-
-          {/* Demo experience cards */}
-          <View style={styles.sectionWrapper}>
+            <Text style={styles.guestTitle}>Your Account</Text>
+            <Text style={styles.guestSub}>Sign in to access your trips, bookings, and more.</Text>
+            <UberButton
+              title="Sign In"
+              onPress={() => router.push('/(auth)/login')}
+              style={{ width: '100%', maxWidth: 280 }}
+            />
+          </View>
+          <View style={styles.section}>
             <Text style={styles.sectionLabel}>Try RIHLA as...</Text>
-            <DemoRoleCard icon="compass-outline" label="Traveler" desc="Explore and book experiences" color="#00a896" onPress={() => handleRoleSwitch('traveler')} />
-            <DemoRoleCard icon="business-outline" label="Business Owner (Hotel)" desc="List and manage your business" color={RIHLA.primary} onPress={() => handleRoleSwitch('business', 'hotel')} />
-            <DemoRoleCard icon="restaurant-outline" label="Business Owner (Restaurant)" desc="Manage restaurant bookings" color="#e08f47" onPress={() => handleRoleSwitch('business', 'restaurant')} />
-            <DemoRoleCard icon="flash-outline" label="Service Partner" desc="Rent your assets and earn" color="#f4a261" onPress={() => handleRoleSwitch('partner')} />
-
-            <View style={styles.divider} />
-
-            <TouchableOpacity style={styles.menuRow} onPress={() => router.push('/(modals)/settings')}>
-              <View style={[styles.menuIcon, { backgroundColor: '#F1F5F9' }]}>
-                <Ionicons name="settings-outline" size={18} color="#64748B" />
-              </View>
-              <Text style={styles.menuLabel}>Settings</Text>
-              <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuRow} onPress={() => router.push('/(modals)/settings')}>
-              <View style={[styles.menuIcon, { backgroundColor: '#F1F5F9' }]}>
-                <Ionicons name="help-circle-outline" size={18} color="#64748B" />
-              </View>
-              <Text style={styles.menuLabel}>Help & Support</Text>
-              <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-            </TouchableOpacity>
+            <DemoCard icon="compass-outline" label="Traveler" color="#00a896" onPress={() => handleRoleSwitch('traveler')} />
+            <DemoCard icon="business-outline" label="Business Owner (Hotel)" color={RIHLA.primary} onPress={() => handleRoleSwitch('business', 'hotel')} />
+            <DemoCard icon="flash-outline" label="Service Partner" color="#f4a261" onPress={() => handleRoleSwitch('partner')} />
+          </View>
+          <View style={styles.menuSection}>
+            <MenuItem icon="settings-outline" label="Settings" color="#64748B" onPress={() => router.push('/(modals)/settings' as any)} />
+            <MenuItem icon="help-circle-outline" label="Help & Support" color="#64748B" onPress={() => router.push('/(modals)/settings' as any)} />
           </View>
         </ScrollView>
       </SafeAreaView>
     );
   }
 
-  // ── SIGNED-IN STATE ──
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Header */}
-      <View style={styles.signedHeader}>
-        <Text style={styles.signedHeaderTitle}>Profile</Text>
-        <TouchableOpacity onPress={() => router.push('/(modals)/settings')} style={styles.settingsBtn}>
-          <Ionicons name="settings-outline" size={22} color="#1a1a1a" />
-        </TouchableOpacity>
-      </View>
-
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Avatar + Name */}
-        <View style={styles.profileTop}>
-          <TouchableOpacity onPress={pickAvatar} style={styles.avatarWrap}>
-            {user.kycData.selfieUri ? (
-              <Image source={{ uri: user.kycData.selfieUri }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarLetter}>{avatarLetter}</Text>
-              </View>
-            )}
-            <View style={styles.avatarEditBadge}>
-              <Ionicons name="camera" size={11} color="#fff" />
-            </View>
-          </TouchableOpacity>
-          <View style={styles.profileNameBlock}>
-            <Text style={styles.profileName}>
-              {user.kycData.fullName || user.name || 'Traveler'}
-            </Text>
-            <View style={styles.verifiedRow}>
-              <Ionicons name="checkmark-circle" size={14} color="#00a896" />
-              <Text style={styles.verifiedText}>Verified Account</Text>
-            </View>
+        {/* ── PROFILE HERO ── */}
+        <View style={styles.profileHero}>
+          <View style={styles.avatarLarge}>
+            <Text style={styles.avatarLetter}>{avatarLetter}</Text>
           </View>
+          <Text style={styles.profileName}>{displayName}</Text>
+          {displayPhone && <Text style={styles.profileMeta}>{displayPhone}</Text>}
+          <View style={styles.verifiedRow}>
+            <Ionicons name="checkmark-circle" size={14} color="#00a896" />
+            <Text style={styles.verifiedText}>Verified Account</Text>
+          </View>
+
+          {/* Edit Profile Button */}
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => router.push('/(tabs)/edit-profile' as any)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={16} color={RIHLA.accent} />
+            <Text style={styles.editBtnText}>Edit Profile</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Stats */}
+        {/* ── STATS ── */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{activeBookings.length}</Text>
@@ -179,218 +133,286 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{pastBookings.filter((b) => b.status === 'completed').length}</Text>
+            <Text style={styles.statValue}>{pastBookings.filter(b => b.status === 'completed').length}</Text>
             <Text style={styles.statLabel}>Completed</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{user.totalVisits}</Text>
-            <Text style={styles.statLabel}>Trips</Text>
+            <Text style={styles.statLabel}>Total Trips</Text>
           </View>
         </View>
 
-        <View style={styles.divider} />
-
-        {/* Personal Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
-          <InfoRow label="Full Name" value={user.kycData.fullName || '—'} />
-          <InfoRow label="Phone" value={user.kycData.phone || user.phone || '—'} />
-          <InfoRow label="Nationality" value={user.kycData.nationality || '—'} />
-          <InfoRow label="KYC Status" value={user.kycStatus === 'approved' ? 'Verified ✅' : 'Pending'} valueColor="#00a896" />
+        {/* ── PERSONAL INFO CARD ── */}
+        <View style={styles.infoCard}>
+          <View style={styles.infoCardHeader}>
+            <Ionicons name="person-outline" size={16} color={RIHLA.primary} />
+            <Text style={styles.infoCardTitle}>Personal Info</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/edit-profile' as any)}>
+              <Text style={styles.infoCardLink}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          {displayName && <InfoRow label="Full Name" value={displayName} icon="person-outline" />}
+          {displayPhone && <InfoRow label="Phone" value={displayPhone} icon="call-outline" />}
+          {user.email && <InfoRow label="Email" value={user.email} icon="mail-outline" />}
+          {user.dateOfBirth && <InfoRow label="Date of Birth" value={user.dateOfBirth} icon="calendar-outline" />}
+          {user.gender && <InfoRow label="Gender" value={user.gender.charAt(0).toUpperCase() + user.gender.slice(1)} icon="male-female-outline" />}
+          {user.kycStatus === 'approved' && <InfoRow label="KYC Status" value="Verified ✅" icon="shield-checkmark-outline" valueColor="#00a896" />}
         </View>
 
-        <View style={styles.divider} />
-
-        {/* Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
-          <TouchableOpacity style={styles.menuRow}>
-            <View style={[styles.menuIcon, { backgroundColor: RIHLA.primary + '15' }]}>
-              <Ionicons name="settings-outline" size={18} color={RIHLA.primary} />
+        {/* ── LOCATION CARD ── */}
+        {(displayNationality || displayWilaya || user.address) && (
+          <View style={styles.infoCard}>
+            <View style={styles.infoCardHeader}>
+              <Ionicons name="location-outline" size={16} color={RIHLA.accent} />
+              <Text style={styles.infoCardTitle}>Location</Text>
             </View>
-            <Text style={styles.menuLabel}>Settings</Text>
-            <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuRow}>
-            <View style={[styles.menuIcon, { backgroundColor: '#00a896' + '15' }]}>
-              <Ionicons name="notifications-outline" size={18} color="#00a896" />
-            </View>
-            <Text style={styles.menuLabel}>Notifications</Text>
-            <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuRow}>
-            <View style={[styles.menuIcon, { backgroundColor: '#f4a261' + '15' }]}>
-              <Ionicons name="help-circle-outline" size={18} color="#f4a261" />
-            </View>
-            <Text style={styles.menuLabel}>Help & Support</Text>
-            <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-          </TouchableOpacity>
-        </View>
+            {displayNationality && <InfoRow label="Nationality" value={displayNationality} icon="globe-outline" />}
+            {displayWilaya && <InfoRow label="Wilaya" value={displayWilaya} icon="map-outline" />}
+            {user.address && <InfoRow label="Address" value={user.address} icon="home-outline" />}
+          </View>
+        )}
 
-        <View style={styles.divider} />
+        {/* ── TRAVEL DOCUMENTS ── */}
+        {(user.passportNumber || user.passportExpiry) && (
+          <View style={styles.infoCard}>
+            <View style={styles.infoCardHeader}>
+              <Ionicons name="card-outline" size={16} color={RIHLA.highlight} />
+              <Text style={styles.infoCardTitle}>Travel Documents</Text>
+            </View>
+            {user.passportNumber && <InfoRow label="Passport #" value={user.passportNumber} icon="card-outline" />}
+            {user.passportExpiry && <InfoRow label="Passport Expiry" value={user.passportExpiry} icon="calendar-outline" />}
+          </View>
+        )}
 
-        {/* Role Switcher */}
+        {/* ── EMERGENCY CONTACT ── */}
+        {user.emergencyContact && (
+          <View style={styles.infoCard}>
+            <View style={styles.infoCardHeader}>
+              <Ionicons name="alert-circle-outline" size={16} color="#EF4444" />
+              <Text style={styles.infoCardTitle}>Emergency Contact</Text>
+            </View>
+            <InfoRow label="Name" value={user.emergencyContact.name} icon="person-outline" />
+            <InfoRow label="Phone" value={user.emergencyContact.phone} icon="call-outline" />
+            <InfoRow label="Relationship" value={user.emergencyContact.relationship} icon="heart-outline" />
+          </View>
+        )}
+
+        {/* ── TRAVEL PREFERENCES PREVIEW ── */}
+        {user.travelPreferences && (
+          <View style={styles.infoCard}>
+            <View style={styles.infoCardHeader}>
+              <Ionicons name="compass-outline" size={16} color="#A855F7" />
+              <Text style={styles.infoCardTitle}>Travel Preferences</Text>
+            </View>
+            {user.travelPreferences.budget && (
+              <InfoRow label="Budget" value={user.travelPreferences.budget.charAt(0).toUpperCase() + user.travelPreferences.budget.slice(1)} icon="cash-outline" />
+            )}
+            {user.travelPreferences.accommodation && (
+              <InfoRow label="Accommodation" value={user.travelPreferences.accommodation.charAt(0).toUpperCase() + user.travelPreferences.accommodation.slice(1)} icon="bed-outline" />
+            )}
+            {user.travelPreferences.travelStyle && (
+              <InfoRow label="Travel Style" value={user.travelPreferences.travelStyle.charAt(0).toUpperCase() + user.travelPreferences.travelStyle.slice(1)} icon="people-outline" />
+            )}
+            {user.travelPreferences.interests && user.travelPreferences.interests.length > 0 && (
+              <View style={styles.prefPills}>
+                {user.travelPreferences.interests.slice(0, 6).map((interest) => (
+                  <View key={interest} style={styles.prefPill}>
+                    <Text style={styles.prefPillText}>{interest}</Text>
+                  </View>
+                ))}
+                {user.travelPreferences.interests.length > 6 && (
+                  <View style={styles.prefPill}>
+                    <Text style={styles.prefPillText}>+{user.travelPreferences.interests.length - 6} more</Text>
+                  </View>
+                )}
+              </View>
+            )}
+            {user.travelPreferences.dietaryRestrictions && user.travelPreferences.dietaryRestrictions.length > 0 && (
+              <View style={[styles.prefPills, { marginTop: 8 }]}>
+                {user.travelPreferences.dietaryRestrictions.map((d) => (
+                  <View key={d} style={[styles.prefPill, { backgroundColor: '#FEF3C7' }]}>
+                    <Text style={[styles.prefPillText, { color: '#92400E' }]}>{d}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ── QUICK ACTIONS ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Role Switcher (Testing)</Text>
-          <DemoRoleCard icon="compass-outline" label="Traveler" desc="Explore and book" color="#00a896" onPress={() => handleRoleSwitch('traveler')} />
-          <DemoRoleCard icon="business-outline" label="Business (Hotel)" desc="Manage hotel listings" color={RIHLA.primary} onPress={() => handleRoleSwitch('business', 'hotel')} />
-          <DemoRoleCard icon="restaurant-outline" label="Business (Restaurant)" desc="Manage restaurant" color="#e08f47" onPress={() => handleRoleSwitch('business', 'restaurant')} />
-          <DemoRoleCard icon="flash-outline" label="Service Partner" desc="Rent assets and earn" color="#f4a261" onPress={() => handleRoleSwitch('partner')} />
+          <Text style={styles.sectionLabel}>Quick Actions</Text>
+          <MenuItem icon="create-outline" label="Edit Profile" color={RIHLA.accent} onPress={() => router.push('/(tabs)/edit-profile' as any)} />
+          <MenuItem icon="settings-outline" label="Settings" color="#64748B" onPress={() => router.push('/(modals)/settings' as any)} />
+          <MenuItem icon="help-circle-outline" label="Help & Support" color="#64748B" onPress={() => router.push('/(modals)/settings' as any)} />
+          {!hasExtendedProfile && (
+            <TouchableOpacity
+              style={styles.completeBanner}
+              onPress={() => router.push('/(tabs)/edit-profile' as any)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="sparkles" size={18} color="#A855F7" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.completeTitle}>Complete Your Profile</Text>
+                <Text style={styles.completeSub}>Add travel preferences, documents & more for a personalized experience</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        <View style={styles.divider} />
-
-        {/* Sign Out */}
-        <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-          <UberButton
-            title="Sign Out"
-            bgVariant="danger"
-            onPress={handleSignOut}
-            IconLeft={() => <Ionicons name="log-out-outline" size={18} color="#fff" />}
-          />
+        {/* ── ROLE SWITCHER ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Demo Mode</Text>
+          <DemoCard icon="compass-outline" label="Traveler" color="#00a896" onPress={() => handleRoleSwitch('traveler')} />
+          <DemoCard icon="business-outline" label="Business (Hotel)" color={RIHLA.primary} onPress={() => handleRoleSwitch('business', 'hotel')} />
+          <DemoCard icon="flash-outline" label="Service Partner" color="#f4a261" onPress={() => handleRoleSwitch('partner')} />
         </View>
 
-        <Text style={styles.versionText}>RIHLA v1.0</Text>
+        {/* ── SIGN OUT ── */}
+        <View style={styles.signOutWrap}>
+          <UberButton title="Sign Out" bgVariant="danger" onPress={handleSignOut} />
+        </View>
+
+        <Text style={styles.version}>RIHLA v1.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ── SUB-COMPONENTS ──
+// ── Sub-Components ──
 
-function InfoRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={[styles.infoValue, valueColor && { color: valueColor }]}>{value}</Text>
-    </View>
-  );
-}
-
-function DemoRoleCard({ icon, label, desc, color, onPress }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  desc: string;
-  color: string;
-  onPress: () => void;
+function DemoCard({ icon, label, color, onPress }: {
+  icon: keyof typeof Ionicons.glyphMap; label: string; color: string; onPress: () => void;
 }) {
   return (
     <TouchableOpacity style={styles.demoCard} onPress={onPress} activeOpacity={0.75}>
       <View style={[styles.demoIcon, { backgroundColor: color + '15' }]}>
-        <Ionicons name={icon} size={20} color={color} />
+        <Ionicons name={icon} size={18} color={color} />
       </View>
-      <View style={styles.demoInfo}>
-        <Text style={styles.demoLabel}>{label}</Text>
-        <Text style={styles.demoDesc}>{desc}</Text>
-      </View>
+      <Text style={styles.demoLabel}>{label}</Text>
       <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
     </TouchableOpacity>
   );
 }
 
-// ── STYLES ──
+function InfoRow({ label, value, icon, valueColor }: {
+  label: string; value: string; icon?: string; valueColor?: string;
+}) {
+  return (
+    <View style={styles.infoRow}>
+      {icon && <Ionicons name={icon as any} size={14} color="#94A3B8" style={{ marginRight: 8 }} />}
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={[styles.infoValue, valueColor && { color: valueColor }]} numberOfLines={1}>{value}</Text>
+    </View>
+  );
+}
+
+function MenuItem({ icon, label, color, onPress }: {
+  icon: string; label: string; color: string; onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+      <Ionicons name={icon as any} size={18} color={color} />
+      <Text style={styles.menuLabel}>{label}</Text>
+      <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+    </TouchableOpacity>
+  );
+}
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FFFFFF' },
+  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  scroll: { paddingBottom: 100 },
+  guestScroll: { flexGrow: 1, paddingBottom: 100 },
 
-  // Guest hero
-  guestScroll: { flexGrow: 1 },
-  guestHero: { paddingTop: 40, paddingBottom: 36, paddingHorizontal: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
-  guestHeroContent: { gap: 10, alignItems: 'center' },
-  guestAvatarCircle: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.25)',
+  // Guest
+  guestHero: {
+    alignItems: 'center', gap: 10,
+    paddingTop: 40, paddingBottom: 32, paddingHorizontal: 24,
+    backgroundColor: '#FFFFFF', borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
   },
-  guestHeroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#FFFFFF', marginTop: 4, letterSpacing: -0.5 },
-  guestHeroSub: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 20, maxWidth: 280 },
+  guestAvatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: RIHLA.primary, alignItems: 'center', justifyContent: 'center' },
+  guestTitle: { fontSize: 24, fontFamily: 'mon-b', color: '#0F172A' },
+  guestSub: { fontSize: 14, fontFamily: 'mon', color: '#64748B', textAlign: 'center', lineHeight: 20 },
 
-  sectionWrapper: { padding: 20, gap: 4 },
-  sectionLabel: { fontSize: 14, fontFamily: 'mon-b', color: '#0F172A', marginBottom: 8 },
-
-  // Demo role cards
-  demoCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 14, paddingHorizontal: 14,
-    backgroundColor: '#FFFFFF', borderRadius: 12,
-    borderWidth: 1, borderColor: '#E2E8F0',
-    marginBottom: 8,
-  },
-  demoIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  demoInfo: { flex: 1, gap: 2 },
-  demoLabel: { fontSize: 14, fontFamily: 'mon-sb', color: '#0F172A' },
-  demoDesc: { fontSize: 11, fontFamily: 'mon', color: '#64748B' },
-
-  // Signed-in header
-  signedHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 24, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E2E8F0',
-  },
-  signedHeaderTitle: { fontSize: 24, fontFamily: 'mon-b', color: '#0F172A' },
-  settingsBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-
-  scroll: { paddingBottom: 48 },
-  profileTop: {
-    flexDirection: 'row', alignItems: 'center', gap: 16,
-    paddingHorizontal: 24, paddingVertical: 20,
-  },
-  avatarWrap: { position: 'relative' },
-  avatar: { width: 72, height: 72, borderRadius: 36 },
-  avatarPlaceholder: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#E2E8F0',
-  },
-  avatarLetter: { fontSize: 28, fontFamily: 'mon-b', color: '#64748B' },
-  avatarEditBadge: {
-    position: 'absolute', bottom: 0, right: 0,
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#FFFFFF',
-  },
-  profileNameBlock: { flex: 1, gap: 4 },
-  profileName: { fontSize: 18, fontFamily: 'mon-b', color: '#0F172A' },
-  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  // Profile hero
+  profileHero: { alignItems: 'center', paddingVertical: 24, gap: 6 },
+  avatarLarge: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#E2E8F0' },
+  avatarLetter: { fontSize: 34, fontFamily: 'mon-b', color: '#64748B' },
+  profileName: { fontSize: 22, fontFamily: 'mon-b', color: '#0F172A' },
+  profileMeta: { fontSize: 14, fontFamily: 'mon', color: '#64748B' },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   verifiedText: { fontSize: 13, fontFamily: 'mon', color: '#00a896' },
+  editBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: 10, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999,
+    borderWidth: 1.5, borderColor: RIHLA.accent, backgroundColor: '#F0FDFA',
+  },
+  editBtnText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
 
   // Stats
   statsRow: {
-    flexDirection: 'row', paddingHorizontal: 24, paddingBottom: 20, alignItems: 'center',
+    flexDirection: 'row', marginHorizontal: 20,
+    backgroundColor: '#FFFFFF', borderRadius: 14,
+    padding: 16, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 12,
   },
   statCard: { flex: 1, alignItems: 'center', gap: 2 },
-  statDivider: { width: 1, height: 32, backgroundColor: '#E2E8F0' },
+  statDivider: { width: 1, height: 28, backgroundColor: '#E2E8F0' },
   statValue: { fontSize: 20, fontFamily: 'mon-b', color: '#0F172A' },
-  statLabel: { fontSize: 12, fontFamily: 'mon', color: '#64748B' },
+  statLabel: { fontSize: 11, fontFamily: 'mon', color: '#64748B' },
 
-  divider: {
-    height: 8, backgroundColor: '#fafbfc',
-    borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: '#E2E8F0',
+  // Info cards
+  infoCard: {
+    marginHorizontal: 20, backgroundColor: '#FFFFFF', borderRadius: 14,
+    borderWidth: 1, borderColor: '#E2E8F0', padding: 16, marginBottom: 12,
   },
-
-  section: { paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
-  sectionTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A', marginBottom: 4 },
-
-  // Info
+  infoCardHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12,
+    paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F1F5F9',
+  },
+  infoCardTitle: { flex: 1, fontSize: 14, fontFamily: 'mon-b', color: '#0F172A' },
+  infoCardLink: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
   infoRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F1F5F9',
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 8,
   },
-  infoLabel: { fontSize: 14, fontFamily: 'mon', color: '#64748B' },
-  infoValue: { fontSize: 14, fontFamily: 'mon-sb', color: '#0F172A' },
+  infoLabel: { fontSize: 13, fontFamily: 'mon', color: '#64748B', minWidth: 100 },
+  infoValue: { flex: 1, fontSize: 13, fontFamily: 'mon-sb', color: '#0F172A', textAlign: 'right' },
 
-  // Menu rows
-  menuRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F1F5F9',
-  },
-  menuIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { flex: 1, fontSize: 15, fontFamily: 'mon-sb', color: '#0F172A' },
+  // Preferences pills
+  prefPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  prefPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: '#F0FDFA' },
+  prefPillText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.accent },
 
-  versionText: {
-    textAlign: 'center', fontSize: 12, fontFamily: 'mon', color: '#CBD5E1', paddingBottom: 8,
+  // Sections
+  section: { paddingHorizontal: 20, marginBottom: 12 },
+  sectionLabel: { fontSize: 14, fontFamily: 'mon-b', color: '#0F172A', marginBottom: 8 },
+
+  // Complete banner
+  completeBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, backgroundColor: '#FAF5FF', borderRadius: 14,
+    borderWidth: 1, borderColor: '#E9D5FF',
   },
+  completeTitle: { fontSize: 14, fontFamily: 'mon-b', color: '#7C3AED' },
+  completeSub: { fontSize: 11, fontFamily: 'mon', color: '#9CA3AF', marginTop: 2 },
+
+  demoCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, backgroundColor: '#FFFFFF', borderRadius: 12,
+    borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 8,
+  },
+  demoIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  demoLabel: { flex: 1, fontSize: 13, fontFamily: 'mon-sb', color: '#0F172A' },
+
+  menuSection: { paddingHorizontal: 20, gap: 8, marginBottom: 12 },
+  menuItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, backgroundColor: '#FFFFFF', borderRadius: 12,
+    borderWidth: 1, borderColor: '#E2E8F0',
+  },
+  menuLabel: { flex: 1, fontSize: 13, fontFamily: 'mon-sb', color: '#0F172A' },
+
+  signOutWrap: { paddingHorizontal: 20, marginTop: 8 },
+  version: { textAlign: 'center', fontSize: 12, fontFamily: 'mon', color: '#CBD5E1', marginTop: 16 },
 });

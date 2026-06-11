@@ -29,6 +29,8 @@ import { DESTINATIONS } from '@/constants/destinations';
 import { MARKETPLACE_CATEGORIES, getCategoryDef } from '@/constants/marketplaceCategories';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
 import { useApp } from '@/context/AppContext';
+import MapWithDirections from '@/components/shared/MapWithDirections';
+import type { ServiceMarker } from '@/store/useLocationStore';
 
 // ── FEATURED LISTING CARD ──────────────────────────────────────────
 function FeaturedListingCard({ listing }: { listing: any }) {
@@ -117,6 +119,24 @@ export default function DiscoverScreen() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const greetingText = firstName ? `${greeting}, ${firstName}! 👋` : `${greeting}! 👋`;
 
+  // Map markers from featured listings
+  const mapMarkers: ServiceMarker[] = useMemo(
+    () =>
+      MOCK_LISTINGS.filter((l) => l.is_active && l.is_featured)
+        .slice(0, 6)
+        .map((l) => ({
+          id: l.id,
+          latitude: l.coordinates.latitude,
+          longitude: l.coordinates.longitude,
+          title: l.title,
+          subtitle: l.wilaya,
+          category: l.category,
+          rating: l.rating,
+          priceDZD: l.price_dzd,
+        })),
+    []
+  );
+
   // Featured listings (active and featured, up to 8)
   const featuredListings = useMemo(
     () => MOCK_LISTINGS.filter(l => l.is_active && l.is_featured).slice(0, 8),
@@ -147,9 +167,9 @@ export default function DiscoverScreen() {
             {/* ── TOP BAR ── */}
             <View style={styles.topBar}>
               <View style={styles.brandLockup}>
-                <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={styles.logoMark}>
+                <View style={styles.logoMark}>
                   <Ionicons name="airplane" size={14} color="#FFFFFF" />
-                </LinearGradient>
+                </View>
                 <Text style={styles.brandText}>RIHLA</Text>
               </View>
               <View style={styles.topBarRight}>
@@ -185,10 +205,36 @@ export default function DiscoverScreen() {
                 <Text style={styles.searchHint}>Hotels, restaurants, guides & more</Text>
               </View>
               <View style={styles.searchDivider} />
-              <View style={styles.searchFilter}>
+              <Pressable
+                style={styles.searchFilter}
+                onPress={(e) => { e.stopPropagation?.(); router.push('/(modals)/filter' as any); }}
+              >
                 <Ionicons name="options-outline" size={18} color={RIHLA.accent} />
-              </View>
+              </Pressable>
             </Pressable>
+
+            {/* ── MAP SECTION (Uber Style) ── */}
+            <View style={styles.mapSection}>
+              <View style={styles.mapSectionHeader}>
+                <View style={styles.mapSectionTitleRow}>
+                  <Ionicons name="location" size={16} color={RIHLA.accent} />
+                  <Text style={styles.mapSectionTitle}>Nearby places</Text>
+                </View>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/explore' as any)}>
+                  <Text style={styles.sectionLink}>Explore map</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.mapContainer}>
+                <MapWithDirections
+                  markers={mapMarkers}
+                  showDirections={false}
+                  showUserLocation={true}
+                  autoCalculateTimes={false}
+                  height={200}
+                  onMarkerPress={(marker) => router.push(`/listing/${marker.id}` as any)}
+                />
+              </View>
+            </View>
 
             {/* ── FEATURED LISTINGS ── */}
             <View style={styles.section}>
@@ -271,13 +317,13 @@ export default function DiscoverScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.quickAction}
-                  onPress={() => { Haptics.selectionAsync(); router.push('/search' as any); }}
+                  onPress={() => { Haptics.selectionAsync(); router.push('/ai-assistant' as any); }}
                 >
-                  <View style={[styles.quickActionIcon, { backgroundColor: '#00a896' }]}>
-                    <Ionicons name="search" size={22} color="#FFFFFF" />
+                  <View style={[styles.quickActionIcon, { backgroundColor: RIHLA.accent }]}>
+                    <Ionicons name="sparkles" size={22} color="#FFFFFF" />
                   </View>
-                  <Text style={styles.quickActionTitle}>Search All</Text>
-                  <Text style={styles.quickActionDesc}>Browse 70+ listings</Text>
+                  <Text style={styles.quickActionTitle}>AI Assistant</Text>
+                  <Text style={styles.quickActionDesc}>Ask me anything</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.quickAction}
@@ -291,10 +337,22 @@ export default function DiscoverScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+
+
           </>
         }
         contentContainerStyle={styles.listContent}
       />
+      </FlatList>
+
+      {/* ── FLOATING AI CHAT FAB ── */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/ai-assistant' as any); }}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="sparkles" size={22} color="#FFFFFF" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -316,6 +374,7 @@ const styles = StyleSheet.create({
   logoMark: {
     width: 32, height: 32, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
+    backgroundColor: RIHLA.primary,
   },
   brandText: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary, letterSpacing: 1.5 },
   topBarRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -466,6 +525,21 @@ const styles = StyleSheet.create({
 
   // Destinations
   destScroll: { paddingLeft: 20, paddingRight: 8, gap: 12 },
+
+  // Map section (Uber style)
+  mapSection: { paddingTop: 20, paddingHorizontal: 20 },
+  mapSectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 10,
+  },
+  mapSectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  mapSectionTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A' },
+  mapContainer: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
   destCard: {
     width: 160,
     height: 190,
@@ -516,5 +590,17 @@ const styles = StyleSheet.create({
   quickActionDesc: { fontSize: 10, fontFamily: 'mon', color: '#94A3B8' },
 
   // List
-  listContent: { paddingBottom: 40 },
+  listContent: { paddingBottom: 100 },
+
+  // AI FAB
+  fab: {
+    position: 'absolute',
+    bottom: 24, right: 20,
+    width: 56, height: 56,
+    borderRadius: 28,
+    backgroundColor: RIHLA.accent,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: RIHLA.accent, shadowOpacity: 0.4, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 }, elevation: 10,
+  },
 });

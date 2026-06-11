@@ -37,6 +37,21 @@ export type KycData = {
   assetPhotoUri?: string;
 };
 
+export type TravelPreferences = {
+  budget?: 'budget' | 'mid-range' | 'premium' | 'luxury';
+  accommodation?: 'hotel' | 'hostel' | 'rental' | 'camping' | 'any';
+  interests?: string[];
+  dietaryRestrictions?: string[];
+  languagesSpoken?: string[];
+  travelStyle?: 'solo' | 'couple' | 'family' | 'group' | 'any';
+};
+
+export type EmergencyContact = {
+  name: string;
+  phone: string;
+  relationship: string;
+};
+
 export type UserProfile = {
   name: string;
   phone: string;
@@ -48,6 +63,25 @@ export type UserProfile = {
   isOnboarded: boolean;
   /** When KYC was rejected, store admin reason */
   kycRejectionReason?: string;
+  /** Extended traveler profile */
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  nationality?: string;
+  passportNumber?: string;
+  passportExpiry?: string;
+  address?: string;
+  wilaya?: string;
+  bio?: string;
+  avatarUrl?: string;
+  emergencyContact?: EmergencyContact;
+  travelPreferences?: TravelPreferences;
+  notificationPrefs?: {
+    pushEnabled: boolean;
+    emailEnabled: boolean;
+    smsEnabled: boolean;
+    bookingUpdates: boolean;
+    promotions: boolean;
+  };
 };
 
 export type { AppBooking, AppBookingStatus, IconFamily, KycFieldProps } from './booking';

@@ -7,6 +7,7 @@ import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppProvider, useApp } from '@/context/AppContext';
+import LocationInitializer from '@/components/shared/LocationInitializer';
 import { I18nProvider } from '@/context/I18nContext';
 import { ToastProvider } from '@/components/Toast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -117,7 +118,9 @@ function RootLayoutNav() {
   }, [isLoaded, isSignedIn, user.role, user.kycStatus, segments]);
 
   return (
-    <GluestackUIProvider mode="light">
+    <>
+      <LocationInitializer />
+      <GluestackUIProvider mode="light">
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(business)" options={{ headerShown: false }} />
@@ -137,6 +140,8 @@ function RootLayoutNav() {
         <Stack.Screen name="checkout/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="listing/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="listing/[category]/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="provider/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="ai-assistant" options={{ headerShown: false }} />
         <Stack.Screen name="services" options={{ headerShown: false }} />
         <Stack.Screen name="marketplace/[category]" options={{ headerShown: false }} />
         <Stack.Screen name="wilaya" options={{ headerShown: false }} />
@@ -145,6 +150,7 @@ function RootLayoutNav() {
           options={{ headerShown: false, presentation: 'modal' }}
         />
       </Stack>
-    </GluestackUIProvider>
+      </GluestackUIProvider>
+    </>
   );
 }

@@ -1,8 +1,8 @@
 /**
  * RIHLA — Uber-Style Onboarding / Welcome Screen
  * ────────────────────────────────────────────────
- * Clean swiper slides • Uber-style dot indicators • Minimal UI
- * Premium gradients • Demo bottom-sheet chooser
+ * Looping video background • Uber-style dot indicators • Minimal UI
+ * Premium overlays • Demo bottom-sheet chooser
  */
 
 import React, { useState, useRef } from 'react';
@@ -22,10 +22,13 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Video, ResizeMode } from 'expo-av';
 import { RIHLA } from '@/constants/theme';
 import { useApp, UserRole } from '@/context/AppContext';
 import * as Haptics from 'expo-haptics';
 import UberButton from '@/components/shared/UberButton';
+
+const ONBOARDING_VIDEO = require('@/assets/videos/PinterestVideoDlBot.mp4');
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,9 +36,7 @@ interface Slide {
   id: string;
   title: string;
   subtitle: string;
-  icon: keyof typeof Ionicons.glyphMap;
   emoji: string;
-  gradient: [string, string, string];
   tag: string;
 }
 
@@ -45,9 +46,7 @@ const SLIDES: Slide[] = [
     title: 'Discover\nAlgeria',
     subtitle:
       'From golden Sahara dunes to turquoise Mediterranean shores — your next adventure starts here.',
-    icon: 'compass',
     emoji: '🏔️',
-    gradient: ['#061422', '#0a2540', '#0d3b6e'],
     tag: '1,200+ Destinations',
   },
   {
@@ -55,9 +54,7 @@ const SLIDES: Slide[] = [
     title: 'Book\nInstantly',
     subtitle:
       'Hotels, beach resorts, desert camps, quad tours, restaurants, and local guides — all in one tap.',
-    icon: 'calendar',
     emoji: '🐫',
-    gradient: ['#0a1a0a', '#1A6B3A', '#00a896'],
     tag: '500+ Experiences',
   },
   {
@@ -65,9 +62,7 @@ const SLIDES: Slide[] = [
     title: 'Grow Your\nBusiness',
     subtitle:
       'Hotel owner? Restaurant? Beach resort? List your services and reach thousands of travelers daily.',
-    icon: 'trending-up',
     emoji: '💼',
-    gradient: ['#1a0a00', '#8B5E3C', '#C56A39'],
     tag: '10 Business Categories',
   },
 ];
@@ -195,6 +190,17 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      {/* ── LOOPING VIDEO BACKGROUND ── */}
+      <Video
+        source={ONBOARDING_VIDEO}
+        style={StyleSheet.absoluteFill}
+        rate={1.0}
+        isMuted={true}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        isLooping
+      />
 
       {/* ── SLIDES ── */}
       <FlatList
@@ -340,7 +346,14 @@ export default function WelcomeScreen() {
 
 function Slide({ slide }: { slide: Slide }) {
   return (
-    <LinearGradient colors={slide.gradient} style={styles.slide} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+    <View style={styles.slide}>
+      {/* Dark gradient overlay for readability */}
+      <LinearGradient
+        colors={['rgba(6,20,34,0.4)', 'rgba(6,20,34,0.2)', 'rgba(6,20,34,0.7)']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
       <View style={styles.slideVisual}>
         {/* Uber-style central icon ring */}
         <View style={styles.outerRing}>
@@ -358,7 +371,7 @@ function Slide({ slide }: { slide: Slide }) {
           <Text style={styles.floatingBadgeText}>4.9</Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 

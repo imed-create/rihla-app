@@ -1,8 +1,8 @@
 import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useRef, useState } from 'react';
 import { defaultStyles } from '@/constants/theme';
 import { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
-import MapView from 'react-native-map-clustering';
+import MapView from 'react-native-maps';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/theme';
@@ -22,8 +22,7 @@ const INITIAL_REGION = {
 
 const ListingsMap = memo(({ listings }: Props) => {
   const router = useRouter();
-  const mapRef = useRef<any>(null);
-  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
+  const mapRef = useRef<MapView>(null);
   const [locating, setLocating] = useState(false);
 
   // When a marker is selected, navigate to the listing page
@@ -44,7 +43,6 @@ const ListingsMap = memo(({ listings }: Props) => {
       let location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      setUserLocation(location);
 
       const region = {
         latitude: location.coords.latitude,
@@ -61,54 +59,17 @@ const ListingsMap = memo(({ listings }: Props) => {
     }
   };
 
-  // Overwrite the renderCluster function to customize the cluster markers
-  const renderCluster = (cluster: { id: string; geometry: { coordinates: [number, number] }; onPress: () => void; properties: { point_count?: number } }) => {
-    const { id, geometry, onPress, properties } = cluster;
-    const points = properties.point_count;
-    
-    return (
-      <Marker
-        key={`cluster-${id}`}
-        coordinate={{
-          longitude: geometry.coordinates[0],
-          latitude: geometry.coordinates[1],
-        }}
-        onPress={onPress}>
-        <View style={styles.marker}>
-          <Text
-            style={{
-              color: '#000',
-              textAlign: 'center',
-              fontFamily: 'mon-sb',
-            }}>
-            {points}
-          </Text>
-        </View>
-      </Marker>
-    );
-  };
-
   return (
     <View style={defaultStyles.container}>
       <MapView
         ref={mapRef}
-        mapRef={() => {}}
-        onRegionChangeComplete={() => {}}
-        onClusterPress={() => {}}
-        onMarkersChange={() => {}}
-        superClusterRef={{ current: null }}
-        animationEnabled={false}
         style={StyleSheet.absoluteFillObject}
         initialRegion={INITIAL_REGION}
-        clusterColor="#fff"
-        clusterTextColor="#000"
-        clusterFontFamily="mon-sb"
-        renderCluster={renderCluster}
         showsUserLocation={true}
         showsMyLocationButton={false}
-        provider={PROVIDER_DEFAULT} // Default uses Apple Maps on iOS, Google on Android.
+        provider={PROVIDER_DEFAULT}
       >
-        {/* Render all our marker as usual */}
+        {/* Render all markers */}
         {listings.features.map((item: AirbnbListingFeature) => (
           <Marker
             coordinate={{
@@ -116,7 +77,8 @@ const ListingsMap = memo(({ listings }: Props) => {
               longitude: Number(item.properties.longitude),
             }}
             key={item.properties.id}
-            onPress={() => onMarkerSelected(item)}>
+            onPress={() => onMarkerSelected(item)}
+          >
             <View style={styles.marker}>
               <Text style={styles.markerText}>DZD {item.properties.price}</Text>
             </View>
@@ -160,7 +122,7 @@ const styles = StyleSheet.create({
   },
   locateBtn: {
     position: 'absolute',
-    bottom: 30, // Moved to bottom right like typical map apps
+    bottom: 30,
     right: 20,
     backgroundColor: '#fff',
     width: 48,

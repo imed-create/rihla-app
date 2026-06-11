@@ -1,13 +1,4 @@
-/**
- * RIHLA — Dedicated Search Screen
- * ---------------------------------
- * Full filter suite: destination, wilaya, category, price range,
- * rating, family friendly, VIP, availability, sort.
- * Separate route from the home screen.
- */
-
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -27,7 +18,6 @@ import { MOCK_LISTINGS, getListingWilayas } from '@/constants/mockListings';
 import type { MarketplaceCategory, Listing } from '@/types/service';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
-import GooglePlacesInput from '@/components/shared/GooglePlacesInput';
 
 type SortOption = 'recommended' | 'price_low' | 'price_high' | 'rating' | 'distance';
 
@@ -41,28 +31,14 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 const WILAYAS = getListingWilayas();
 
 function getDetailRoute(item: Listing): string {
-  switch (item.category) {
-    case 'hotel': return `/listing/hotel/${item.id}`;
-    case 'restaurant': return `/listing/restaurant/${item.id}`;
-    case 'beach': return `/listing/beach/${item.id}`;
-    case 'rental': return `/listing/rental/${item.id}`;
-    case 'activity': return `/listing/activity/${item.id}`;
-    case 'event': return `/listing/event/${item.id}`;
-    case 'guide': return `/listing/guide/${item.id}`;
-    case 'photographer': return `/listing/photographer/${item.id}`;
-    case 'driver': return `/listing/driver/${item.id}`;
-    case 'experience': return `/listing/experience/${item.id}`;
-    default: return `/listing/${item.id}`;
-  }
+  return `/listing/${item.id}`;
 }
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
   const isWide = Platform.OS === 'web' && width >= 900;
 
-  // ── FILTER STATE ──
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<MarketplaceCategory | null>(null);
   const [selectedWilaya, setSelectedWilaya] = useState<string | null>(null);
@@ -88,11 +64,9 @@ export default function SearchScreen() {
     setMinRating(0);
   }, []);
 
-  // ── FILTER ENGINE ──
   const results = useMemo(() => {
     let list = [...MOCK_LISTINGS].filter((l) => l.is_active);
 
-    // Text search
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
@@ -104,25 +78,13 @@ export default function SearchScreen() {
       );
     }
 
-    // Category
     if (selectedCategory) list = list.filter((l) => l.category === selectedCategory);
-
-    // Wilaya
     if (selectedWilaya) list = list.filter((l) => l.wilaya === selectedWilaya);
-
-    // Family friendly
     if (familyFriendly) list = list.filter((l) => l.family_friendly);
-
-    // VIP
     if (isVip) list = list.filter((l) => l.is_vip);
-
-    // Price range
     list = list.filter((l) => l.price_dzd >= priceMin && l.price_dzd <= priceMax);
-
-    // Rating
     if (minRating > 0) list = list.filter((l) => l.rating >= minRating);
 
-    // Sort
     switch (selectedSort) {
       case 'price_low': list.sort((a, b) => a.price_dzd - b.price_dzd); break;
       case 'price_high': list.sort((a, b) => b.price_dzd - a.price_dzd); break;
@@ -140,15 +102,9 @@ export default function SearchScreen() {
         style={[styles.resultCard, isWide && { width: '48%' }]}
         onPress={() => router.push(getDetailRoute(item) as any)}
       >
-        {item.cover_image_url ? (
-          <View style={[styles.resultImage, { backgroundColor: catDef.color + '20' }]}>
-            <Ionicons name={catDef.icon as any} size={32} color={catDef.color} />
-          </View>
-        ) : (
-          <View style={[styles.resultImage, { backgroundColor: catDef.color + '20' }]}>
-            <Ionicons name={catDef.icon as any} size={32} color={catDef.color} />
-          </View>
-        )}
+        <View style={[styles.resultImage, { backgroundColor: catDef.color + '20' }]}>
+          <Ionicons name={catDef.icon as any} size={32} color={catDef.color} />
+        </View>
         <View style={styles.resultInfo}>
           <View style={styles.resultRow}>
             <View style={[styles.catBadge, { backgroundColor: catDef.color + '18' }]}>
@@ -178,31 +134,38 @@ export default function SearchScreen() {
   }, [isWide]);
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
-      {/* Header */}
-      <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={[styles.header, { paddingTop: topPad + 12 }]}>
-        <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Search</Text>
-        {hasActiveFilters && (
-          <Pressable onPress={resetAll} style={styles.resetBtn}>
-            <Text style={styles.resetText}>Reset</Text>
+    <View style={styles.root}>
+      {/* Uber-style dark header */}
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </Pressable>
-        )}
-      </LinearGradient>
-
-      {/* Google Places Autocomplete (Uber-style) */}
-      <View style={styles.placesContainer}>
-        <GooglePlacesInput
-          icon="search"
-          placeholder="Where do you want to go?"
-          backgroundColor="#FFFFFF"
-          onPlaceSelected={(params) => {
-            setQuery(params.address);
-          }}
-          containerStyle={{ borderRadius: 999 }}
-        />
+          <Text style={styles.headerTitle}>Search</Text>
+          {hasActiveFilters && (
+            <Pressable onPress={resetAll} style={styles.resetBtn}>
+              <Text style={styles.resetText}>Reset</Text>
+            </Pressable>
+          )}
+          {!hasActiveFilters && <View style={{ width: 50 }} />}
+        </View>
+        {/* Uber-style search input right in header */}
+        <View style={styles.searchInputWrap}>
+          <Ionicons name="search" size={18} color="#94A3B8" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Where do you want to go?"
+            placeholderTextColor="#94A3B8"
+            value={query}
+            onChangeText={setQuery}
+            autoFocus={false}
+          />
+          {query.length > 0 && (
+            <Pressable onPress={() => setQuery('')}>
+              <Ionicons name="close-circle" size={18} color="#64748B" />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Category Chips */}
@@ -217,7 +180,7 @@ export default function SearchScreen() {
             style={[styles.chip, selectedCategory === cat.key && { backgroundColor: cat.color, borderColor: cat.color }]}
             onPress={() => { hapticLight(); setSelectedCategory(selectedCategory === cat.key ? null : cat.key); }}
           >
-            <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : RIHLA.mutedText} />
+            <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : '#64748B'} />
             <Text style={[styles.chipText, selectedCategory === cat.key && { color: '#fff' }]}>{cat.label}</Text>
           </Pressable>
         )}
@@ -232,17 +195,17 @@ export default function SearchScreen() {
         contentContainerStyle={styles.chipRow}
         renderItem={({ item: w }) => (
           <Pressable
-            style={[styles.chip, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && styles.chipActive]}
+            style={[styles.chip, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary }]}
             onPress={() => { hapticLight(); setSelectedWilaya(w === 'All' ? null : w); }}
           >
-            <Text style={[styles.chipText, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && styles.chipTextActive]}>
+            <Text style={[styles.chipText, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && { color: '#fff' }]}>
               {w}
             </Text>
           </Pressable>
         )}
       />
 
-      {/* Filter Row: Sort + Toggles */}
+      {/* Sort + Toggles */}
       <View style={styles.filterRow}>
         <FlatList
           horizontal
@@ -264,39 +227,40 @@ export default function SearchScreen() {
             style={[styles.toggle, familyFriendly && styles.toggleActive]}
             onPress={() => { hapticLight(); setFamilyFriendly(!familyFriendly); }}
           >
-            <Text style={[styles.toggleText, familyFriendly && styles.toggleTextActive]}>👨‍👩‍👧 Family</Text>
+            <Text style={[styles.toggleText, familyFriendly && styles.toggleTextActive]}>Family</Text>
           </Pressable>
           <Pressable
             style={[styles.toggle, isVip && styles.toggleActive]}
             onPress={() => { hapticLight(); setIsVip(!isVip); }}
           >
-            <Text style={[styles.toggleText, isVip && styles.toggleTextActive]}>⭐ VIP</Text>
+            <Text style={[styles.toggleText, isVip && styles.toggleTextActive]}>VIP</Text>
           </Pressable>
           <Pressable
             style={[styles.toggle, minRating >= 4.5 && styles.toggleActive]}
             onPress={() => { hapticLight(); setMinRating(minRating >= 4.5 ? 0 : 4.5); }}
           >
-            <Text style={[styles.toggleText, minRating >= 4.5 && styles.toggleTextActive]}>🏆 4.5+</Text>
+            <Text style={[styles.toggleText, minRating >= 4.5 && styles.toggleTextActive]}>4.5+</Text>
           </Pressable>
         </View>
       </View>
 
-      {/* Results */}
+      {/* Results count */}
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsCount}>{results.length} result{results.length !== 1 ? 's' : ''}</Text>
       </View>
 
+      {/* Results list */}
       <FlatList
         data={results}
         keyExtractor={(l) => l.id}
         numColumns={isWide ? 2 : 1}
         key={isWide ? 'wide' : 'narrow'}
         columnWrapperStyle={isWide ? { gap: 16 } : undefined}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 20, maxWidth: 1180, alignSelf: 'center', width: '100%' }]}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="search-outline" size={48} color={RIHLA.border} />
+            <Ionicons name="search-outline" size={48} color="#CBD5E1" />
             <Text style={styles.emptyText}>No results found</Text>
             <Text style={styles.emptySub}>Try adjusting your filters</Text>
           </View>
@@ -308,59 +272,70 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, fontSize: 18, fontFamily: 'mon-b', color: '#fff', textAlign: 'center' },
-  resetBtn: { paddingHorizontal: 12, paddingVertical: 6 },
-  resetText: { fontSize: 14, fontFamily: 'mon-sb', color: '#fff' },
+  root: { flex: 1, backgroundColor: '#F8FAFC' },
 
-  // Search
-  placesContainer: {
-    marginHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 4,
-    zIndex: 100,
+  // Uber dark header
+  header: { backgroundColor: '#0d0d0d', paddingBottom: 12 },
+  headerRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 8,
   },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  headerTitle: { fontSize: 17, fontFamily: 'mon-b', color: '#FFFFFF', flex: 1, textAlign: 'center' },
+  resetBtn: { width: 50, alignItems: 'flex-end' },
+  resetText: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent },
 
-  // Chips
-  chipRow: { paddingHorizontal: 20, gap: 8, paddingVertical: 6 },
+  searchInputWrap: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginHorizontal: 16, marginTop: 8,
+    backgroundColor: '#1a1a1a', borderRadius: 12,
+    paddingHorizontal: 14, height: 44,
+  },
+  searchInput: { flex: 1, fontSize: 15, fontFamily: 'mon', color: '#FFFFFF' },
+
+  // Chips — Uber clean pill style
+  chipRow: { paddingHorizontal: 16, gap: 8, paddingVertical: 8 },
   chip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
-  chipActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
-  chipText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
-  chipTextActive: { color: '#fff' },
+  chipText: { fontSize: 13, fontFamily: 'mon-sb', color: '#334155' },
 
   // Filter row
-  filterRow: { paddingHorizontal: 20, gap: 8, paddingBottom: 4 },
+  filterRow: { paddingHorizontal: 16, gap: 10, paddingBottom: 4 },
   toggleRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   toggle: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
-    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
-  toggleActive: { backgroundColor: RIHLA.primary + '12', borderColor: RIHLA.primary },
-  toggleText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
-  toggleTextActive: { color: RIHLA.primary },
+  toggleActive: { backgroundColor: RIHLA.primary, shadowOpacity: 0 },
+  toggleText: { fontSize: 12, fontFamily: 'mon-sb', color: '#64748B' },
+  toggleTextActive: { color: '#FFFFFF' },
 
   // Sort
-  sortChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: '#f0f0f0' },
-  sortChipActive: { backgroundColor: RIHLA.dark },
-  sortText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText },
+  sortChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F1F5F9' },
+  sortChipActive: { backgroundColor: '#0d0d0d' },
+  sortText: { fontSize: 12, fontFamily: 'mon-sb', color: '#64748B' },
   sortTextActive: { color: '#fff' },
 
   // Results
-  resultsHeader: { paddingHorizontal: 24, paddingVertical: 8 },
-  resultsCount: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
+  resultsHeader: { paddingHorizontal: 20, paddingVertical: 8 },
+  resultsCount: { fontSize: 12, fontFamily: 'mon-sb', color: '#94A3B8' },
 
-  list: { paddingHorizontal: 20, gap: 12 },
+  list: { paddingHorizontal: 16, gap: 12 },
 
   // Card
   resultCard: {
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
+    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0',
     overflow: 'hidden', marginBottom: 4,
   },
   resultImage: { height: 120, alignItems: 'center', justifyContent: 'center' },
@@ -368,19 +343,19 @@ const styles = StyleSheet.create({
   resultRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   catBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   catBadgeText: { fontSize: 10, fontFamily: 'mon-b' },
-  featBadge: { backgroundColor: RIHLA.highlight + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  featBadgeText: { fontSize: 9, fontFamily: 'mon-b', color: RIHLA.highlight },
-  resultTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark, marginTop: 4 },
-  resultDesc: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, lineHeight: 16 },
+  featBadge: { backgroundColor: '#f4a26120', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  featBadgeText: { fontSize: 9, fontFamily: 'mon-b', color: '#f4a261' },
+  resultTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A', marginTop: 4 },
+  resultDesc: { fontSize: 12, fontFamily: 'mon', color: '#64748B', lineHeight: 16 },
   resultBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
   resultRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  resultRatingText: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.dark },
-  resultReviewCount: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
+  resultRatingText: { fontSize: 13, fontFamily: 'mon-b', color: '#0F172A' },
+  resultReviewCount: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
   resultPrice: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
-  resultLocation: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
+  resultLocation: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
 
   // Empty
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  emptySub: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
+  emptyText: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+  emptySub: { fontSize: 13, fontFamily: 'mon', color: '#94A3B8' },
 });

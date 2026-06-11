@@ -19,7 +19,6 @@ import BottomSheet, {
   BottomSheetScrollView,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RIHLA } from '@/constants/theme';
@@ -64,16 +63,22 @@ export default function MapBottomSheetLayout({
   const ContentWrapper = scrollable ? BottomSheetScrollView : BottomSheetView;
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <View style={styles.root}>
       <View style={styles.container}>
         {/* Map Background */}
         <MapWithDirections
-          height={Platform.OS === 'web' ? 400 : '100%' as any}
+          height={Platform.OS === 'web' ? 400 : undefined}
           markers={markers}
           showDirections={showDirections}
           showUserLocation={true}
           onMarkerPress={onMarkerPress}
           autoCalculateTimes={false}
+          initialRegion={markers && markers.length > 0 ? {
+            latitude: markers[0].latitude,
+            longitude: markers[0].longitude,
+            latitudeDelta: 0.08,
+            longitudeDelta: 0.08,
+          } : undefined}
           customMapStyle={undefined}
         />
 
@@ -107,7 +112,7 @@ export default function MapBottomSheetLayout({
           {children}
         </ContentWrapper>
       </BottomSheet>
-    </GestureHandlerRootView>
+    </View>
   );
 }
 

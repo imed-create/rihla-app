@@ -167,7 +167,7 @@ export default function FindProvidersScreen() {
         <ScrollView
           style={styles.providerList}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
         >
           {showConfirmation && selectedProviderData ? (
             /* Uber-style confirmation card */
@@ -262,18 +262,21 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
     backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   filterLabel: {
     fontSize: 13,
     fontFamily: 'mon-sb',
-    color: '#475569',
+    color: '#334155',
   },
   providerList: {
     flex: 1,

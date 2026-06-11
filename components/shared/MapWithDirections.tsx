@@ -1,79 +1,101 @@
 /**
- * RIHLA — Map With Directions
- * ──────────────────────────────
- * Ported from Uber Clone's Map.tsx + RideLayout.tsx.
- * Shows user location, destination, route line, and nearby service provider markers.
- * Used in explore screen, destination hub, and booking flow.
+ * RIHLA — Map With Directions (Uber Style)
+ * ────────────────────────────────────────
+ * Clean, reliable map component inspired by the Uber template.
+ * Uses PROVIDER_DEFAULT (no Google Maps SDK dependency in dev),
+ * no refs (avoids the MapView.props.ref crash), mutedStandard map type,
+ * and simple marker rendering with no clustering.
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useMemo, memo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import MapView, {
   Marker,
-  PROVIDER_GOOGLE,
+  PROVIDER_DEFAULT,
   Callout,
   type MapStyleElement,
+  type Region,
 } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useLocationStore, type ServiceMarker } from '@/store/useLocationStore';
-import { calculateRegion, calculateServiceTimes, formatTime } from '@/lib/map';
-import { GOOGLE_MAP_LIGHT_STYLE } from '@/constants/googleMapStyle';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import { RIHLA } from '@/constants/theme';
 
-const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY || process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+const directionsAPI =
+  process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY ||
+  process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 
 interface MapWithDirectionsProps {
-  /** Height of the map container */
   height?: number;
-  /** Service provider markers to show on map */
   markers?: ServiceMarker[];
-  /** Called when a marker is pressed */
   onMarkerPress?: (marker: ServiceMarker) => void;
-  /** Called when the map is ready */
-  onMapReady?: () => void;
-  /** Whether to show user location dot */
   showUserLocation?: boolean;
-  /** Whether to show the route line */
   showDirections?: boolean;
-  /** Custom map style */
-  customMapStyle?: MapStyleElement[];
-  /** If true, auto-calculate ETA for markers */
   autoCalculateTimes?: boolean;
-  /** Initial region override */
-  initialRegion?: {
-    latitude: number;
-    longitude: number;
-    latitudeDelta: number;
-    longitudeDelta: number;
-  };
-  /** Map type */
-  mapType?: 'standard' | 'satellite' | 'hybrid';
+  initialRegion?: Region;
+  customMapStyle?: MapStyleElement[];
+  mapType?: 'standard' | 'mutedStandard' | 'satellite' | 'hybrid';
 }
 
-const { width: SCREEN_W } = Dimensions.get('window');
+// ── Memoized Marker Pin ──
 
+const ServiceMarkerPin = memo(function ServiceMarkerPin({
+  marker,
+  onPress,
+}: {
+  marker: ServiceMarker;
+  onPress: (m: ServiceMarker) => void;
+}) {
+  const catDef = getCategoryDef(marker.category as any);
+  const catColor = catDef?.color || RIHLA.primary;
 
+  return (
+    <Marker
+      coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+      title={marker.title}
+      onPress={() => onPress(marker)}
+      tracksViewChanges={false}
+    >
+      <View style={[styles.markerPin, { backgroundColor: catColor }]}>
+        <Ionicons name={(catDef?.icon || 'location') as any} size={13} color="#fff" />
+      </View>
+      <Callout tooltip>
+        <View style={styles.calloutCard}>
+          <Text style={styles.calloutTitle}>{marker.title}</Text>
+          {marker.subtitle && <Text style={styles.calloutSub}>{marker.subtitle}</Text>}
+          <View style={styles.calloutRow}>
+            {marker.priceDZD != null && (
+              <Text style={styles.calloutPrice}>{marker.priceDZD.toLocaleString()} DZD</Text>
+            )}
+            {marker.rating != null && (
+              <Text style={styles.calloutRating}>⭐ {marker.rating}</Text>
+            )}
+          </View>
+        </View>
+        <View style={styles.calloutArrow} />
+      </Callout>
+    </Marker>
+  );
+});
+
+// ── Main Component ──
 
 export default function MapWithDirections({
   height,
   markers: externalMarkers,
   onMarkerPress,
-  onMapReady,
   showUserLocation = true,
   showDirections = true,
-  customMapStyle,
   autoCalculateTimes = true,
   initialRegion,
-  mapType = 'standard',
+  customMapStyle,
+  mapType = 'mutedStandard',
 }: MapWithDirectionsProps) {
   const {
     userLatitude,
@@ -81,139 +103,61 @@ export default function MapWithDirections({
     destinationLatitude,
     destinationLongitude,
     serviceMarkers: storeMarkers,
-    setServiceMarkers,
-    setSelectedMarker,
   } = useLocationStore();
-
-  const [markersWithTimes, setMarkersWithTimes] = useState<ServiceMarker[]>([]);
 
   // Use external markers or store markers
   const markers = externalMarkers || storeMarkers;
 
-  useEffect(() => {
-    if (Array.isArray(markers) && markers.length > 0 && autoCalculateTimes) {
-      if (!userLatitude || !userLongitude || !destinationLatitude || !destinationLongitude) {
-        setMarkersWithTimes(markers);
-        return;
-      }
-      calculateServiceTimes({
-        markers,
-        userLatitude,
-        userLongitude,
-        destinationLatitude,
-        destinationLongitude,
-      }).then((updated) => {
-        if (updated) {
-          setMarkersWithTimes(updated);
-          if (!externalMarkers) setServiceMarkers(updated);
-        }
-      });
-    } else {
-      setMarkersWithTimes(markers || []);
+  // Memoize markers
+  const renderedMarkers = useMemo(
+    () =>
+      markers.map((marker) => (
+        <ServiceMarkerPin
+          key={marker.id}
+          marker={marker}
+          onPress={(m) => onMarkerPress?.(m)}
+        />
+      )),
+    [markers, onMarkerPress]
+  );
+
+  // If no user location AND no initial region, use Algeria center as fallback
+  const fallbackRegion = useMemo(() => (
+    initialRegion || {
+      latitude: 36.7538,
+      longitude: 3.0588,
+      latitudeDelta: 0.15,
+      longitudeDelta: 0.15,
     }
-  }, [markers, userLatitude, userLongitude, destinationLatitude, destinationLongitude, autoCalculateTimes]);
-
-  const region = initialRegion || calculateRegion({
-    userLatitude,
-    userLongitude,
-    destinationLatitude,
-    destinationLongitude,
-  });
-
-  const handleMarkerPress = useCallback((marker: ServiceMarker) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedMarker(marker.id);
-    onMarkerPress?.(marker);
-  }, [onMarkerPress, setSelectedMarker]);
-
-  const mapStyle = customMapStyle || (GOOGLE_MAP_LIGHT_STYLE as unknown as MapStyleElement[]);
-
-  // If no location data and no initial region, show loading
-  if (!userLatitude && !userLongitude && !initialRegion) {
-    return (
-      <View style={[styles.loadingContainer, height ? { height } : styles.fill]}>
-        <ActivityIndicator size="small" color={RIHLA.primary} />
-        <Text style={styles.loadingText}>Loading map...</Text>
-      </View>
-    );
-  }
+  ), [initialRegion]);
 
   return (
     <View style={[styles.container, height ? { height } : styles.fill]}>
       <MapView
-        provider={PROVIDER_GOOGLE}
+        provider={PROVIDER_DEFAULT}
         style={styles.map}
-        customMapStyle={mapStyle}
         mapType={mapType}
-        initialRegion={region}
+        customMapStyle={customMapStyle}
+        showsPointsOfInterest={false}
+        initialRegion={fallbackRegion}
         showsUserLocation={showUserLocation}
-        showsCompass={true}
-        showsScale={true}
+        showsCompass
+        showsScale
         rotateEnabled={false}
         pitchEnabled={false}
-        onMapReady={onMapReady}
         toolbarEnabled={false}
+        tintColor={RIHLA.primary}
+        userInterfaceStyle="light"
       >
-        {/* Service provider markers */}
-        {markersWithTimes.map((marker) => {
-          const catDef = getCategoryDef(marker.category as any);
-          const catColor = catDef?.color || RIHLA.primary;
-          return (
-            <Marker
-              key={marker.id}
-              coordinate={{
-                latitude: marker.latitude,
-                longitude: marker.longitude,
-              }}
-              title={marker.title}
-              onPress={() => handleMarkerPress(marker)}
-              tracksViewChanges={false}
-            >
-              <View style={[styles.markerPin, { backgroundColor: catColor, borderColor: '#fff' }]}>
-                <Ionicons
-                  name={(catDef?.icon || 'location') as any}
-                  size={14}
-                  color="#fff"
-                />
-              </View>
-              <Callout tooltip>
-                <View style={styles.calloutCard}>
-                  <Text style={styles.calloutTitle}>{marker.title}</Text>
-                  {marker.subtitle && (
-                    <Text style={styles.calloutSub}>{marker.subtitle}</Text>
-                  )}
-                  <View style={styles.calloutRow}>
-                    {marker.time != null && (
-                      <Text style={styles.calloutTime}>
-                        ⏱ {formatTime(marker.time)}
-                      </Text>
-                    )}
-                    {marker.priceDZD != null && (
-                      <Text style={styles.calloutPrice}>
-                        {marker.priceDZD.toLocaleString()} DZD
-                      </Text>
-                    )}
-                    {marker.rating != null && (
-                      <Text style={styles.calloutRating}>
-                        ⭐ {marker.rating}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-                <View style={styles.calloutArrow} />
-              </Callout>
-            </Marker>
-          );
-        })}
+        {/* Markers */}
+        {renderedMarkers}
 
         {/* Destination marker */}
-        {destinationLatitude && destinationLongitude && (
+        {destinationLatitude != null && destinationLongitude != null && (
           <Marker
-            coordinate={{
-              latitude: destinationLatitude,
-              longitude: destinationLongitude,
-            }}
+            coordinate={{ latitude: destinationLatitude, longitude: destinationLongitude }}
             title="Destination"
+            tracksViewChanges={false}
           >
             <View style={styles.destinationPin}>
               <Ionicons name="location" size={18} color="#DC2626" />
@@ -221,22 +165,17 @@ export default function MapWithDirections({
           </Marker>
         )}
 
-        {/* Route directions line */}
+        {/* Route directions */}
         {showDirections &&
-          userLatitude &&
-          userLongitude &&
-          destinationLatitude &&
-          destinationLongitude && (
+          userLatitude != null &&
+          userLongitude != null &&
+          destinationLatitude != null &&
+          destinationLongitude != null &&
+          directionsAPI && (
             <MapViewDirections
-              origin={{
-                latitude: userLatitude,
-                longitude: userLongitude,
-              }}
-              destination={{
-                latitude: destinationLatitude,
-                longitude: destinationLongitude,
-              }}
-              apikey={directionsAPI!}
+              origin={{ latitude: userLatitude, longitude: userLongitude }}
+              destination={{ latitude: destinationLatitude, longitude: destinationLongitude }}
+              apikey={directionsAPI}
               strokeColor={RIHLA.primary}
               strokeWidth={3}
             />
@@ -246,38 +185,36 @@ export default function MapWithDirections({
   );
 }
 
+// ── Styles ──
+
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   map: {
     width: '100%',
     height: '100%',
   },
+  fill: { flex: 1 },
   loadingContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderRadius: 20,
+    borderRadius: 16,
     gap: 8,
-  },
-  fill: {
-    flex: 1,
   },
   loadingText: {
     fontSize: 13,
     fontFamily: 'mon',
     color: '#94A3B8',
   },
-  // Service marker pin
   markerPin: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2.5,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -286,7 +223,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 4,
   },
-  // Destination pin
   destinationPin: {
     width: 36,
     height: 36,
@@ -297,12 +233,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Callout tooltip
   calloutCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 12,
-    minWidth: 160,
+    minWidth: 150,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
@@ -327,11 +262,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 6,
-  },
-  calloutTime: {
-    fontSize: 11,
-    fontFamily: 'mon-sb',
-    color: '#3B82F6',
   },
   calloutPrice: {
     fontSize: 12,

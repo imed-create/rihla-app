@@ -19,7 +19,6 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RIHLA } from '@/constants/theme';
 import { getListingById } from '@/constants/mockListings';
@@ -40,6 +39,7 @@ import type {
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticSuccess } from '@/utils/haptics';
 import { showToast } from '@/components/Toast';
+import { useApp } from '@/context/AppContext';
 import * as Haptics from 'expo-haptics';
 import MapWithDirections from '@/components/shared/MapWithDirections';
 import UberButton from '@/components/shared/UberButton';
@@ -339,10 +339,11 @@ export default function CheckoutScreen() {
   const topPad = Platform.OS === 'web' ? insets.top + 20 : insets.top + 8;
 
   const listing = useMemo(() => getListingById(id ?? ''), [id]);
+  const { user, addBooking } = useApp();
   const [paymentMethod, setPaymentMethod] = useState('chargily');
   const [loading, setLoading] = useState(false);
-  const [contactName, setContactName] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
+  const [contactName, setContactName] = useState(user.name || '');
+  const [contactPhone, setContactPhone] = useState(user.phone || '');
   const [notes, setNotes] = useState('');
 
   if (!listing) {
@@ -372,26 +373,51 @@ export default function CheckoutScreen() {
     }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1500));
+
+    // Create the booking in AppContext
+    const iconMap: Record<string, string> = {
+      hotel: 'bed', restaurant: 'restaurant', beach: 'umbrella', rental: 'home',
+      activity: 'bicycle', event: 'musical-notes', guide: 'map',
+      photographer: 'camera', driver: 'car', experience: 'compass',
+    };
+    addBooking({
+      type: listing.category,
+      icon: iconMap[listing.category] || 'pricetag',
+      iconFamily: 'Ionicons',
+      color: catDef.color,
+      title: listing.title,
+      subtitle: `${listing.wilaya} · ${catDef.label}`,
+      price: total,
+      businessId: listing.provider_id,
+      details: {
+        payment_method: paymentMethod === 'chargily' ? 'Online' : 'Cash on arrival',
+        contact_name: contactName,
+        contact_phone: contactPhone,
+        ...(notes ? { notes } : {}),
+        wilaya: listing.wilaya,
+      },
+    });
+
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    showToast('Booking confirmed! 🎉 Check your email for details.', 'success');
-    router.replace('/(tabs)/bookings' as any);
+    showToast('Booking confirmed! 🎉 Check your trips.', 'success');
+    router.replace('/(tabs)/trips' as any);
   };
 
   return (
     <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* ── HEADER ── */}
-      <View style={[styles.header, { paddingTop: topPad }]}>
+      {/* ── UBER DARK HEADER ── */}
+      <View style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Pressable style={styles.backBtn} onPress={() => safeGoBack()}>
-          <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Checkout</Text>
           <Text style={styles.headerSub}>Complete your booking</Text>
         </View>
-        <View style={{ width: 36 }} />
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}>
@@ -415,15 +441,24 @@ export default function CheckoutScreen() {
           <Text style={styles.formLabel}>Location</Text>
           <MapWithDirections
             height={160}
-            markers={[]}
+            markers={[{
+              id: listing.id,
+              latitude: listing.coordinates.latitude,
+              longitude: listing.coordinates.longitude,
+              title: listing.title,
+              subtitle: listing.wilaya,
+              category: listing.category,
+              rating: listing.rating,
+              priceDZD: listing.price_dzd,
+            }]}
             showDirections={false}
-            showUserLocation={false}
+            showUserLocation={true}
             autoCalculateTimes={false}
             initialRegion={{
-              latitude: 36.75,
-              longitude: 3.05,
-              latitudeDelta: 0.15,
-              longitudeDelta: 0.15,
+              latitude: listing.coordinates.latitude,
+              longitude: listing.coordinates.longitude,
+              latitudeDelta: 0.08,
+              longitudeDelta: 0.08,
             }}
             customMapStyle={undefined}
           />
@@ -518,11 +553,11 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, gap: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: RIHLA.card, borderWidth: 1, borderColor: RIHLA.border, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 14, gap: 12, backgroundColor: '#0d0d0d' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1 },
-  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
-  headerSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#FFFFFF' },
+  headerSub: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.6)' },
 
   // Listing summary
   listingCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginBottom: 8, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },

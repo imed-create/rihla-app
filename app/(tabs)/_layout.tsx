@@ -1,45 +1,49 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/useColors';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useApp } from '@/context/AppContext';
-import { useTranslation } from '@/context/I18nContext';
+import { useFavorites } from '@/store/useFavorites';
 import { RIHLA } from '@/constants/theme';
 
 export default function TabLayout() {
-  const colors = useColors();
   const { activeBookings } = useApp();
-  const { t } = useTranslation();
+  const { favoriteIds } = useFavorites();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: RIHLA.mutedText,
         headerShown: false,
-        tabBarLabelStyle: { fontFamily: 'mon-sb', fontSize: 10, marginTop: -2 },
+        tabBarActiveTintColor: RIHLA.accent,
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
+        tabBarLabelStyle: { fontFamily: 'mon-sb', fontSize: 10, marginTop: 2 },
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopWidth: 0.5,
-          borderTopColor: colors.border,
-          height: 72,
-          paddingBottom: 12,
+          backgroundColor: '#0d0d0d',
+          borderRadius: 28,
+          paddingBottom: Platform.OS === 'ios' ? 4 : 8,
           paddingTop: 8,
-          shadowColor: RIHLA.dark,
-          shadowOpacity: 0.08,
-          shadowRadius: 20,
-          shadowOffset: { width: 0, height: -4 },
+          overflow: 'hidden',
+          marginHorizontal: 16,
+          marginBottom: 16,
+          height: 64,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
           elevation: 16,
+          shadowColor: '#000',
+          shadowOpacity: 0.3,
+          shadowRadius: 20,
+          shadowOffset: { width: 0, height: 8 },
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: t('tabs.discover'),
+          title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'compass' : 'compass-outline'} size={26} color={color} />
+            <Ionicons name={focused ? 'compass' : 'compass-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -48,19 +52,37 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'map' : 'map-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'map' : 'map-outline'} size={20} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="favorites"
+        options={{
+          title: 'Saved',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{ position: 'relative' }}>
+              <Ionicons name={focused ? 'heart' : 'heart-outline'} size={20} color={color} />
+              {favoriteIds.length > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {favoriteIds.length > 9 ? '9+' : favoriteIds.length}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="trips"
         options={{
-          title: t('tabs.trips'),
+          title: 'Trips',
           tabBarIcon: ({ color, focused }) => (
             <View style={{ position: 'relative' }}>
-              <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={24} color={color} />
+              <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={20} color={color} />
               {activeBookings.length > 0 && (
-                <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                <View style={styles.badge}>
                   <Text style={styles.badgeText}>
                     {activeBookings.length > 9 ? '9+' : activeBookings.length}
                   </Text>
@@ -73,11 +95,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('tabs.profile'),
+          title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />
+            <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={22} color={color} />
           ),
         }}
+      />
+      <Tabs.Screen
+        name="edit-profile"
+        options={{ href: null }}
       />
     </Tabs>
   );
@@ -85,10 +111,13 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   badge: {
-    position: 'absolute', top: -5, right: -8,
+    position: 'absolute', top: -4, right: -6,
     minWidth: 16, height: 16, borderRadius: 8,
     alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 3, borderWidth: 1.5, borderColor: RIHLA.card,
+    paddingHorizontal: 3,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5,
+    borderColor: '#0d0d0d',
   },
   badgeText: { fontSize: 9, fontFamily: 'mon-b', color: '#FFFFFF' },
 });

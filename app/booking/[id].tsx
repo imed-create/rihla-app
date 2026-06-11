@@ -9,7 +9,6 @@ import React, { useState } from "react";
 import { Alert, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { useApp } from "@/context/AppContext";
 import CountdownTimer from '@/components/shared/CountdownTimer';
 import LiveTracker from '@/components/shared/LiveTracker';
@@ -106,8 +105,8 @@ export default function BookingDetailScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
       >
-        {/* Gradient Header */}
-        <LinearGradient colors={[booking.color || RIHLA.primary, '#0F172A']} style={[styles.header, { paddingTop: topPad + 12 }]}>
+        {/* Uber dark header */}
+        <View style={[styles.header, { paddingTop: topPad + 12 }]}>
           <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <Feather name="arrow-left" size={22} color="#FFFFFF" />
           </TouchableOpacity>
@@ -118,7 +117,7 @@ export default function BookingDetailScreen() {
           <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
             <Feather name="share" size={18} color="#FFFFFF" />
           </TouchableOpacity>
-        </LinearGradient>
+        </View>
 
         <View style={styles.content}>
           {/* Service Info Card */}
@@ -288,11 +287,11 @@ export default function BookingDetailScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#F8FAFC" },
 
-  // Gradient Header
+  // Uber dark header
   header: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 16, paddingBottom: 20,
-    borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
+    backgroundColor: '#0d0d0d',
   },
   backBtn: {
     width: 38, height: 38, borderRadius: 19,

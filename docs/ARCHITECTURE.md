@@ -1,339 +1,275 @@
-# RIHLA — Complete Architecture Spec
-
-> Multi-vendor tourism marketplace for Algeria. Think Airbnb × Booking.com × GetYourGuide × Uber Eats.
-
----
-
-## Vision
-
-RIHLA is a **real-world interactive marketplace** where businesses in Algeria list their services — hotels, restaurants, beaches, rental houses, activities, events, tour guides, photographers, drivers, and curated experiences. Travelers discover, search, and book everything through one app.
-
-### What makes us different
-
-Most apps show a card with a price and a "Book" button.
-RIHLA shows:
-- **Beaches**: Real satellite map with actual umbrella positions, zones, real-time availability
-- **Hotels**: Full rooms, pricing, amenities, availability calendar
-- **Restaurants**: Full menus, categories, photos, delivery options
-- **Activities**: Schedules, capacity, equipment, guides
+# RIHLA — Full Platform Architecture
+## Every Service Category, Every Flow, Every Screen
 
 ---
 
-## Traveler Flow
+## 🎯 Vision
+RIHLA is a **multi-service travel marketplace** for Algeria where every category has its own perfect UX flow — like having Booking.com + Airbnb + Uber + TripAdvisor in one app.
+
+---
+
+## 📊 Category-by-Category Architecture
+
+### 1. 🏨 HOTELS → Booking.com Style
+**Interaction Mode:** `date_range_picker`
+**What Exists:** Basic listing detail, checkout form
+**What Needs Building:**
+- **Provider Profile**: Hotel photos gallery (carousel), video walkthrough, star rating, amenities grid
+- **Room Selector**: Horizontal room type cards (Single, Double, Suite, Penthouse) with photos, price, capacity
+- **Calendar**: 60-day horizontal date range picker (check-in → check-out) with per-night pricing
+- **Guest Selector**: Adults/Children counter
+- **Price Breakdown**: Nightly rate × nights + service fee + taxes = total
+- **Instant Book** vs **Request to Book** toggle
+- **Reviews Section**: Star distribution bar, guest reviews with photos
+- **Map**: Hotel location + nearby attractions
+
+### 2. 🍽️ RESTAURANTS → Menu + Reservation
+**Interaction Mode:** `menu_browse`
+**What Exists:** Basic listing detail, checkout form
+**What Needs Building:**
+- **Provider Profile**: Restaurant photos, cuisine type badges, hours of operation
+- **Menu Browser**: Category tabs (Starters, Mains, Desserts, Drinks) with item cards (photo, name, description, price, dietary badges)
+- **Cart System**: Add items with quantity +/-, running total
+- **Reservation Flow**: Date picker + time slot selector + guest count + table preference (indoor/outdoor/terrace)
+- **Walk-in Order** vs **Reservation** toggle
+- **Reviews Section**: Food quality, service, ambiance ratings
+
+### 3. 🏖️ BEACHES → Owner-Positioned Grid (UNIQUE TO RIHLA)
+**Interaction Mode:** `matrix_grid`
+**What Exists:** Beach satellite map, grid explorer, zone overlays
+**What Needs Building:**
+- **Owner Grid Editor**: Beach owners drag-and-drop to position real umbrella spots on satellite/aerial photo of their actual beach
+- **Real Coordinate Mapping**: Each spot has lat/lng that maps to real beach position
+- **Dynamic Pricing**: Per-spot pricing (VIP = premium, Family = standard, Free = no charge)
+- **Live Availability**: Real-time occupied/available status per spot
+- **Countdown Timer**: 20-min hold with auto-release
+- **Add-ons Panel**: Food delivery, drinks, massage, equipment rental per spot
+- **QR Entry**: Scan on arrival to activate
+
+### 4. 🏠 RENTALS → Airbnb Style
+**Interaction Mode:** `date_range_picker`
+**What Exists:** Basic listing detail, checkout form
+**What Needs Building:**
+- **Property Gallery**: Full-width photo carousel with dots indicator
+- **Host Profile**: Host avatar, name, response time, superhost badge
+- **Calendar**: Monthly calendar with per-night pricing, minimum stay
+- **Guest Selector**: Adults + Children + Infants counters with limits
+- **Amenities Grid**: Icon grid (WiFi, Pool, Kitchen, AC, Parking, etc.)
+- **House Rules**: Check-in/out times, smoking policy, pets, max guests
+- **Location Map**: Property location + neighborhood highlights
+- **Reviews Section**: Cleanliness, accuracy, communication, location ratings
+
+### 5. 🚗 RIDES → Uber/Yassir Style
+**Interaction Mode:** `route_picker`
+**What Exists:** Basic listing detail, find-providers screen
+**What Needs Building:**
+- **Nearby Driver Map**: Real-time map showing available drivers as car pins with ETA
+- **Route Selection**: Pickup point → Destination with route calculation
+- **Driver Card**: Photo, name, rating, vehicle info (make/model/color), ETA
+- **Vehicle Selector**: Economy / Comfort / VIP tier selection with price estimates
+- **Live Tracking**: Driver approaching → arrived → in transit → arrived at destination
+- **Fare Estimation**: Dynamic pricing based on distance + time
+- **Payment**: Cash / Chargily Pay toggle
+- **Driver Rating**: Post-ride rating + tip
+
+### 6. 🎯 ACTIVITIES → Adventure Booking
+**Interaction Mode:** `time_slot_queue`
+**What Exists:** Basic listing detail
+**What Needs Building:**
+- **Session Cards**: Available time slots with capacity (e.g., "9:00 AM — 3 spots left")
+- **Participant Selector**: Number of participants (affects price)
+- **Difficulty Badge**: Easy / Moderate / Challenging with visual indicator
+- **Duration Display**: Total session time with start/end
+- **Equipment Info**: What's included vs what to bring
+- **Safety Brief**: Pre-booking safety information
+- **Weather Policy**: Cancellation/refund policy for weather
+
+### 7. 🎪 EVENTS → Ticket Purchase
+**Interaction Mode:** `ticket_quantity`
+**What Exists:** Basic listing detail
+**What Needs Building:**
+- **Ticket Type Selector**: General / VIP / Front Row with pricing
+- **Quantity Picker**: +/- counter per ticket type
+- **Event Timeline**: Schedule of performers/activities
+- **Venue Map**: Seating layout with section highlights
+- **Age Restriction Badge**: Visible warning for age limits
+- **QR Ticket**: Digital ticket with barcode for entry scanning
+- **Share Event**: Social sharing with event card preview
+
+### 8. 🧭 GUIDES → Profile-Based Booking
+**Interaction Mode:** `time_slot_queue`
+**What Exists:** Basic listing detail
+**What Needs Building:**
+- **Guide Profile**: Full bio, photo, experience years, certifications, languages spoken
+- **Portfolio Gallery**: Past tour photos organized by location
+- **Tour Packages**: Half-day / Full-day / Multi-day with pricing
+- **Schedule Calendar**: Available dates with tour types
+- **Languages Badge**: Flag icons for spoken languages
+- **Certification Badges**: Official tourism license, first aid, etc.
+- **Reviews Section**: Tour quality, knowledge, punctuality ratings
+
+### 9. 📸 PHOTOGRAPHERS → Portfolio + Package
+**Interaction Mode:** `portfolio_package`
+**What Exists:** PhotographerDetail screen with portfolio grid, packages ✅
+**What Needs Building:**
+- **Real Portfolio Gallery**: Actual photos (currently mock colored cards)
+- **Before/After Slider**: Editing showcase
+- **Package Comparison Table**: Side-by-side package features
+- **Availability Calendar**: Bookable dates with session times
+- **Style Tags**: Visual style indicators (portrait, landscape, editorial, etc.)
+- **Drone Badge**: Prominent drone availability indicator
+
+### 10. 🌟 EXPERIENCES → Multi-Day Itinerary
+**Interaction Mode:** `itinerary_builder`
+**What Exists:** Basic listing detail
+**What Needs Building:**
+- **Day-by-Day Itinerary**: Expandable cards for each day with activities, meals, accommodation
+- **Inclusions/Exclusions**: Clear visual checklist
+- **Departure Dates**: Available start dates with group size remaining
+- **Group Size Selector**: Number of travelers
+- **Difficulty + Fitness Level**: Visual indicators
+- **Gear Checklist**: What to bring
+- **Route Map**: Multi-point route visualization
+
+---
+
+## 🧑‍💼 Service Provider Profile System (ALL CATEGORIES)
+
+Every provider (hotel, restaurant, guide, photographer, driver, etc.) should have:
+
+### Profile Page
+- **Avatar + Cover Photo**: Professional photos
+- **Name + Title**: e.g., "Karim — Casbah Expert Guide"
+- **Verified Badge**: After KYC approval
+- **Rating Summary**: Star distribution bar + total reviews
+- **Quick Stats**: Years active, total bookings, response time
+- **Bio**: Personal description
+- **Location**: Wilaya + map pin
+
+### Portfolio Section
+- **Photo Gallery**: Grid/carousel of past work
+- **Video Showcase**: Walkthrough/testimonial videos
+- **Organized by Category**: Tours, events, weddings, etc.
+
+### Reviews Section
+- **Star Distribution**: 5→1 star horizontal bars
+- **Review Cards**: Avatar, name, date, rating, text, photos
+- **Review Filters**: All / 5★ / 4★ / With Photos
+- **Provider Response**: Provider can reply to reviews
+
+### Services/Products
+- **List of offerings**: Each with price, description, photos
+- **Quick Book**: Direct booking from profile
+- **Availability**: Calendar integration
+
+---
+
+## 🔔 Notification System
+
+### Push Notifications (Already wired with expo-notifications)
+- **Booking Confirmed**: "Your hotel stay at Hotel El Djazair is confirmed! 🎉"
+- **Booking Reminder**: "Your beach spot at Sidi Fredj starts in 2 hours"
+- **Booking Cancelled**: "Your ride with Karim has been cancelled"
+- **Payment Received**: "Payment of 14,000 DZD received for Hotel El Djazair"
+- **Review Request**: "How was your stay at Hotel El Djazair? Rate now!"
+- **Promotion**: "Summer deals! 20% off beach spots this weekend"
+- **Provider Message**: "Your guide Karim sent you a message"
+
+### In-App Notification Center
+- **Notification Bell**: Icon on home screen with unread count badge
+- **Notification List**: Grouped by category with timestamps
+- **Mark as Read**: Tap to dismiss, swipe to delete
+- **Deep Links**: Tap notification → navigate to relevant screen
+
+---
+
+## 📋 Implementation Phases
+
+### Phase 1: Core Profile + Booking Flows (Week 1-2)
+1. ✅ Provider Profile screen with portfolio, reviews, booking CTA
+2. ✅ Hotel booking flow with calendar + room selector
+3. ✅ Rental booking flow with calendar + guest selector
+4. ✅ Review submission system (rate + write after booking)
+
+### Phase 2: Service-Specific Maps (Week 3-4)
+5. ✅ Rides: Nearby driver detection with ETA on map
+6. ✅ Beaches: Owner-positioned umbrella grid editor
+7. ✅ Restaurants: Menu browser + table reservation
+
+### Phase 3: Advanced Features (Week 5-6)
+8. ✅ Notification center with push + in-app
+9. ✅ Event ticket purchase with QR generation
+10. ✅ Experience itinerary builder
+11. ✅ Guide/Photographer portfolio gallery with real photos
+
+### Phase 4: Polish + Connect (Week 7-8)
+12. ✅ Supabase backend connection
+13. ✅ Real-time driver tracking
+14. ✅ Payment gateway (Chargily Pay)
+15. ✅ Image upload for provider portfolios
+
+---
+
+## 🗂️ File Structure (New Files Needed)
 
 ```
-Home Screen (clean, premium)
-  → Search Screen (dedicated, full filters)
-  → Destination Hub (ALL services for that destination)
-    → Category Listings (filtered by type)
-      → Listing Detail (full detail with booking)
-        → Booking / Payment
-          → QR Ticket
-            → Review
-```
+app/
+  provider/[id].tsx                    # Provider profile page (NEW)
+  hotel/[id].tsx                       # Hotel detail with calendar (EXISTS - enhance)
+  rental/[id].tsx                      # Rental detail with calendar (EXISTS - enhance)
+  ride/[id].tsx                        # Ride flow with nearby drivers (NEW)
+  restaurant/menu/[id].tsx             # Restaurant menu browser (NEW)
+  restaurant/reserve/[id].tsx          # Table reservation (NEW)
 
-### 1. Home Screen
-- Search bar at top → opens dedicated Search screen
-- Popular destinations grid
-- Featured experiences carousel
-- AI travel recommendations
-- **NO filters on homepage** — keep it clean
+components/
+  provider/
+    ProviderProfile.tsx                # Reusable provider profile header
+    PortfolioGallery.tsx               # Photo/video gallery
+    ReviewSection.tsx                  # Reviews list + submit form
+    ReviewCard.tsx                     # Individual review card
+    ProviderStats.tsx                  # Quick stats row
 
-### 2. Search Screen (dedicated route)
-- Wilaya filter
-- Destination filter
-- Category filter (all 10 types)
-- Price range
-- Rating
-- Family Friendly toggle
-- VIP toggle
-- Availability
+  booking/
+    DateRangeCalendar.tsx              # Booking.com-style calendar
+    GuestSelector.tsx                  # Adults/children counter
+    RoomSelector.tsx                   # Hotel room type picker
+    TicketSelector.tsx                 # Event ticket quantity
+    TimeSlotPicker.tsx                 # Activity/guide time slots
+    PriceBreakdown.tsx                 # Dynamic price calculator
 
-### 3. Destination Hub (KEY SCREEN)
-When user clicks a destination (e.g., "Constantine"):
+  rides/
+    NearbyDriverMap.tsx                # Map with driver pins + ETAs
+    DriverCard.tsx                     # Driver profile card
+    RoutePreview.tsx                   # Pickup → destination route
+    LiveTracking.tsx                   # Real-time ride tracking
 
-**"All" tab shows:**
-- ALL 10 marketplace category cards with icons
-- Legacy services grid (beach services, desert services, etc.)
-- Featured listings
+  beach/
+    BeachGridEditor.tsx                # Owner: position umbrellas on satellite
+    SpotBookingSheet.tsx               # Traveler: book a specific spot
 
-**When user clicks a category tab (e.g., "Restaurants"):**
-- Shows ALL restaurants in that destination
-- Each restaurant is a listing card with title, rating, price
+  restaurant/
+    MenuBrowser.tsx                    # Menu with categories + cart
+    TableReservation.tsx               # Date/time/guest picker
 
-**When user clicks a specific restaurant:**
-- Opens full restaurant detail page
-
-### 4. Listing Detail (polymorphic — different per category)
-
-#### Beach Detail
-```
-Jijel Beach Club
-  → Photos / Video
-  → Reviews
-  → Services
-  → Reserve Spot →
-    REAL SATELLITE MAP with actual umbrella positions
-    (Google Maps satellite or Mapbox)
-    Each umbrella = { lat, lng, price, status }
-    Tap umbrella → popup with details → Book
-    VIP zones visually highlighted on the map
-```
-
-#### Hotel Detail
-```
-Hotel El Djazair
-  → Photos
-  → Rooms (types, pricing, availability)
-  → Amenities
-  → Reviews
-  → Availability Calendar
-  → Book Stay
-```
-
-#### Restaurant Detail
-```
-Le Saveur de Constantine
-  → Photos
-  → Menu (categories, items, prices)
-  → Reviews
-  → Opening Hours
-  → Delivery Options
-  → Reserve Table
-```
-
-#### Activity Detail
-```
-Tandem Paragliding
-  → Photos
-  → Schedule / Time Slots
-  → Capacity
-  → Equipment included
-  → Difficulty level
-  → Reviews
-  → Book Activity
-```
-
-#### Event Detail
-```
-Raï Night Oran
-  → Photos
-  → Ticket types & pricing
-  → Venue info
-  → Event timeline
-  → Reviews
-  → Get Tickets
-```
-
-#### Guide Detail
-```
-Karim — Casbah Expert
-  → Bio
-  → Languages
-  → Certifications
-  → Schedule
-  → Reviews
-  → Book Guide
-```
-
-#### Photographer Detail
-```
-Amina — Beach Photography
-  → Portfolio gallery
-  → Packages & pricing
-  → Turnaround time
-  → Drone availability
-  → Reviews
-  → Book Shoot
-```
-
-#### Driver Detail
-```
-Youcef — Airport Transfers
-  → Vehicle info
-  → Fixed routes & pricing
-  → Per-km rate
-  → Airport transfer available
-  → Reviews
-  → Book Ride
-```
-
-#### Experience Detail
-```
-3-Day Sahara Expedition
-  → Day-by-day itinerary
-  → Inclusions / Exclusions
-  → Departure dates
-  → Group size
-  → Difficulty
-  → Reviews
-  → Book Experience
-```
-
-#### Rental Detail
-```
-Villa Oran Seafront
-  → Photos
-  → Bedrooms / Bathrooms
-  → Amenities
-  → House rules
-  → Availability calendar
-  → Reviews
-  → Reserve House
+  notifications/
+    NotificationBell.tsx               # Header bell with badge
+    NotificationList.tsx               # In-app notification center
+    NotificationCard.tsx               # Individual notification
 ```
 
 ---
 
-## Beach System (Satellite Map)
+## 🎨 Design Principles Per Category
 
-This is the KEY differentiator.
-
-### Beach Owner Creates Assets
-Each asset has:
-```typescript
-{
-  id: "A12",
-  type: "umbrella" | "table" | "chair" | "parking" | "vip" | "family" | "shower" | "powerbank",
-  lat: 36.799,
-  lng: 5.765,
-  price: 1500,  // DZD
-  status: "available" | "reserved" | "occupied" | "maintenance",
-  zone: "vip" | "family" | "free"
-}
-```
-
-### Traveler Sees
-- Real satellite imagery of the beach
-- Assets overlaid on the actual map coordinates
-- Tap any umbrella → popup with distance to sea, price, status
-- VIP zones highlighted with colored overlays
-- Family zone marked
-- Reserve in real-time
-
-### Beach Dashboard
-- Owner can draw zones on the map (VIP, Family, Free)
-- Toggle asset availability
-- See real-time occupancy
-- Revenue tracking
-
----
-
-## Business Onboarding (6-step KYC)
-
-| Step | Fields |
-|---|---|
-| 1. Business Type | Hotel, Restaurant, Beach, Activity, Event, Rental, Guide, Photo, Driver, Experience |
-| 2. Business Information | Name, description, phone, email, website |
-| 3. Location / Address | Wilaya, city, street address |
-| 4. GPS Location | Latitude, longitude (map picker) |
-| 5. Identity Verification | National ID, Commercial Register, Tax Info |
-| 6. Brand Assets | Logo, cover photo, gallery images |
-
----
-
-## Business Dashboard (category-aware)
-
-| Category | Dashboard Shows |
-|---|---|
-| Beach | Spot grid map, reservations, occupancy %, revenue |
-| Hotel | Room inventory, bookings calendar, occupancy, revenue |
-| Restaurant | Menu management, live orders, prep status, revenue |
-| Activity | Schedule, bookings, participant management |
-| Event | Ticket sales, attendee list, check-in scanner |
-| Guide | Upcoming tours, client messages, earnings |
-| Photographer | Portfolio, bookings, earnings |
-| Driver | Active routes, ride history, earnings |
-| Rental | Calendar, bookings, guest messages |
-| Experience | Itinerary, bookings, group management |
-
----
-
-## AI Travel Assistant
-
-User writes:
-```
-"I have 3 days in Constantine"
-"Budget 30,000 DZD"
-```
-
-AI generates:
-- Day 1: Hotel check-in → Restaurant lunch → City tour with guide
-- Day 2: Activity morning → Restaurant dinner → Event evening
-- Day 3: Photography session → Hotel checkout
-
-All recommendations use **real marketplace listings** stored in the platform.
-
----
-
-## Marketplace Categories (10)
-
-1. **Beach** — Real satellite map with physical assets
-2. **Hotel** — Rooms, calendar, amenities
-3. **Restaurant** — Menus, photos, reservations
-4. **Rental House** — Calendar, amenities, house rules
-5. **Activity** — Schedules, capacity, equipment
-6. **Event** — Tickets, venue, timeline
-7. **Tour Guide** — Bio, languages, schedule
-8. **Photographer** — Portfolio, packages
-9. **Driver** — Routes, vehicle, pricing
-10. **Experience** — Multi-day itineraries
-
----
-
-## Design System
-
-- **Navy** `#0a2540` — Primary / Trust
-- **Teal** `#00a896` — Accent / Action
-- **Gold** `#f4a261` — VIP / Highlight
-- **Ice White** `#fafbfc` — Background
-- **Fonts**: Montserrat (mon, mon-sb, mon-b)
-- **Prices**: Always DZD
-- **I18n**: en / fr / ar (RTL)
-
----
-
-## Tech Stack
-
-- Expo SDK 54 + React Native + TypeScript
-- Expo Router for navigation
-- Zustand for state management
-- Supabase for backend (auth, database, realtime)
-- Google Maps / Mapbox for satellite beach views
-- Chargily for payments
-- expo-camera for QR scanning
-- expo-location for GPS
-
----
-
-## Current Status
-
-### ✅ Built
-- Design system (SAHEL palette, Montserrat fonts)
-- 10-category polymorphic type system
-- Mock marketplace data (12 listings)
-- Home screen with discovery feed
-- Destination Hub with category tabs + listing grid
-- Search Screen with full filter suite
-- Polymorphic Listing Detail dispatcher (10 categories)
-- Filter modal (Zustand store)
-- Business dashboard (category-aware panels)
-- Partner dashboard
-- Beach services (spots, food, order tracking, etc.)
-- Desert services (camel, camp, dune buggy, etc.)
-- Auth flow (Clerk phone/email)
-- KYC onboarding (role select + 3 KYC screens)
-- QR scanner (expo-camera)
-- GPS geo-fencing
-- Toast notifications
-- Haptic feedback
-- I18n (en/fr/ar)
-
-### 🔴 Next Priority
-1. Real beach satellite map system (Google Maps satellite)
-2. Hotel detail + room booking flow
-3. Restaurant detail + menu + table reservation
-4. Activity detail + time slot booking
-5. Business KYC (6-step with GPS location picker)
-6. Supabase backend foundation
-7. AI trip builder
-8. Payment integration (Chargily)
+| Category | Inspiration | Key Visual | CTA Color |
+|----------|------------|------------|-----------|
+| Hotel | Booking.com | Calendar + Room cards | #0a2540 (Navy) |
+| Restaurant | UberEats | Menu grid + Cart | #EF4444 (Red) |
+| Beach | RIHLA Original | Satellite grid | #00a896 (Teal) |
+| Rental | Airbnb | Photo gallery + Calendar | #FF5A5F (Coral) |
+| Ride | Uber/Yassir | Map + Driver card | #3B82F6 (Blue) |
+| Activity | GetYourGuide | Time slots + Difficulty | #10B981 (Green) |
+| Event | Ticketmaster | Ticket types + QR | #EC4899 (Pink) |
+| Guide | Viator | Profile + Portfolio | #F59E0B (Amber) |
+| Photographer | Thumbtack | Portfolio + Packages | #8B5CF6 (Purple) |
+| Experience | Intrepid | Day-by-day itinerary | #6366F1 (Indigo) |

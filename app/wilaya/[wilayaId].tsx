@@ -17,7 +17,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -205,7 +204,7 @@ export default function WilayaHubScreen() {
       <StatusBar barStyle="light-content" />
 
       {/* ── HERO HEADER ─────────────────────────────── */}
-      <LinearGradient colors={gradientColors} style={styles.hero}>
+      <View style={styles.hero}>
         <SafeAreaView edges={['top']} style={styles.heroInner}>
           <Pressable style={styles.heroBack} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
@@ -241,7 +240,7 @@ export default function WilayaHubScreen() {
             </View>
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
 
       {/* ── CATEGORY FILTER TABS ─────────────────────── */}
       <View style={styles.tabsWrap}>
@@ -331,8 +330,8 @@ export default function WilayaHubScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F8FAFC' },
 
-  // Hero
-  hero: { paddingBottom: 20 },
+  // Hero (Uber dark solid)
+  hero: { paddingBottom: 20, backgroundColor: '#0a2540' },
   heroInner: { paddingHorizontal: 20 },
   heroBack: {
     width: 40, height: 40, borderRadius: 20,
@@ -368,7 +367,7 @@ const styles = StyleSheet.create({
 
   // Scroll
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, gap: 8 },
+  scrollContent: { padding: 16, gap: 8, paddingBottom: 100 },
 
   // Category section
   categorySection: {

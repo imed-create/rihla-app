@@ -1,32 +1,30 @@
 /**
- * RIHLA — Destination Hub Screen
- * ---------------------------------
- * Shows destination hero + ALL category cards always.
- * When a specific category tab is clicked, shows marketplace listings for that category.
- * "All" tab shows the category overview grid.
+ * RIHLA — Destination Hub Screen (Map-First)
+ * -------------------------------------------
+ * Map is the hero — shows ALL services as pins on the map.
+ * Bottom sheet style listing cards below the map.
+ * Tap a category filter to filter pins. Tap a pin to see details.
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams, Stack } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
+  Image,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RIHLA } from '@/constants/theme';
 import { getDestinationById } from '@/constants/destinations';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
 import { MARKETPLACE_CATEGORIES, getCategoryDef } from '@/constants/marketplaceCategories';
 import type { MarketplaceCategory, Listing } from '@/types/service';
-import { getServicesByCategory } from '@/constants/services';
-import EmptyState from '@/components/shared/EmptyState';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
 import MapWithDirections from '@/components/shared/MapWithDirections';
@@ -42,20 +40,11 @@ const DESTINATION_IMAGES: Record<string, string> = {
 export default function DestinationHubScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
-  const isWide = Platform.OS === 'web' && width >= 900;
 
   const destination = useMemo(() => getDestinationById(id ?? ''), [id]);
   const [selectedCategory, setSelectedCategory] = useState<MarketplaceCategory | 'all'>('all');
 
-  // Services for this destination type (always available, from constants/services)
-  const destinationServices = useMemo(() => {
-    if (!destination) return [];
-    return getServicesByCategory(destination.type);
-  }, [destination]);
-
-  // Marketplace listings for this destination's region
   const listings = useMemo(() => {
     if (!destination) return [];
     let results = MOCK_LISTINGS.filter((l) => l.is_active && l.wilaya === destination.region);
@@ -69,7 +58,7 @@ export default function DestinationHubScreen() {
     return (
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <Pressable style={styles.backCircle} onPress={() => safeGoBack()}>
+        <Pressable style={styles.backBtn} onPress={() => safeGoBack()}>
           <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
         </Pressable>
         <View style={styles.notFound}>
@@ -80,240 +69,160 @@ export default function DestinationHubScreen() {
     );
   }
 
-  const isAll = selectedCategory === 'all';
-  const catDef = !isAll ? getCategoryDef(selectedCategory) : null;
+  const heroImage = DESTINATION_IMAGES[destination.type] ?? DESTINATION_IMAGES.beach;
+  const totalCount = MOCK_LISTINGS.filter(l => l.is_active && l.wilaya === destination.region).length;
+
+  // Map markers for all listings in this destination
+  const mapMarkers = listings.map((l) => ({
+    id: l.id,
+    latitude: l.coordinates.latitude,
+    longitude: l.coordinates.longitude,
+    title: l.title,
+    subtitle: l.wilaya,
+    category: l.category,
+    rating: l.rating,
+    priceDZD: l.price_dzd,
+  }));
 
   return (
     <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
+
+      {/* ── HERO IMAGE ── */}
+      <View style={[styles.heroWrap, { paddingTop: topPad }]}>
+        <Image source={{ uri: heroImage }} style={styles.heroImage} resizeMode="cover" />
+        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.heroGradient} />
+        <Pressable style={[styles.backBtn, { top: topPad + 12 }]} onPress={() => safeGoBack()}>
+          <Ionicons name="arrow-back" size={22} color="#fff" />
+        </Pressable>
+        <View style={styles.heroContent}>
+          <Text style={styles.heroName}>{destination.name}</Text>
+          <View style={styles.heroLocationRow}>
+            <Ionicons name="location" size={13} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.heroRegion}>{destination.region}, Algeria · {totalCount} listings</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* ── CATEGORY FILTER PILLS ── */}
       <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterScroll}
       >
-        {/* ── HERO HEADER ── */}
-        <View style={[styles.heroWrap, { paddingTop: topPad }]}>
-          <LinearGradient
-            colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.85)']}
-            style={styles.heroGradient}
-          >
-            <Pressable style={styles.backCircle} onPress={() => safeGoBack()}>
-              <Ionicons name="arrow-back" size={22} color="#fff" />
-            </Pressable>
-            <View style={styles.heroContent}>
-              <Text style={styles.heroName}>{destination.name}</Text>
-              <Text style={styles.heroRegion}>{destination.region}, Algeria</Text>
-              <View style={styles.heroStats}>
-                <View style={styles.heroStatItem}>
-                  <Ionicons name="star" size={14} color="#FFD166" />
-                  <Text style={styles.heroStatVal}>{destination.rating}</Text>
-                  <Text style={styles.heroStatLabel}>({destination.reviews})</Text>
-                </View>
-                <View style={styles.heroStatDivider} />
-                <View style={styles.heroStatItem}>
-                  <Ionicons name="navigate" size={13} color="rgba(255,255,255,0.7)" />
-                  <Text style={styles.heroStatVal}>{destination.distance}</Text>
-                </View>
-              </View>
-              <Text style={styles.heroTagline}>{destination.tagline}</Text>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* ── DESTINATION MAP ── */}
-        <View style={styles.section}>
-          <MapWithDirections
-            height={180}
-            markers={[]}
-            showDirections={false}
-            showUserLocation={false}
-            autoCalculateTimes={false}
-            initialRegion={{
-              latitude: destination.lat,
-              longitude: destination.lng,
-              latitudeDelta: 0.15,
-              longitudeDelta: 0.15,
-            }}
-            customMapStyle={undefined}
-          />
-        </View>
-
-        {/* ── CATEGORY TABS (always show ALL 10) ── */}
-        <View style={styles.tabsContainer}>
-          <Pressable
-            style={[styles.tab, isAll && styles.tabActive]}
-            onPress={() => { hapticLight(); setSelectedCategory('all'); }}
-          >
-            <Ionicons name="grid-outline" size={14} color={isAll ? '#fff' : RIHLA.mutedText} />
-            <Text style={[styles.tabText, isAll && styles.tabTextActive]}>All</Text>
-          </Pressable>
-          {MARKETPLACE_CATEGORIES.map((cat) => (
+        <Pressable
+          style={[styles.filterPill, selectedCategory === 'all' && styles.filterPillActive]}
+          onPress={() => { hapticLight(); setSelectedCategory('all'); }}
+        >
+          <Ionicons name="grid-outline" size={14} color={selectedCategory === 'all' ? '#fff' : RIHLA.mutedText} />
+          <Text style={[styles.filterPillText, selectedCategory === 'all' && { color: '#fff' }]}>All</Text>
+        </Pressable>
+        {MARKETPLACE_CATEGORIES.map((cat) => {
+          const count = MOCK_LISTINGS.filter(l => l.is_active && l.wilaya === destination.region && l.category === cat.key).length;
+          const isActive = selectedCategory === cat.key;
+          return (
             <Pressable
               key={cat.key}
-              style={[styles.tab, selectedCategory === cat.key && { backgroundColor: cat.color, borderColor: cat.color }]}
-              onPress={() => { hapticLight(); setSelectedCategory(selectedCategory === cat.key ? 'all' : cat.key); }}
+              style={[styles.filterPill, isActive && { backgroundColor: cat.color, borderColor: cat.color }]}
+              onPress={() => { hapticLight(); setSelectedCategory(isActive ? 'all' : cat.key); }}
             >
-              <Ionicons name={cat.icon as any} size={14} color={selectedCategory === cat.key ? '#fff' : RIHLA.mutedText} />
-              <Text style={[styles.tabText, selectedCategory === cat.key && { color: '#fff' }]}>{cat.labelPlural}</Text>
+              <Ionicons name={cat.icon as any} size={14} color={isActive ? '#fff' : cat.color} />
+              <Text style={[styles.filterPillText, isActive && { color: '#fff' }]}>{cat.label}</Text>
+              {count > 0 && (
+                <View style={[styles.filterPillCount, isActive && { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
+                  <Text style={[styles.filterPillCountText, isActive && { color: 'rgba(255,255,255,0.8)' }]}>{count}</Text>
+                </View>
+              )}
             </Pressable>
-          ))}
-        </View>
-
-        {/* ── "ALL" TAB: Show category overview cards + legacy services ── */}
-        {isAll && (
-          <>
-            {/* Category Cards Grid */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>What are you looking for?</Text>
-              <Text style={styles.sectionSub}>Browse by category in {destination.name}</Text>
-              <View style={styles.categoryGrid}>
-                {MARKETPLACE_CATEGORIES.map((cat) => {
-                  const count = MOCK_LISTINGS.filter(
-                    (l) => l.is_active && l.wilaya === destination.region && l.category === cat.key
-                  ).length;
-                  return (
-                    <Pressable
-                      key={cat.key}
-                      style={styles.categoryCard}
-                      onPress={() => { hapticLight(); setSelectedCategory(cat.key); }}
-                    >
-                      <View style={[styles.categoryIconWrap, { backgroundColor: cat.color + '15' }]}>
-                        <Ionicons name={cat.icon as any} size={24} color={cat.color} />
-                      </View>
-                      <Text style={styles.categoryLabel}>{cat.labelPlural}</Text>
-                      <Text style={styles.categoryCount}>
-                        {count > 0 ? `${count} listing${count > 1 ? 's' : ''}` : 'Browse'}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Legacy Services Grid (existing beach/desert services) */}
-            {destinationServices.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Services & Activities</Text>
-                <Text style={styles.sectionSub}>Everything you need, booked instantly</Text>
-                <View style={styles.servicesGrid}>
-                  {destinationServices.map((svc) => (
-                    <Pressable
-                      key={svc.id}
-                      style={styles.serviceCard}
-                      onPress={() => {
-                        hapticLight();
-                        router.push({ pathname: svc.route as any, params: { destinationId: destination.id } });
-                      }}
-                    >
-                      <View style={[styles.serviceIconWrap, { backgroundColor: svc.color + '18' }]}>
-                        <Ionicons name={svc.icon as any} size={22} color={svc.color} />
-                      </View>
-                      <Text style={styles.serviceTitle} numberOfLines={1}>{svc.title}</Text>
-                      <Text style={styles.serviceTagline} numberOfLines={1}>{svc.tagline}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Featured marketplace listings */}
-            {listings.filter((l) => l.is_featured).length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Featured in {destination.name}</Text>
-                <View style={styles.listingsGrid}>
-                  {listings.filter((l) => l.is_featured).map((item) => (
-                    <ListingCard key={item.id} item={item} isWide={isWide} />
-                  ))}
-                </View>
-              </View>
-            )}
-          </>
-        )}
-
-        {/* ── SPECIFIC CATEGORY TAB: Show marketplace listings ── */}
-        {!isAll && (
-          <>
-            {/* Category Header */}
-            <View style={styles.catHeader}>
-              <View style={[styles.catHeaderIcon, { backgroundColor: catDef!.color + '15' }]}>
-                <Ionicons name={catDef!.icon as any} size={24} color={catDef!.color} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.catHeaderTitle}>{catDef!.labelPlural} in {destination.name}</Text>
-                <Text style={styles.catHeaderSub}>{listings.length} listing{listings.length !== 1 ? 's' : ''} available</Text>
-              </View>
-            </View>
-
-            {/* Listings */}
-            {listings.length > 0 ? (
-              <View style={styles.listingsGrid}>
-                {listings.map((item) => (
-                  <ListingCard key={item.id} item={item} isWide={isWide} />
-                ))}
-              </View>
-            ) : (
-              <View style={styles.emptyWrap}>
-                <EmptyState
-                  icon={catDef!.icon as any}
-                  title={`No ${catDef!.labelPlural.toLowerCase()} yet`}
-                  subtitle={`${catDef!.labelPlural} in ${destination.name} will appear here once listed by businesses.`}
-                />
-              </View>
-            )}
-          </>
-        )}
+          );
+        })}
       </ScrollView>
+
+      {/* ── FULL MAP (THE MAIN EVENT) ── */}
+      <View style={styles.mapContainer}>
+        <MapWithDirections
+          markers={mapMarkers}
+          showDirections={false}
+          showUserLocation={true}
+          autoCalculateTimes={false}
+          height={320}
+          initialRegion={{
+            latitude: destination.lat,
+            longitude: destination.lng,
+            latitudeDelta: 0.12,
+            longitudeDelta: 0.12,
+          }}
+          onMarkerPress={(marker) => router.push(`/listing/${marker.id}` as any)}
+        />
+      </View>
+
+      {/* ── LISTINGS BOTTOM SHEET ── */}
+      <View style={styles.listingsSheet}>
+        <View style={styles.sheetHandle} />
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>
+            {selectedCategory === 'all' ? 'All Listings' : getCategoryDef(selectedCategory).labelPlural}
+          </Text>
+          <Text style={styles.sheetCount}>{listings.length} available</Text>
+        </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.listingsList, { paddingBottom: insets.bottom + 20 }]}
+        >
+          {listings.map((item) => (
+            <ListingRow key={item.id} item={item} />
+          ))}
+          {listings.length === 0 && (
+            <View style={styles.empty}>
+              <Ionicons name="search-outline" size={36} color="#CBD5E1" />
+              <Text style={styles.emptyText}>No listings in this category</Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
     </View>
   );
 }
 
-// ── Listing Card ──
-function getDetailRoute(item: Listing): string {
-  switch (item.category) {
-    case 'hotel': return `/listing/hotel/${item.id}`;
-    case 'restaurant': return `/listing/restaurant/${item.id}`;
-    case 'beach': return `/listing/beach/${item.id}`;
-    case 'rental': return `/listing/rental/${item.id}`;
-    case 'activity': return `/listing/activity/${item.id}`;
-    case 'event': return `/listing/event/${item.id}`;
-    case 'guide': return `/listing/guide/${item.id}`;
-    case 'photographer': return `/listing/photographer/${item.id}`;
-    case 'driver': return `/listing/driver/${item.id}`;
-    case 'experience': return `/listing/experience/${item.id}`;
-    default: return `/listing/${item.id}`;
-  }
-}
-
-function ListingCard({ item, isWide }: { item: Listing; isWide: boolean }) {
+// ── Listing Row Card ──
+function ListingRow({ item }: { item: Listing }) {
   const catDef = getCategoryDef(item.category);
   return (
     <Pressable
-      style={[styles.listingCard, isWide && { width: '48%' }]}
-      onPress={() => router.push(getDetailRoute(item) as any)}
+      style={styles.listingRow}
+      onPress={() => router.push(`/listing/${item.id}` as any)}
     >
-      <View style={[styles.listingImage, { backgroundColor: catDef.color + '15' }]}>
-        <Ionicons name={catDef.icon as any} size={28} color={catDef.color} />
-        <View style={[styles.listingCatBadge, { backgroundColor: catDef.color }]}>
-          <Text style={styles.listingCatText}>{catDef.label}</Text>
+      {item.cover_image_url ? (
+        <Image source={{ uri: item.cover_image_url }} style={styles.listingThumb} resizeMode="cover" />
+      ) : (
+        <View style={[styles.listingThumbPlaceholder, { backgroundColor: catDef.color + '15' }]}>
+          <Ionicons name={catDef.icon as any} size={22} color={catDef.color} />
         </View>
-        {item.is_featured && (
-          <View style={styles.listingFeatBadge}>
-            <Ionicons name="star" size={10} color="#fff" />
-            <Text style={styles.listingFeatText}>Featured</Text>
-          </View>
-        )}
-      </View>
+      )}
       <View style={styles.listingInfo}>
+        <View style={styles.listingTopRow}>
+          <View style={[styles.listingCatBadge, { backgroundColor: catDef.color + '15' }]}>
+            <Ionicons name={catDef.icon as any} size={10} color={catDef.color} />
+            <Text style={[styles.listingCatText, { color: catDef.color }]}>{catDef.label}</Text>
+          </View>
+          {item.is_featured && (
+            <View style={styles.listingFeatBadge}>
+              <Ionicons name="star" size={9} color="#FFD166" />
+              <Text style={styles.listingFeatText}>Featured</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.listingDesc} numberOfLines={2}>{item.description}</Text>
         <View style={styles.listingBottom}>
           <View style={styles.listingRating}>
-            <Ionicons name="star" size={12} color="#FFD166" />
+            <Ionicons name="star" size={11} color="#FFD166" />
             <Text style={styles.listingRatingText}>{item.rating}</Text>
             <Text style={styles.listingReviewCount}>({item.review_count})</Text>
           </View>
           <Text style={styles.listingPrice}>{item.price_dzd.toLocaleString()} DZD</Text>
         </View>
       </View>
+      <Ionicons name="chevron-forward" size={18} color="#CBD5E1" style={{ marginLeft: 4 }} />
     </Pressable>
   );
 }
@@ -324,95 +233,68 @@ const styles = StyleSheet.create({
   notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
 
   // Hero
-  heroWrap: { overflow: 'hidden', borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
-  heroGradient: { paddingHorizontal: 20, paddingBottom: 28, minHeight: 260, justifyContent: 'space-between' },
-  backCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  heroContent: { gap: 4 },
-  heroName: { fontSize: 30, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.5 },
-  heroRegion: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.8)' },
-  heroStats: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
-  heroStatItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroStatVal: { fontSize: 13, fontFamily: 'mon-b', color: '#fff' },
-  heroStatLabel: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
-  heroStatDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.3)' },
-  heroTagline: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)', marginTop: 6, lineHeight: 18 },
+  heroWrap: { position: 'relative', height: 180, overflow: 'hidden' },
+  heroImage: { width: '100%', height: '100%' },
+  heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 120 },
+  backBtn: {
+    position: 'absolute', left: 16, zIndex: 10,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center',
+  },
+  heroContent: { position: 'absolute', bottom: 12, left: 16, right: 16 },
+  heroName: { fontSize: 24, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
+  heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  heroRegion: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.8)' },
 
-  // Tabs — ALWAYS show all 10 categories
-  tabsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20, paddingVertical: 14 },
-  tab: {
+  // Filter pills
+  filterScroll: { paddingHorizontal: 12, paddingVertical: 10, gap: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  filterPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+    borderWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#fff',
   },
-  tabActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
-  tabText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
-  tabTextActive: { color: '#fff' },
+  filterPillActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
+  filterPillText: { fontSize: 12, fontFamily: 'mon-sb', color: '#475569' },
+  filterPillCount: { backgroundColor: '#F1F5F9', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 8, marginLeft: 2 },
+  filterPillCountText: { fontSize: 10, fontFamily: 'mon-b', color: '#94A3B8' },
 
-  // Sections
-  section: { paddingHorizontal: 20, marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 2 },
-  sectionSub: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, marginBottom: 14 },
+  // Map
+  mapContainer: { flex: 0 },
 
-  // Category grid (on "All" tab)
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  categoryCard: {
-    width: '30%', minWidth: 100, alignItems: 'center', gap: 6,
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
-    paddingVertical: 16, paddingHorizontal: 8,
+  // Listings sheet
+  listingsSheet: {
+    flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    marginTop: -20, borderTopWidth: 1, borderTopColor: '#E2E8F0',
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 8,
   },
-  categoryIconWrap: {
-    width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
-  },
-  categoryLabel: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.dark, textAlign: 'center' },
-  categoryCount: { fontSize: 10, fontFamily: 'mon', color: RIHLA.mutedText },
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB', alignSelf: 'center', marginTop: 10 },
+  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
+  sheetTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+  sheetCount: { fontSize: 12, fontFamily: 'mon-sb', color: '#94A3B8' },
 
-  // Services grid (legacy beach/desert services)
-  servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  serviceCard: {
-    width: '47%', alignItems: 'flex-start', gap: 6,
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
-    padding: 14,
-  },
-  serviceIconWrap: {
-    width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
-  },
-  serviceTitle: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
-  serviceTagline: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
-
-  // Category header (when specific category selected)
-  catHeader: {
+  // Listing rows
+  listingsList: { paddingHorizontal: 16, gap: 8 },
+  listingRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#fff',
-    marginHorizontal: 20, borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
-    marginBottom: 14,
+    backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#F1F5F9',
+    padding: 10,
   },
-  catHeaderIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  catHeaderTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  catHeaderSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
-
-  // Listing cards
-  listingsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 12 },
-  listingCard: {
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
-    overflow: 'hidden', marginBottom: 4, width: '100%',
-  },
-  listingImage: { height: 110, alignItems: 'center', justifyContent: 'center' },
-  listingCatBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  listingCatText: { fontSize: 10, fontFamily: 'mon-b', color: '#fff' },
-  listingFeatBadge: {
-    position: 'absolute', top: 10, right: 10, flexDirection: 'row', alignItems: 'center', gap: 3,
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  listingFeatText: { fontSize: 9, fontFamily: 'mon-b', color: '#fff' },
-  listingInfo: { padding: 14, gap: 4 },
-  listingTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
-  listingDesc: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, lineHeight: 16 },
-  listingBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
+  listingThumb: { width: 64, height: 64, borderRadius: 10 },
+  listingThumbPlaceholder: { width: 64, height: 64, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  listingInfo: { flex: 1, gap: 3 },
+  listingTopRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  listingCatBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  listingCatText: { fontSize: 9, fontFamily: 'mon-b' },
+  listingFeatBadge: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: '#FEF3C7' },
+  listingFeatText: { fontSize: 8, fontFamily: 'mon-b', color: '#B45309' },
+  listingTitle: { fontSize: 14, fontFamily: 'mon-b', color: '#0F172A' },
+  listingBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   listingRating: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  listingRatingText: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.dark },
-  listingReviewCount: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
-  listingPrice: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
+  listingRatingText: { fontSize: 12, fontFamily: 'mon-b', color: '#0F172A' },
+  listingReviewCount: { fontSize: 10, fontFamily: 'mon', color: '#94A3B8' },
+  listingPrice: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.primary },
 
   // Empty
-  emptyWrap: { paddingHorizontal: 20 },
+  empty: { alignItems: 'center', paddingVertical: 40, gap: 8 },
+  emptyText: { fontSize: 14, fontFamily: 'mon-sb', color: '#94A3B8' },
 });

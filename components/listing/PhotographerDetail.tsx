@@ -12,6 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RIHLA } from '@/constants/theme';
 import { getListingById } from '@/constants/mockListings';
 import type { PhotographerMetadata } from '@/types/service';
+import PhotoCarousel from '@/components/shared/PhotoCarousel';
+import { getListingGallery } from '@/utils/listingPhotos';
 import { useFavorites } from '@/store/useFavorites';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
@@ -53,24 +55,35 @@ export default function PhotographerDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}>
+        {/* ── HERO PHOTO CAROUSEL ── */}
         <View style={[styles.heroWrap, { paddingTop: topPad }]}>
-          <LinearGradient colors={['#EC4899', RIHLA.primary]} style={styles.hero}>
-            <View style={styles.heroNav}>
-              <Pressable style={styles.backCircle} onPress={() => safeGoBack()}><Ionicons name="arrow-back" size={22} color="#fff" /></Pressable>
-              <View style={styles.heroActions}>
-                <Pressable style={styles.actionCircle}><Ionicons name="share-outline" size={20} color="#fff" /></Pressable>
-                <Pressable style={styles.actionCircle} onPress={() => { hapticLight(); toggleFavorite(listing.id); }}>
-                  <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={20} color={isFavorite ? '#FF499E' : '#fff'} />
-                </Pressable>
-              </View>
+          <PhotoCarousel
+            photos={getListingGallery(listing.cover_image_url ?? '', 'photographer', 6)}
+            height={360}
+            showCount={true}
+          />
+          <View style={[styles.heroNav, { top: topPad + 12 }]}>
+            <Pressable style={styles.navCircle} onPress={() => safeGoBack()}><Ionicons name="arrow-back" size={22} color="#fff" /></Pressable>
+            <View style={styles.heroActions}>
+              <Pressable style={styles.navCircle}><Ionicons name="share-outline" size={20} color="#fff" /></Pressable>
+              <Pressable style={styles.navCircle} onPress={() => { hapticLight(); toggleFavorite(listing.id); }}>
+                <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={20} color={isFavorite ? '#FF499E' : '#fff'} />
+              </Pressable>
             </View>
-            <View style={styles.heroContent}>
+          </View>
+          <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} style={styles.heroGradient}>
+            <View style={styles.heroOverlay}>
               <Text style={styles.heroTitle}>{listing.title}</Text>
-              <Text style={styles.heroLocation}>{listing.wilaya}, Algeria</Text>
+              <View style={styles.heroLocationRow}>
+                <Ionicons name="location" size={13} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.heroLocation}>{listing.wilaya}, Algeria</Text>
+              </View>
               <View style={styles.heroRating}>
-                <Ionicons name="star" size={14} color="#FFD166" />
-                <Text style={styles.heroRatingText}>{listing.rating}</Text>
-                <Text style={styles.heroReviewCount}>({listing.review_count} reviews)</Text>
+                <View style={styles.ratingBadge}>
+                  <Ionicons name="star" size={11} color="#fff" />
+                  <Text style={styles.ratingBadgeText}>{listing.rating}</Text>
+                </View>
+                <Text style={styles.heroReviewCount}>· {listing.review_count} reviews</Text>
               </View>
             </View>
           </LinearGradient>
@@ -182,17 +195,18 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
-  heroWrap: { overflow: 'hidden' },
-  hero: { paddingHorizontal: 20, paddingBottom: 28, gap: 8 },
-  heroNav: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  backCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
-  heroActions: { flexDirection: 'row', gap: 10 },
-  actionCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  heroContent: { gap: 4 },
-  heroTitle: { fontSize: 28, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.5 },
-  heroLocation: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
-  heroRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  heroRatingText: { fontSize: 14, fontFamily: 'mon-b', color: '#fff' },
+  heroWrap: { position: 'relative' },
+  heroNav: { position: 'absolute', left: 16, right: 16, zIndex: 10, flexDirection: 'row', justifyContent: 'space-between' },
+  navCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+  heroActions: { flexDirection: 'row', gap: 8 },
+  heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 160, justifyContent: 'flex-end' },
+  heroOverlay: { paddingHorizontal: 20, paddingBottom: 14, gap: 3 },
+  heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
+  heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  heroLocation: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
+  heroRating: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 },
+  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
+  ratingBadgeText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
   heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
   section: { paddingHorizontal: 20, paddingTop: 20 },
   sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 12 },
