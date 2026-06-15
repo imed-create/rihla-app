@@ -6,8 +6,9 @@ import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 
 const BANKS = [
   { id: "10k", name: "10,000 mAh", desc: "Charges up to 2 phones", price: 300, icon: "battery-70" },
@@ -22,7 +23,7 @@ const DURATIONS = [
 ];
 
 export default function PowerBankScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
 
@@ -61,7 +62,7 @@ export default function PowerBankScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#06D6A0", "#f4a261"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -77,14 +78,14 @@ export default function PowerBankScreen() {
       {success ? (
         <View style={styles.successWrap}>
           <Ionicons name="checkmark-circle" size={80} color="#06D6A0" />
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>Rented!</Text>
-          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>Rented!</Text>
+          <Text style={[styles.successSub, { color: colors.muted }]}>
             Pick up your power bank at the service desk. Deposit: 2000 DZD (refunded on return).
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 16 }} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT POWER BANK</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>SELECT POWER BANK</Text>
           <View style={styles.bankList}>
             {BANKS.map((b) => (
               <Pressable
@@ -99,20 +100,20 @@ export default function PowerBankScreen() {
                 ]}
                 onPress={() => setBank(b)}
               >
-                <View style={[styles.bankIcon, { backgroundColor: bank.id === b.id ? "#06D6A022" : colors.muted }]}>
-                  <MaterialCommunityIcons name={b.icon as any} size={32} color={bank.id === b.id ? "#06D6A0" : colors.mutedForeground} />
+                <View style={[styles.bankIcon, { backgroundColor: bank.id === b.id ? "#06D6A022" : colors.card }]}>
+                  <MaterialCommunityIcons name={b.icon as any} size={32} color={bank.id === b.id ? "#06D6A0" : colors.muted} />
                 </View>
                 <View style={styles.bankInfo}>
-                  <Text style={[styles.bankName, { color: colors.foreground }]}>{b.name}</Text>
-                  <Text style={[styles.bankDesc, { color: colors.mutedForeground }]}>{b.desc}</Text>
-                  <Text style={[styles.bankPrice, { color: colors.primary }]}>from {b.price} DZD</Text>
+                  <Text style={[styles.bankName, { color: colors.text }]}>{b.name}</Text>
+                  <Text style={[styles.bankDesc, { color: colors.muted }]}>{b.desc}</Text>
+                  <Text style={[styles.bankPrice, { color: RIHLA.primary }]}>from {b.price} DZD</Text>
                 </View>
                 {bank.id === b.id && <Ionicons name="checkmark-circle" size={22} color="#06D6A0" />}
               </Pressable>
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>DURATION</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>DURATION</Text>
           <View style={styles.durationRow}>
             {DURATIONS.map((d) => (
               <Pressable
@@ -120,20 +121,20 @@ export default function PowerBankScreen() {
                 style={[
                   styles.durationChip,
                   {
-                    backgroundColor: duration.label === d.label ? "#06D6A0" : colors.muted,
+                    backgroundColor: duration.label === d.label ? "#06D6A0" : colors.card,
                     borderColor: duration.label === d.label ? "#06D6A0" : colors.border,
                   },
                 ]}
                 onPress={() => setDuration(d)}
               >
-                <Text style={[styles.durationText, { color: duration.label === d.label ? "#FFF" : colors.foreground }]}>
+                <Text style={[styles.durationText, { color: duration.label === d.label ? "#FFF" : colors.text }]}>
                   {d.label}
                 </Text>
               </Pressable>
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>OPTIONS</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>OPTIONS</Text>
           <Pressable
             style={[
               styles.tableOption,
@@ -145,26 +146,26 @@ export default function PowerBankScreen() {
             ]}
             onPress={() => setWithTable(!withTable)}
           >
-            <View style={[styles.tableIcon, { backgroundColor: withTable ? "#06D6A022" : colors.muted }]}>
-              <MaterialCommunityIcons name="table-furniture" size={24} color={withTable ? "#06D6A0" : colors.mutedForeground} />
+            <View style={[styles.tableIcon, { backgroundColor: withTable ? "#06D6A022" : colors.card }]}>
+              <MaterialCommunityIcons name="table-furniture" size={24} color={withTable ? "#06D6A0" : colors.muted} />
             </View>
             <View style={styles.tableInfo}>
-              <Text style={[styles.tableName, { color: colors.foreground }]}>Include Beach Table</Text>
-              <Text style={[styles.tableDesc, { color: colors.mutedForeground }]}>Shaded table for charging +500 DZD</Text>
+              <Text style={[styles.tableName, { color: colors.text }]}>Include Beach Table</Text>
+              <Text style={[styles.tableDesc, { color: colors.muted }]}>Shaded table for charging +500 DZD</Text>
             </View>
-            <View style={[styles.toggle, { backgroundColor: withTable ? "#06D6A0" : colors.muted }]}>
+            <View style={[styles.toggle, { backgroundColor: withTable ? "#06D6A0" : colors.card }]}>
               {withTable && <Ionicons name="checkmark" size={14} color="#FFF" />}
             </View>
           </Pressable>
 
           <View style={[styles.totalBox, { backgroundColor: "#06D6A022", borderColor: "#06D6A044" }]}>
-            <Text style={[styles.totalLabel, { color: colors.mutedForeground }]}>Rental Total</Text>
+            <Text style={[styles.totalLabel, { color: colors.muted }]}>Rental Total</Text>
             <Text style={[styles.totalValue, { color: "#06D6A0" }]}>{total} DZD</Text>
           </View>
 
-          <View style={[styles.depositNote, { backgroundColor: colors.muted }]}>
-            <Ionicons name="information-circle-outline" size={16} color={colors.mutedForeground} />
-            <Text style={[styles.depositText, { color: colors.mutedForeground }]}>
+          <View style={[styles.depositNote, { backgroundColor: colors.card }]}>
+            <Ionicons name="information-circle-outline" size={16} color={colors.muted} />
+            <Text style={[styles.depositText, { color: colors.muted }]}>
               A refundable deposit of 2,000 DZD is required when picking up the power bank.
             </Text>
           </View>
@@ -172,7 +173,7 @@ export default function PowerBankScreen() {
       )}
 
       {!success && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
           <ConfirmButton label="Rent Now" onPress={handleRent} loading={loading} price={total} />
         </View>
       )}

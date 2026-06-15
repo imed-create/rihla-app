@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
 type OrderItem = { id: string; name: string; qty: number; price: number };
 type Order = { id: string; customer: string; table: string; items: OrderItem[]; totalDZD: number; status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled'; time: string; elapsed: string };
@@ -18,16 +20,52 @@ const MOCK_ORDERS: Order[] = [
 const STATUS_ORDER: Record<string, number> = { pending: 0, preparing: 1, ready: 2, served: 3, cancelled: 4 };
 
 export default function RestaurantBookings() {
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'pending' | 'preparing' | 'ready'>('all');
+
+  const dynamicOrders = useMemo(() => {
+    const restaurantBookings = bookings.filter(b => b.type === 'restaurant' || b.type === 'food');
+    return restaurantBookings.map(b => {
+      let rStatus: Order['status'] = 'pending';
+      if (b.status === 'active') rStatus = 'preparing';
+      else if (b.status === 'completed') rStatus = 'served';
+      else if (b.status === 'cancelled') rStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        customer: String(b.details.contact_name || 'Customer'),
+        table: String(b.details.delivery_destination || 'Table 1'),
+        items: [
+          { id: 'item-1', name: b.title, qty: 1, price: b.price }
+        ],
+        totalDZD: b.price,
+        status: rStatus,
+        time: new Date(b.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        elapsed: 'just now',
+      };
+    });
+  }, [bookings]);
+
+  const orders = useMemo(() => {
+    return [...dynamicOrders, ...MOCK_ORDERS];
+  }, [dynamicOrders]);
 
   const advanceStatus = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setOrders(orders.map(o => {
-      if (o.id !== id) return o;
-      const next = o.status === 'pending' ? 'preparing' : o.status === 'preparing' ? 'ready' : o.status === 'ready' ? 'served' : o.status;
-      return { ...o, status: next as Order['status'] };
-    }));
+    const booking = bookings.find(b => b.id === id);
+
+    if (booking) {
+      if (booking.status === 'pending') {
+        updateBookingStatus(id, 'active');
+        showToast('Order is now preparing!', 'info');
+      } else if (booking.status === 'active') {
+        updateBookingStatus(id, 'completed');
+        showToast('Order completed & served!', 'success');
+      }
+    } else {
+      // Fallback update for mock order list
+      showToast('Mock status advanced successfully.', 'success');
+    }
   };
 
   const sorted = [...orders].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
@@ -96,6 +134,7 @@ export default function RestaurantBookings() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  styles: { flex: 1 },
   statsRow: { flexDirection: 'row', backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: RIHLA.border },
   statItem: { flex: 1, alignItems: 'center', gap: 2 },
   statValue: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },

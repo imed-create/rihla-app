@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
 type Trip = { id: string; customer: string; from: string; to: string; date: string; time: string; vehicle: string; distance: string; priceDZD: number; status: 'scheduled' | 'in-transit' | 'completed' | 'cancelled' };
 
@@ -15,8 +17,51 @@ const MOCK_TRIPS: Trip[] = [
 ];
 
 export default function DriverBookings() {
-  const [trips] = useState(MOCK_TRIPS);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'in-transit'>('all');
+
+  const dynamicTrips = useMemo(() => {
+    const driverBookings = bookings.filter(b => b.type === 'driver' || b.type === 'ride');
+    return driverBookings.map(b => {
+      let rStatus: Trip['status'] = 'scheduled';
+      if (b.status === 'active') rStatus = 'in-transit';
+      else if (b.status === 'completed') rStatus = 'completed';
+      else if (b.status === 'cancelled') rStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        customer: String(b.details.contact_name || 'Customer'),
+        from: String(b.details.pickup || 'Pickup Location'),
+        to: String(b.details.dropoff || 'Dropoff Location'),
+        date: new Date(b.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        time: new Date(b.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        vehicle: String(b.details.vehicle || 'Berline'),
+        distance: 'Local ride',
+        priceDZD: b.price,
+        status: rStatus,
+      };
+    });
+  }, [bookings]);
+
+  const trips = useMemo(() => {
+    return [...dynamicTrips, ...MOCK_TRIPS];
+  }, [dynamicTrips]);
+
+  const advanceTripStatus = (id: string, currentStatus: Trip['status']) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const booking = bookings.find(b => b.id === id);
+    if (booking) {
+      if (booking.status === 'pending' || booking.status === 'confirmed') {
+        updateBookingStatus(id, 'active');
+        showToast('Trip is now active (in-transit)!', 'info');
+      } else if (booking.status === 'active') {
+        updateBookingStatus(id, 'completed');
+        showToast('Trip completed!', 'success');
+      }
+    } else {
+      showToast('Mock trip status advanced.', 'success');
+    }
+  };
 
   const filtered = filter === 'all' ? trips : trips.filter(t => t.status === filter);
 
@@ -73,8 +118,20 @@ export default function DriverBookings() {
               </View>
             </View>
             <View style={styles.footer}>
-              <Text style={styles.timeText}>{item.time}</Text>
-              <Text style={styles.priceText}>{item.priceDZD.toLocaleString()} DZD</Text>
+              <Text style={styles.timeText}>{item.time} · {item.date}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text style={styles.priceText}>{item.priceDZD.toLocaleString()} DA</Text>
+                {(item.status === 'scheduled' || item.status === 'in-transit') && (
+                  <TouchableOpacity
+                    style={{ backgroundColor: RIHLA.accent, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                    onPress={() => advanceTripStatus(item.id, item.status)}
+                  >
+                    <Text style={{ color: '#FFF', fontSize: 11, fontFamily: 'mon-b' }}>
+                      {item.status === 'scheduled' ? 'Start' : 'Complete'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         )}

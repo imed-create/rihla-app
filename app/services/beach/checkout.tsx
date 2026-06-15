@@ -23,6 +23,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showToast } from '@/components/Toast';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import { orderTrackingHref } from '@/utils/router';
@@ -52,6 +53,7 @@ const PAYMENT_METHODS: { key: PaymentMethod; label: string; icon: string; desc: 
 ];
 
 export default function CheckoutScreen() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addOrder } = useApp();
   const { deliverySpotId } = useBeachOccupancy();
@@ -128,7 +130,7 @@ export default function CheckoutScreen() {
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {/* Header */}
       <LinearGradient colors={[RIHLA.primary, RIHLA.accent]} style={[styles.header, { paddingTop: topPad + 12 }]}>
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
@@ -146,15 +148,15 @@ export default function CheckoutScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="location-outline" size={18} color={RIHLA.accent} />
-            <Text style={styles.sectionTitle}>Delivery Location</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Delivery Location</Text>
           </View>
-          <View style={styles.deliveryCard}>
-            <View style={styles.deliveryDot} />
+          <View style={[styles.deliveryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.deliveryDot, { backgroundColor: RIHLA.accent }]} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.deliverySpot}>{spotLabel}</Text>
-              <Text style={styles.deliveryBeach}>Sidi Fredj Beach · Algiers</Text>
+              <Text style={[styles.deliverySpot, { color: colors.text }]}>{spotLabel}</Text>
+              <Text style={[styles.deliveryBeach, { color: colors.muted }]}>Sidi Fredj Beach · Algiers</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={RIHLA.mutedText} />
+            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
           </View>
         </View>
 
@@ -162,33 +164,33 @@ export default function CheckoutScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="receipt-outline" size={18} color={RIHLA.primary} />
-            <Text style={styles.sectionTitle}>Order Summary</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Order Summary</Text>
           </View>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {cartItems.map((item) => (
               <View key={item.id} style={styles.summaryRow}>
                 <View style={styles.summaryLeft}>
-                  <Text style={styles.summaryQty}>{item.qty}×</Text>
-                  <Text style={styles.summaryName}>{item.name}</Text>
+                  <Text style={[styles.summaryQty, { color: colors.muted }]}>{item.qty}×</Text>
+                  <Text style={[styles.summaryName, { color: colors.text }]}>{item.name}</Text>
                 </View>
-                <Text style={styles.summaryPrice}>{(item.priceDZD * item.qty).toLocaleString()} DZD</Text>
+                <Text style={[styles.summaryPrice, { color: colors.text }]}>{(item.priceDZD * item.qty).toLocaleString()} DZD</Text>
               </View>
             ))}
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryValue}>{subtotal.toLocaleString()} DZD</Text>
+              <Text style={[styles.summaryLabel, { color: colors.muted }]}>Subtotal</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>{subtotal.toLocaleString()} DZD</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Delivery</Text>
+              <Text style={[styles.summaryLabel, { color: colors.muted }]}>Delivery</Text>
               <Text style={[styles.summaryValue, { color: RIHLA.accent }]}>
                 {deliveryFee === 0 ? 'FREE' : `${deliveryFee.toLocaleString()} DZD`}
               </Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.summaryRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>{total.toLocaleString()} DZD</Text>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+              <Text style={[styles.totalValue, { color: RIHLA.primary }]}>{total.toLocaleString()} DZD</Text>
             </View>
           </View>
         </View>
@@ -197,13 +199,14 @@ export default function CheckoutScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="wallet-outline" size={18} color={RIHLA.highlight} />
-            <Text style={styles.sectionTitle}>Payment Method</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment Method</Text>
           </View>
           {PAYMENT_METHODS.map((pm) => (
             <Pressable
               key={pm.key}
               style={[
                 styles.paymentCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
                 paymentMethod === pm.key && {
                   borderColor: pm.color,
                   backgroundColor: pm.color + '08',
@@ -220,37 +223,39 @@ export default function CheckoutScreen() {
                 <Text
                   style={[
                     styles.paymentLabel,
+                    { color: colors.text },
                     paymentMethod === pm.key && { color: pm.color, fontFamily: 'mon-b' },
                   ]}
                 >
                   {pm.label}
                 </Text>
-                <Text style={styles.paymentDesc}>{pm.desc}</Text>
+                <Text style={[styles.paymentDesc, { color: colors.muted }]}>{pm.desc}</Text>
               </View>
               <View
                 style={[
                   styles.radio,
+                  { borderColor: colors.border },
                   paymentMethod === pm.key && { borderColor: pm.color, backgroundColor: pm.color },
                 ]}
               >
-                {paymentMethod === pm.key && <View style={styles.radioDot} />}
+                {paymentMethod === pm.key && <View style={[styles.radioDot, { backgroundColor: colors.text }]} />}
               </View>
             </Pressable>
           ))}
         </View>
 
         {/* ── ESTIMATED TIME ── */}
-        <View style={styles.etaCard}>
+        <View style={[styles.etaCard, { backgroundColor: '#E6FAF7' }]}>
           <Ionicons name="time-outline" size={18} color={RIHLA.accent} />
-          <Text style={styles.etaText}>Estimated delivery: 15–25 minutes</Text>
+          <Text style={[styles.etaText, { color: RIHLA.primary }]}>Estimated delivery: 15–25 minutes</Text>
         </View>
       </ScrollView>
 
       {/* ── PLACE ORDER BUTTON ── */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12, backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <View style={styles.bottomInfo}>
-          <Text style={styles.bottomTotal}>{total.toLocaleString()} DZD</Text>
-          <Text style={styles.bottomItems}>{itemCount} item(s)</Text>
+          <Text style={[styles.bottomTotal, { color: RIHLA.primary }]}>{total.toLocaleString()} DZD</Text>
+          <Text style={[styles.bottomItems, { color: colors.muted }]}>{itemCount} item(s)</Text>
         </View>
         <Pressable
           style={[styles.orderBtn, (loading || orderPlaced || cartItems.length === 0) && { opacity: 0.6 }]}
@@ -291,52 +296,46 @@ const styles = StyleSheet.create({
   // Sections
   section: { marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  sectionTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  sectionTitle: { fontSize: 15, fontFamily: 'mon-b' },
 
   // Delivery
   deliveryCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: RIHLA.border,
     padding: 14,
   },
-  deliveryDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: RIHLA.accent },
-  deliverySpot: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
-  deliveryBeach: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
+  deliveryDot: { width: 10, height: 10, borderRadius: 5 },
+  deliverySpot: { fontSize: 15, fontFamily: 'mon-b' },
+  deliveryBeach: { fontSize: 12, fontFamily: 'mon', marginTop: 2 },
 
   // Summary
   summaryCard: {
-    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: RIHLA.border,
     padding: 16,
     gap: 10,
   },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  summaryQty: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.mutedText, minWidth: 24 },
-  summaryName: { fontSize: 14, fontFamily: 'mon', color: RIHLA.dark, flexShrink: 1 },
-  summaryPrice: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
-  summaryLabel: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText },
-  summaryValue: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
-  divider: { height: 1, backgroundColor: RIHLA.border, marginVertical: 4 },
-  totalLabel: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  totalValue: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.primary },
+  summaryQty: { fontSize: 13, fontFamily: 'mon-b', minWidth: 24 },
+  summaryName: { fontSize: 14, fontFamily: 'mon', flexShrink: 1 },
+  summaryPrice: { fontSize: 14, fontFamily: 'mon-sb' },
+  summaryLabel: { fontSize: 13, fontFamily: 'mon' },
+  summaryValue: { fontSize: 13, fontFamily: 'mon-sb' },
+  divider: { height: 1, marginVertical: 4 },
+  totalLabel: { fontSize: 16, fontFamily: 'mon-b' },
+  totalValue: { fontSize: 20, fontFamily: 'mon-b' },
 
   // Payment
   paymentCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: RIHLA.border,
     padding: 14,
     marginBottom: 10,
   },
@@ -347,29 +346,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  paymentLabel: { fontSize: 15, fontFamily: 'mon-sb', color: RIHLA.dark },
-  paymentDesc: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
+  paymentLabel: { fontSize: 15, fontFamily: 'mon-sb' },
+  paymentDesc: { fontSize: 12, fontFamily: 'mon', marginTop: 2 },
   radio: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFFFFF' },
+  radioDot: { width: 10, height: 10, borderRadius: 5 },
 
   // ETA
   etaCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E6FAF7',
     borderRadius: 12,
     padding: 12,
   },
-  etaText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary },
+  etaText: { fontSize: 13, fontFamily: 'mon-sb' },
 
   // Bottom bar
   bottomBar: {
@@ -382,17 +379,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 20,
     paddingTop: 14,
-    backgroundColor: RIHLA.card,
     borderTopWidth: 1,
-    borderTopColor: RIHLA.border,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 12,
   },
   bottomInfo: { flex: 1 },
-  bottomTotal: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
-  bottomItems: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  bottomTotal: { fontSize: 18, fontFamily: 'mon-b' },
+  bottomItems: { fontSize: 12, fontFamily: 'mon' },
   orderBtn: {
     flexDirection: 'row',
     alignItems: 'center',

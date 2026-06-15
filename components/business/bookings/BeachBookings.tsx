@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
 type BeachService = { id: string; customer: string; service: string; spot: string; priceDZD: number; status: 'pending' | 'active' | 'completed' | 'cancelled'; time: string; zone: string };
 
@@ -16,8 +18,49 @@ const MOCK_SERVICES: BeachService[] = [
 ];
 
 export default function BeachBookings() {
-  const [services] = useState(MOCK_SERVICES);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'active' | 'pending'>('all');
+
+  const dynamicServices = useMemo(() => {
+    const beachBookings = bookings.filter(b => b.type === 'beach' || b.type === 'spots');
+    return beachBookings.map(b => {
+      let rStatus: BeachService['status'] = 'pending';
+      if (b.status === 'active') rStatus = 'active';
+      else if (b.status === 'completed') rStatus = 'completed';
+      else if (b.status === 'cancelled') rStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        customer: String(b.details.contact_name || b.title),
+        service: 'Beach Spot Reservation',
+        spot: `Umbrella #${b.details.spot || 'Grid'}`,
+        priceDZD: b.price,
+        status: rStatus,
+        time: new Date(b.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        zone: String(b.details.zone || 'family').toLowerCase(),
+      };
+    });
+  }, [bookings]);
+
+  const services = useMemo(() => {
+    return [...dynamicServices, ...MOCK_SERVICES];
+  }, [dynamicServices]);
+
+  const advanceStatus = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const booking = bookings.find(b => b.id === id);
+    if (booking) {
+      if (booking.status === 'pending') {
+        updateBookingStatus(id, 'active');
+        showToast('Reservation activated!', 'success');
+      } else if (booking.status === 'active') {
+        updateBookingStatus(id, 'completed');
+        showToast('Reservation marked completed.', 'success');
+      }
+    } else {
+      showToast('Mock spot status advanced.', 'success');
+    }
+  };
 
   const filtered = filter === 'all' ? services : services.filter(s => s.status === filter);
   const activeCount = services.filter(s => s.status === 'active').length;
@@ -62,7 +105,16 @@ export default function BeachBookings() {
             </View>
             <View style={styles.cardFooter}>
               <Text style={styles.timeText}>{item.time}</Text>
-              <Text style={styles.priceText}>{item.priceDZD.toLocaleString()} DZD</Text>
+              <View style={styles.actions}>
+                <Text style={styles.priceText}>{item.priceDZD.toLocaleString()} DZD</Text>
+                {(item.status === 'pending' || item.status === 'active') && (
+                  <TouchableOpacity style={styles.advanceBtn} onPress={() => advanceStatus(item.id)}>
+                    <Text style={styles.advanceBtnText}>
+                      {item.status === 'pending' ? 'Activate' : 'Complete'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -91,7 +143,10 @@ const styles = StyleSheet.create({
   serviceInfo: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 1 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 10, fontFamily: 'mon-b', textTransform: 'capitalize' },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIHLA.border },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIHLA.border },
   timeText: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
-  priceText: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
+  priceText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.mutedText, marginRight: 8 },
+  actions: { flexDirection: 'row', alignItems: 'center' },
+  advanceBtn: { backgroundColor: RIHLA.accent, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
+  advanceBtnText: { color: '#FFF', fontSize: 10, fontFamily: 'mon-b' },
 });

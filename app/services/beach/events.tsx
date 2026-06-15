@@ -6,8 +6,9 @@ import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 
 const EVENTS = [
   {
@@ -57,7 +58,7 @@ const EVENTS = [
 ];
 
 export default function EventsScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
 
@@ -96,7 +97,7 @@ export default function EventsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#FF70A6", "#E0508C"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -112,14 +113,14 @@ export default function EventsScreen() {
       {success ? (
         <View style={styles.successWrap}>
           <Ionicons name="checkmark-circle" size={80} color="#06D6A0" />
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>Tickets Purchased!</Text>
-          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>Tickets Purchased!</Text>
+          <Text style={[styles.successSub, { color: colors.muted }]}>
             Your e-tickets are saved in Bookings. See you there!
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 16 }} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>UPCOMING EVENTS</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>UPCOMING EVENTS</Text>
           {EVENTS.map((ev) => (
             <Pressable
               key={ev.id}
@@ -136,7 +137,7 @@ export default function EventsScreen() {
               <View style={[styles.eventColorBar, { backgroundColor: ev.color }]} />
               <View style={styles.eventBody}>
                 <View style={styles.eventRow}>
-                  <Text style={[styles.eventTitle, { color: colors.foreground }]} numberOfLines={1}>
+                  <Text style={[styles.eventTitle, { color: colors.text }]} numberOfLines={1}>
                     {ev.title}
                   </Text>
                   <View style={[styles.ticketBadge, { backgroundColor: ev.color + "22" }]}>
@@ -144,14 +145,14 @@ export default function EventsScreen() {
                   </View>
                 </View>
                 <View style={styles.eventMeta}>
-                  <Ionicons name="calendar-outline" size={13} color={colors.mutedForeground} />
-                  <Text style={[styles.eventMetaText, { color: colors.mutedForeground }]}>{ev.date} · {ev.time}</Text>
+                  <Ionicons name="calendar-outline" size={13} color={colors.muted} />
+                  <Text style={[styles.eventMetaText, { color: colors.muted }]}>{ev.date} · {ev.time}</Text>
                 </View>
                 <View style={styles.eventMeta}>
-                  <Ionicons name="location-outline" size={13} color={colors.mutedForeground} />
-                  <Text style={[styles.eventMetaText, { color: colors.mutedForeground }]}>{ev.location}</Text>
+                  <Ionicons name="location-outline" size={13} color={colors.muted} />
+                  <Text style={[styles.eventMetaText, { color: colors.muted }]}>{ev.location}</Text>
                 </View>
-                <Text style={[styles.eventDesc, { color: colors.mutedForeground }]} numberOfLines={2}>
+                <Text style={[styles.eventDesc, { color: colors.muted }]} numberOfLines={2}>
                   {ev.description}
                 </Text>
                 <Text style={[styles.eventPrice, { color: ev.color }]}>{ev.price} DZD / ticket</Text>
@@ -161,15 +162,15 @@ export default function EventsScreen() {
 
           {event && (
             <>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>NUMBER OF TICKETS</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>NUMBER OF TICKETS</Text>
               <View style={styles.ticketControl}>
                 <Pressable
-                  style={[styles.controlBtn, { backgroundColor: colors.muted }]}
+                  style={[styles.controlBtn, { backgroundColor: colors.card }]}
                   onPress={() => setTickets(Math.max(1, tickets - 1))}
                 >
-                  <Ionicons name="remove" size={20} color={colors.foreground} />
+                  <Ionicons name="remove" size={20} color={colors.text} />
                 </Pressable>
-                <Text style={[styles.ticketCount, { color: colors.foreground }]}>{tickets}</Text>
+                <Text style={[styles.ticketCount, { color: colors.text }]}>{tickets}</Text>
                 <Pressable
                   style={[styles.controlBtn, { backgroundColor: event.color }]}
                   onPress={() => setTickets(Math.min(event.tickets, tickets + 1))}
@@ -178,7 +179,7 @@ export default function EventsScreen() {
                 </Pressable>
               </View>
               <View style={[styles.totalRow, { backgroundColor: event.color + "22", borderColor: event.color + "44" }]}>
-                <Text style={[styles.totalLabel, { color: colors.mutedForeground }]}>{tickets} ticket{tickets > 1 ? "s" : ""}</Text>
+                <Text style={[styles.totalLabel, { color: colors.muted }]}>{tickets} ticket{tickets > 1 ? "s" : ""}</Text>
                 <Text style={[styles.totalValue, { color: event.color }]}>{total} DZD</Text>
               </View>
             </>
@@ -187,7 +188,7 @@ export default function EventsScreen() {
       )}
 
       {!success && event && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
           <ConfirmButton label="Buy Tickets" onPress={handleBuy} loading={loading} price={total} />
         </View>
       )}

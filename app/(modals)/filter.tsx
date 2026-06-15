@@ -25,6 +25,7 @@ import {
   ServiceCategory,
 } from '@/constants/destinations';
 import { useTranslation } from '@/context/I18nContext';
+import { useTheme } from '@/context/ThemeContext';
 import { useFilterStore } from '@/store/useFilterStore';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
@@ -79,6 +80,7 @@ const REGION_OPTIONS = [
 export default function FilterScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const store = useFilterStore();
 
   // Local draft state (user edits these, then hits Apply)
@@ -131,17 +133,17 @@ export default function FilterScreen() {
     (selectedRegion === 'All regions' ? null : selectedRegion) !== store.region;
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {/* Uber Dark Header */}
-      <View style={[styles.header, { paddingTop: topPad + 12 }]}>
-        <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
-          <Ionicons name="close" size={22} color="#FFFFFF" />
+      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.bg }]}>
+        <Pressable onPress={() => safeGoBack()} style={[styles.backBtn, { backgroundColor: colors.border }]}>
+          <Ionicons name="close" size={22} color={colors.text} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Filters</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Filters</Text>
         </View>
         <Pressable onPress={handleReset} style={styles.resetBtn}>
-          <Text style={styles.resetBtnText}>Reset</Text>
+          <Text style={[styles.resetBtnText, { color: colors.muted }]}>Reset</Text>
         </Pressable>
       </View>
 
@@ -151,13 +153,14 @@ export default function FilterScreen() {
       >
         {/* ── ENVIRONMENT ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('discover.environment').toUpperCase()}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>{t('discover.environment').toUpperCase()}</Text>
           <View style={styles.envRow}>
             {ENVIRONMENTS.map((env) => (
               <Pressable
                 key={env.key}
                 style={[
                   styles.envCard,
+                  { backgroundColor: colors.card, borderColor: colors.border },
                   environment === env.key && {
                     borderColor: env.color,
                     backgroundColor: env.color + '10',
@@ -172,6 +175,7 @@ export default function FilterScreen() {
                 <Text
                   style={[
                     styles.envLabel,
+                    { color: colors.text },
                     environment === env.key && { color: env.color, fontFamily: 'mon-b' },
                   ]}
                 >
@@ -185,17 +189,17 @@ export default function FilterScreen() {
               </Pressable>
             ))}
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
         </View>
 
         {/* ── GEO-REGION ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('discover.geoRegion').toUpperCase()}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>{t('discover.geoRegion').toUpperCase()}</Text>
           <View style={styles.chipGrid}>
             {GEO_REGIONS.map((gr) => (
               <Pressable
                 key={gr.key}
-                style={[styles.chip, geoRegion === gr.key && styles.chipActive]}
+                style={[styles.chip, { borderColor: colors.border, backgroundColor: colors.card }, geoRegion === gr.key && styles.chipActive]}
                 onPress={() => {
                   hapticLight();
                   setGeoRegion(geoRegion === gr.key ? null : gr.key);
@@ -204,25 +208,25 @@ export default function FilterScreen() {
                 <Ionicons
                   name={gr.icon as any}
                   size={14}
-                  color={geoRegion === gr.key ? '#FFFFFF' : RIHLA.mutedText}
+                  color={geoRegion === gr.key ? '#FFFFFF' : colors.muted}
                 />
-                <Text style={[styles.chipText, geoRegion === gr.key && styles.chipTextActive]}>
+                <Text style={[styles.chipText, { color: colors.muted }, geoRegion === gr.key && styles.chipTextActive]}>
                   {gr.label}
                 </Text>
               </Pressable>
             ))}
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
         </View>
 
         {/* ── SERVICE CATEGORY ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('discover.serviceCategory').toUpperCase()}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>{t('discover.serviceCategory').toUpperCase()}</Text>
           <View style={styles.chipGrid}>
             {SERVICE_CATEGORIES.map((sc) => (
               <Pressable
                 key={sc.key}
-                style={[styles.chip, serviceCategory === sc.key && styles.chipActive]}
+                style={[styles.chip, { borderColor: colors.border, backgroundColor: colors.card }, serviceCategory === sc.key && styles.chipActive]}
                 onPress={() => {
                   hapticLight();
                   setServiceCategory(serviceCategory === sc.key ? null : sc.key);
@@ -231,58 +235,58 @@ export default function FilterScreen() {
                 <Ionicons
                   name={sc.icon as any}
                   size={14}
-                  color={serviceCategory === sc.key ? '#FFFFFF' : RIHLA.mutedText}
+                  color={serviceCategory === sc.key ? '#FFFFFF' : colors.muted}
                 />
-                <Text style={[styles.chipText, serviceCategory === sc.key && styles.chipTextActive]}>
+                <Text style={[styles.chipText, { color: colors.muted }, serviceCategory === sc.key && styles.chipTextActive]}>
                   {sc.label}
                 </Text>
               </Pressable>
             ))}
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
         </View>
 
         {/* ── PRICE RANGE ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>PRICE RANGE</Text>
-          <Text style={styles.sectionSub}>Prices in Algerian Dinar (DZD)</Text>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>PRICE RANGE</Text>
+          <Text style={[styles.sectionSub, { color: colors.muted }]}>Prices in Algerian Dinar (DZD)</Text>
           <View style={styles.priceList}>
             {PRICE_PRESETS.map((preset, i) => (
               <Pressable
                 key={preset.label}
-                style={[styles.filterRow, priceIdx === i && styles.filterRowActive]}
+                style={[styles.filterRow, { backgroundColor: colors.card, borderColor: colors.border }, priceIdx === i && styles.filterRowActive]}
                 onPress={() => {
                   hapticLight();
                   setPriceIdx(i);
                 }}
               >
-                <Text style={[styles.filterRowLabel, priceIdx === i && styles.filterRowLabelActive]}>
+                <Text style={[styles.filterRowLabel, { color: colors.text }, priceIdx === i && styles.filterRowLabelActive]}>
                   {preset.label}
                 </Text>
-                <View style={[styles.radio, priceIdx === i && styles.radioActive]}>
+                <View style={[styles.radio, { borderColor: colors.border }, priceIdx === i && styles.radioActive]}>
                   {priceIdx === i && <View style={styles.radioDot} />}
                 </View>
               </Pressable>
             ))}
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
         </View>
 
         {/* ── GUEST RATING ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>GUEST RATING</Text>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>GUEST RATING</Text>
           <View style={styles.priceList}>
             {RATING_OPTIONS.map((opt) => (
               <Pressable
                 key={opt.value}
-                style={[styles.filterRow, minRating === opt.value && styles.filterRowActive]}
+                style={[styles.filterRow, { backgroundColor: colors.card, borderColor: colors.border }, minRating === opt.value && styles.filterRowActive]}
                 onPress={() => {
                   hapticLight();
                   setMinRating(opt.value);
                 }}
               >
                 <View style={styles.filterRowLeft}>
-                  <Text style={[styles.filterRowLabel, minRating === opt.value && styles.filterRowLabelActive]}>
+                  <Text style={[styles.filterRowLabel, { color: colors.text }, minRating === opt.value && styles.filterRowLabelActive]}>
                     {opt.label}
                   </Text>
                   {opt.value > 0 && (
@@ -298,29 +302,29 @@ export default function FilterScreen() {
                     </View>
                   )}
                 </View>
-                <View style={[styles.radio, minRating === opt.value && styles.radioActive]}>
+                <View style={[styles.radio, { borderColor: colors.border }, minRating === opt.value && styles.radioActive]}>
                   {minRating === opt.value && <View style={styles.radioDot} />}
                 </View>
               </Pressable>
             ))}
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
         </View>
 
         {/* ── REGION (Wilaya) ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>WILAYA / REGION</Text>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>WILAYA / REGION</Text>
           <View style={styles.chipGrid}>
             {REGION_OPTIONS.map((r) => (
               <Pressable
                 key={r}
-                style={[styles.chip, selectedRegion === r && styles.chipActive]}
+                style={[styles.chip, { borderColor: colors.border, backgroundColor: colors.card }, selectedRegion === r && styles.chipActive]}
                 onPress={() => {
                   hapticLight();
                   setSelectedRegion(r);
                 }}
               >
-                <Text style={[styles.chipText, selectedRegion === r && styles.chipTextActive]}>
+                <Text style={[styles.chipText, { color: colors.muted }, selectedRegion === r && styles.chipTextActive]}>
                   {r}
                 </Text>
               </Pressable>
@@ -330,10 +334,10 @@ export default function FilterScreen() {
       </ScrollView>
 
       {/* ── STICKY FOOTER ── */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <View style={styles.footerShadow} />
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12, backgroundColor: colors.card, borderTopColor: colors.border }]}>
+        <View style={[styles.footerShadow, { backgroundColor: colors.bg }]} />
         <View style={styles.footerInfo}>
-          <Text style={styles.footerReset} onPress={handleReset}>
+          <Text style={[styles.footerReset, { color: colors.muted }]} onPress={handleReset}>
             Clear all
           </Text>
         </View>
@@ -351,22 +355,22 @@ export default function FilterScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  // Uber Dark Header
-  header: { backgroundColor: '#0d0d0d', paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  // Header
+  header: { paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#FFFFFF' },
+  headerTitle: { fontSize: 18, fontFamily: 'mon-b' },
   resetBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  resetBtnText: { fontSize: 14, fontFamily: 'mon-sb', color: 'rgba(255,255,255,0.7)' },
+  resetBtnText: { fontSize: 14, fontFamily: 'mon-sb' },
 
   // Scroll
   scrollContent: { paddingTop: 8 },
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 4 },
-  sectionLabel: { fontSize: 11, fontFamily: 'mon-b', color: RIHLA.mutedText, letterSpacing: 1, marginBottom: 10, marginTop: 8 },
-  sectionSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginBottom: 10, marginTop: -4 },
-  divider: { height: 1, backgroundColor: RIHLA.border, marginTop: 16 },
+  sectionLabel: { fontSize: 11, fontFamily: 'mon-b', letterSpacing: 1, marginBottom: 10, marginTop: 8 },
+  sectionSub: { fontSize: 12, fontFamily: 'mon', marginBottom: 10, marginTop: -4 },
+  divider: { height: 1, marginTop: 16 },
 
   // Environment cards
   envRow: { flexDirection: 'row', gap: 12 },
@@ -375,14 +379,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: RIHLA.card,
     borderWidth: 1.5,
-    borderColor: RIHLA.border,
     borderRadius: 16,
     padding: 14,
   },
   envEmoji: { fontSize: 24 },
-  envLabel: { flex: 1, fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
+  envLabel: { flex: 1, fontSize: 14, fontFamily: 'mon-sb' },
   envCheck: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
 
   // Chips grid
@@ -395,11 +397,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: RIHLA.border,
-    backgroundColor: RIHLA.card,
   },
   chipActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
-  chipText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.mutedText },
+  chipText: { fontSize: 13, fontFamily: 'mon-sb' },
   chipTextActive: { color: '#FFFFFF' },
 
   // Filter rows (radio)
@@ -411,14 +411,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: RIHLA.card,
     borderWidth: 1,
-    borderColor: RIHLA.border,
     marginBottom: 6,
   },
   filterRowActive: { borderColor: RIHLA.primary, backgroundColor: RIHLA.primary + '08' },
   filterRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  filterRowLabel: { fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
+  filterRowLabel: { fontSize: 14, fontFamily: 'mon' },
   filterRowLabelActive: { fontFamily: 'mon-b', color: RIHLA.primary },
   ratingStars: { flexDirection: 'row', gap: 2 },
 
@@ -428,7 +426,6 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -447,9 +444,7 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingHorizontal: 20,
     paddingTop: 16,
-    backgroundColor: RIHLA.card,
     borderTopWidth: 1,
-    borderTopColor: RIHLA.border,
   },
   footerShadow: {
     position: 'absolute',
@@ -457,10 +452,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 8,
-    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   footerInfo: {},
-  footerReset: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.mutedText, textDecorationLine: 'underline' },
+  footerReset: { fontSize: 14, fontFamily: 'mon-sb', textDecorationLine: 'underline' },
   applyBtn: {
     backgroundColor: RIHLA.primary,
     paddingHorizontal: 32,

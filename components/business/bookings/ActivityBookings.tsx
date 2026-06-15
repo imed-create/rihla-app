@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
-type ActivityBooking = { id: string; customer: string; activity: string; date: string; time: string; participants: number; totalDZD: number; status: 'confirmed' | 'checked-in' | 'completed' | 'cancelled'; difficulty: string };
+type ActivityReservation = { id: string; customer: string; activity: string; date: string; time: string; participants: number; totalDZD: number; status: 'confirmed' | 'checked-in' | 'completed' | 'cancelled'; difficulty: string };
 
-const MOCK_BOOKINGS: ActivityBooking[] = [
+const MOCK_BOOKINGS: ActivityReservation[] = [
   { id: 'a1', customer: 'Alex T.', activity: 'Tandem Paragliding', date: '2026-06-12', time: '09:00', participants: 2, totalDZD: 16000, status: 'confirmed', difficulty: 'moderate' },
   { id: 'a2', customer: 'Maria G.', activity: 'Scuba Diving Intro', date: '2026-06-10', time: '11:00', participants: 4, totalDZD: 20000, status: 'checked-in', difficulty: 'easy' },
   { id: 'a3', customer: 'Omar K.', activity: 'Mountain Hiking', date: '2026-06-15', time: '06:00', participants: 6, totalDZD: 15000, status: 'confirmed', difficulty: 'challenging' },
@@ -15,21 +17,75 @@ const MOCK_BOOKINGS: ActivityBooking[] = [
 ];
 
 export default function ActivityBookings() {
-  const [bookings] = useState(MOCK_BOOKINGS);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'confirmed' | 'checked-in'>('all');
 
-  const filtered = filter === 'all' ? bookings : bookings.filter(b => b.status === filter);
+  const dynamicActivities = useMemo(() => {
+    const activityBookings = bookings.filter(b => b.type === 'activity');
+    return activityBookings.map(b => {
+      let aStatus: ActivityReservation['status'] = 'confirmed';
+      if (b.status === 'active') aStatus = 'checked-in';
+      else if (b.status === 'completed') aStatus = 'completed';
+      else if (b.status === 'cancelled') aStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        customer: String(b.details.contact_name || 'Guest'),
+        activity: b.title,
+        date: String(b.details.date || b.createdAt.split('T')[0]),
+        time: String(b.details.time || '10:00'),
+        participants: Number(b.details.participants || b.details.group_size || 1),
+        totalDZD: b.price,
+        status: aStatus,
+        difficulty: String(b.details.difficulty || 'moderate'),
+      };
+    });
+  }, [bookings]);
+
+  const allBookings = useMemo(() => {
+    return [...dynamicActivities, ...MOCK_BOOKINGS];
+  }, [dynamicActivities]);
+
+  const handleCheckIn = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'active');
+      showToast('Participant checked in!', 'success');
+    } else {
+      showToast('Check-in recorded.', 'success');
+    }
+  };
+
+  const handleComplete = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'completed');
+      showToast('Activity completed!', 'success');
+    } else {
+      showToast('Activity marked complete.', 'success');
+    }
+  };
+
+  const filtered = filter === 'all' ? allBookings : allBookings.filter(b => b.status === filter);
+
+  const difficultyColor = (d: string) => {
+    if (d === 'easy') return '#10B981';
+    if (d === 'challenging') return '#EF4444';
+    return '#F59E0B';
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.statsRow}>
-        <View style={styles.statItem}><Text style={styles.statValue}>{bookings.length}</Text><Text style={styles.statLabel}>Bookings</Text></View>
+        <View style={styles.statItem}><Text style={styles.statValue}>{allBookings.length}</Text><Text style={styles.statLabel}>Bookings</Text></View>
         <View style={styles.statDiv} />
-        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#6366F1' }]}>{bookings.filter(b => b.status === 'confirmed').length}</Text><Text style={styles.statLabel}>Upcoming</Text></View>
+        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#6366F1' }]}>{allBookings.filter(b => b.status === 'confirmed').length}</Text><Text style={styles.statLabel}>Upcoming</Text></View>
         <View style={styles.statDiv} />
-        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#10B981' }]}>{bookings.filter(b => b.status === 'checked-in').length}</Text><Text style={styles.statLabel}>Checked In</Text></View>
+        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#10B981' }]}>{allBookings.filter(b => b.status === 'checked-in').length}</Text><Text style={styles.statLabel}>Checked In</Text></View>
         <View style={styles.statDiv} />
-        <View style={styles.statItem}><Text style={styles.statValue}>{bookings.reduce((s, b) => s + b.totalDZD, 0).toLocaleString()}</Text><Text style={styles.statLabel}>Revenue</Text></View>
+        <View style={styles.statItem}><Text style={styles.statValue}>{allBookings.reduce((s, b) => s + b.totalDZD, 0).toLocaleString()}</Text><Text style={styles.statLabel}>Revenue</Text></View>
       </View>
 
       <View style={styles.filterRow}>
@@ -60,9 +116,26 @@ export default function ActivityBookings() {
             <View style={styles.detailRow}>
               <View style={styles.detailChip}><Ionicons name="calendar-outline" size={12} color={RIHLA.mutedText} /><Text style={styles.detailText}>{new Date(item.date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</Text></View>
               <View style={styles.detailChip}><Ionicons name="time-outline" size={12} color={RIHLA.mutedText} /><Text style={styles.detailText}>{item.time}</Text></View>
-              <View style={styles.detailChip}><Ionicons name="people-outline" size={12} color={RIHLA.mutedText} /><Text style={styles.detailText}>{item.participants} people</Text></View>
+              <View style={[styles.detailChip, { backgroundColor: difficultyColor(item.difficulty) + '15' }]}>
+                <Ionicons name="fitness-outline" size={12} color={difficultyColor(item.difficulty)} />
+                <Text style={[styles.detailText, { color: difficultyColor(item.difficulty) }]}>{item.difficulty}</Text>
+              </View>
             </View>
-            <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+              {item.status === 'confirmed' && (
+                <TouchableOpacity style={styles.checkInBtn} onPress={() => handleCheckIn(item.id)}>
+                  <Ionicons name="enter-outline" size={14} color="#fff" />
+                  <Text style={styles.actionBtnText}>Check In</Text>
+                </TouchableOpacity>
+              )}
+              {item.status === 'checked-in' && (
+                <TouchableOpacity style={styles.completeBtn} onPress={() => handleComplete(item.id)}>
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                  <Text style={styles.actionBtnText}>Complete</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         )}
         contentContainerStyle={{ paddingBottom: 20 }}
@@ -93,5 +166,9 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F8FAFC', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   detailText: { fontSize: 10, fontFamily: 'mon', color: RIHLA.mutedText },
-  priceText: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.primary, marginTop: 8 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIHLA.border },
+  priceText: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.primary },
+  checkInBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: RIHLA.accent, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  completeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10B981', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  actionBtnText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
 });

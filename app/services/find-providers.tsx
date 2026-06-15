@@ -13,6 +13,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,8 +21,10 @@ import * as Haptics from 'expo-haptics';
 import MapBottomSheetLayout from '@/components/shared/MapBottomSheetLayout';
 import ServiceProviderCard, { type ServiceProvider } from '@/components/shared/ServiceProviderCard';
 import UberButton from '@/components/shared/UberButton';
+import { useTheme } from '@/context/ThemeContext';
 import { RIHLA } from '@/constants/theme';
 import { useLocationStore, type ServiceMarker } from '@/store/useLocationStore';
+import { useApp } from '@/context/AppContext';
 
 // Mock providers — one per category to demonstrate the flow
 const MOCK_PROVIDERS: ServiceProvider[] = [
@@ -61,8 +64,10 @@ const PROVIDER_CATEGORIES = [
 export default function FindProvidersScreen() {
   const { category: initialCategory, lat, lng, name: listingName } = useLocalSearchParams<Record<string, string>>();
   const [activeCategory, setActiveCategory] = useState<string>(initialCategory || 'all');
+  const { colors } = useTheme();
 
   const { setDestinationLocation } = useLocationStore();
+  const { addBooking } = useApp();
 
   // Use listing coordinates if passed from explore screen
   const destinationCoords = lat && lng
@@ -105,8 +110,39 @@ export default function FindProvidersScreen() {
   };
 
   const handleConfirm = () => {
+    if (!selectedProviderData) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.back();
+
+    const booking = addBooking({
+      type: selectedProviderData.category,
+      icon: 'car-outline',
+      iconFamily: 'Ionicons',
+      color: RIHLA.primary,
+      title: selectedProviderData.name,
+      subtitle: selectedProviderData.title,
+      price: selectedProviderData.priceDZD,
+      details: {
+        provider: selectedProviderData.name,
+        rating: selectedProviderData.rating,
+        eta: selectedProviderData.time ? `~${selectedProviderData.time} min` : 'Instant',
+        seats: selectedProviderData.seats ?? 4,
+      },
+    });
+
+    Alert.alert(
+      'Request Sent!',
+      `${selectedProviderData.name} has been notified. You'll be connected shortly.`,
+      [
+        {
+          text: 'View Booking',
+          onPress: () => router.push(`/booking/${booking.id}` as any),
+        },
+        {
+          text: 'Done',
+          onPress: () => router.back(),
+        },
+      ]
+    );
   };
 
   return (
@@ -139,6 +175,7 @@ export default function FindProvidersScreen() {
                 }}
                 style={[
                   styles.filterChip,
+                  { backgroundColor: colors.card },
                   isActive && {
                     backgroundColor: RIHLA.primary,
                     borderColor: RIHLA.primary,
@@ -148,11 +185,12 @@ export default function FindProvidersScreen() {
                 <Ionicons
                   name={cat.icon}
                   size={14}
-                  color={isActive ? '#FFFFFF' : '#64748B'}
+                  color={isActive ? '#FFFFFF' : colors.muted}
                 />
                 <Text
                   style={[
                     styles.filterLabel,
+                    { color: colors.text },
                     isActive && { color: '#FFFFFF' },
                   ]}
                 >
@@ -171,27 +209,27 @@ export default function FindProvidersScreen() {
         >
           {showConfirmation && selectedProviderData ? (
             /* Uber-style confirmation card */
-            <View style={styles.confirmCard}>
-              <Text style={styles.confirmTitle}>Confirm your selection</Text>
+            <View style={[styles.confirmCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[styles.confirmTitle, { color: colors.text }]}>Confirm your selection</Text>
               <ServiceProviderCard
                 provider={selectedProviderData}
                 selected
                 onSelect={() => {}}
               />
-              <View style={styles.confirmMeta}>
+              <View style={[styles.confirmMeta, { borderTopColor: colors.border }]}>
                 <View style={styles.confirmMetaItem}>
-                  <Ionicons name="location-outline" size={14} color="#64748B" />
-                  <Text style={styles.confirmMetaText}>Your location → Provider</Text>
+                  <Ionicons name="location-outline" size={14} color={colors.muted} />
+                  <Text style={[styles.confirmMetaText, { color: colors.muted }]}>Your location → Provider</Text>
                 </View>
                 <View style={styles.confirmMetaItem}>
-                  <Ionicons name="time-outline" size={14} color="#64748B" />
-                  <Text style={styles.confirmMetaText}>
+                  <Ionicons name="time-outline" size={14} color={colors.muted} />
+                  <Text style={[styles.confirmMetaText, { color: colors.muted }]}>
                     Arrives in ~{selectedProviderData.time || 10} min
                   </Text>
                 </View>
                 <View style={styles.confirmMetaItem}>
-                  <Ionicons name="card-outline" size={14} color="#64748B" />
-                  <Text style={styles.confirmMetaText}>
+                  <Ionicons name="card-outline" size={14} color={colors.muted} />
+                  <Text style={[styles.confirmMetaText, { color: colors.muted }]}>
                     {selectedProviderData.priceDZD.toLocaleString()} DZD
                   </Text>
                 </View>
@@ -217,7 +255,7 @@ export default function FindProvidersScreen() {
             /* Provider Cards */
             <>
               <View style={styles.resultHeader}>
-                <Text style={styles.resultCount}>
+                <Text style={[styles.resultCount, { color: colors.muted }]}>
                   {filteredProviders.length} {activeCategory === 'all' ? 'providers' : `${activeCategory}s`} nearby
                 </Text>
                 <TouchableOpacity
@@ -226,15 +264,15 @@ export default function FindProvidersScreen() {
                     router.back();
                   }}
                 >
-                  <Text style={styles.viewMapText}>View map</Text>
+                  <Text style={[styles.viewMapText, { color: RIHLA.accent }]}>View map</Text>
                 </TouchableOpacity>
               </View>
 
               {filteredProviders.length === 0 ? (
                 <View style={styles.emptyState}>
-                  <Ionicons name="search-outline" size={40} color="#CBD5E1" />
-                  <Text style={styles.emptyText}>No providers found</Text>
-                  <Text style={styles.emptySubtext}>Try a different category</Text>
+                  <Ionicons name="search-outline" size={40} color={colors.muted} />
+                  <Text style={[styles.emptyText, { color: colors.muted }]}>No providers found</Text>
+                  <Text style={[styles.emptySubtext, { color: colors.muted }]}>Try a different category</Text>
                 </View>
               ) : (
                 filteredProviders.map((provider) => (
@@ -266,7 +304,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -276,7 +313,6 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 13,
     fontFamily: 'mon-sb',
-    color: '#334155',
   },
   providerList: {
     flex: 1,
@@ -291,12 +327,10 @@ const styles = StyleSheet.create({
   resultCount: {
     fontSize: 13,
     fontFamily: 'mon-sb',
-    color: '#64748B',
   },
   viewMapText: {
     fontSize: 13,
     fontFamily: 'mon-sb',
-    color: RIHLA.accent,
   },
   emptyState: {
     alignItems: 'center',
@@ -307,26 +341,21 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontFamily: 'mon-b',
-    color: '#94A3B8',
   },
   emptySubtext: {
     fontSize: 13,
     fontFamily: 'mon',
-    color: '#CBD5E1',
   },
 
   // Confirmation card
   confirmCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: RIHLA.border,
   },
   confirmTitle: {
     fontSize: 17,
     fontFamily: 'mon-b',
-    color: RIHLA.dark,
     marginBottom: 12,
   },
   confirmMeta: {
@@ -334,7 +363,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
   },
   confirmMetaItem: {
     flexDirection: 'row',
@@ -344,7 +372,6 @@ const styles = StyleSheet.create({
   confirmMetaText: {
     fontSize: 13,
     fontFamily: 'mon-sb',
-    color: '#475569',
   },
   cancelBtn: {
     height: 44,

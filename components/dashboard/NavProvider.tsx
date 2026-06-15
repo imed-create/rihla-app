@@ -1,6 +1,7 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState, Suspense } from 'react';
 import { ProRole } from '@/constants/proNavigation';
-import ProCommandDrawer from './CommandDrawer';
+
+const ProCommandDrawer = React.lazy(() => import('./CommandDrawer'));
 
 type ProNavContextValue = {
   role: ProRole;
@@ -27,7 +28,9 @@ export function ProNavProvider({ role, children }: { role: ProRole; children: Re
   return (
     <ProNavContext.Provider value={value}>
       {children}
-      <ProCommandDrawer />
+      <Suspense fallback={null}>
+        <ProCommandDrawer />
+      </Suspense>
     </ProNavContext.Provider>
   );
 }

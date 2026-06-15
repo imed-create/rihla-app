@@ -7,8 +7,9 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-n
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
 import MassagePavilionGrid from "@/components/beach/MassagePavilionGrid";
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 import { safeGoBack } from "@/utils/safeNavigation";
 
 const MASSAGE_TYPES = [
@@ -32,7 +33,7 @@ const BASE_PRICES: Record<string, number> = {
 };
 
 export default function MassageScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking, activeBookings } = useApp();
 
@@ -81,7 +82,7 @@ export default function MassageScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#845EC2", "#6B46C1"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -98,7 +99,7 @@ export default function MassageScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.label, { color: colors.mutedForeground }]}>MASSAGE TYPE</Text>
+        <Text style={[styles.label, { color: colors.muted }]}>MASSAGE TYPE</Text>
         <View style={styles.typeGrid}>
           {MASSAGE_TYPES.map((m) => (
             <Pressable
@@ -116,20 +117,20 @@ export default function MassageScreen() {
               <MaterialCommunityIcons
                 name={m.icon as any}
                 size={28}
-                color={massageType.id === m.id ? "#845EC2" : colors.mutedForeground}
+                color={massageType.id === m.id ? "#845EC2" : colors.muted}
               />
-              <Text style={[styles.typeName, { color: colors.foreground }]}>{m.name}</Text>
-              <Text style={[styles.typeDesc, { color: colors.mutedForeground }]} numberOfLines={2}>
+              <Text style={[styles.typeName, { color: colors.text }]}>{m.name}</Text>
+              <Text style={[styles.typeDesc, { color: colors.muted }]} numberOfLines={2}>
                 {m.desc}
               </Text>
-              <Text style={[styles.typeBase, { color: colors.primary }]}>
+              <Text style={[styles.typeBase, { color: RIHLA.primary }]}>
                 from {BASE_PRICES[m.id]} DA
               </Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={[styles.label, { color: colors.mutedForeground }]}>DURATION</Text>
+        <Text style={[styles.label, { color: colors.muted }]}>DURATION</Text>
         <View style={styles.row}>
           {DURATIONS.map((d) => (
             <Pressable
@@ -137,7 +138,7 @@ export default function MassageScreen() {
               style={[
                 styles.durationChip,
                 {
-                  backgroundColor: duration.label === d.label ? "#845EC2" : colors.muted,
+                  backgroundColor: duration.label === d.label ? "#845EC2" : colors.card,
                   borderColor: duration.label === d.label ? "#845EC2" : colors.border,
                 },
               ]}
@@ -146,7 +147,7 @@ export default function MassageScreen() {
               <Text
                 style={[
                   styles.chipText,
-                  { color: duration.label === d.label ? "#FFF" : colors.foreground },
+                  { color: duration.label === d.label ? "#FFF" : colors.text },
                 ]}
               >
                 {d.label}
@@ -170,12 +171,12 @@ export default function MassageScreen() {
         />
 
         <View style={[styles.priceBox, { backgroundColor: "#845EC222", borderColor: "#845EC244" }]}>
-          <Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>Total Price</Text>
+          <Text style={[styles.priceLabel, { color: colors.muted }]}>Total Price</Text>
           <Text style={[styles.priceValue, { color: "#845EC2" }]}>{price} DA</Text>
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
         <ConfirmButton
           label={slot ? `Book · ${price} DA` : "Select cabana & time"}
           onPress={handleBook}

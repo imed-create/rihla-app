@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 
 const SECTIONS = [
   {
@@ -72,7 +72,7 @@ const EMERGENCY = [
 ];
 
 export default function GuideScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [expanded, setExpanded] = useState<string | null>("rules");
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
@@ -83,7 +83,7 @@ export default function GuideScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#A8763E", "#8B5E32"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -132,11 +132,11 @@ export default function GuideScreen() {
               <View style={[styles.sectionIcon, { backgroundColor: section.color + "22" }]}>
                 <Ionicons name={section.icon} size={20} color={section.color} />
               </View>
-              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{section.title}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{section.title}</Text>
               <Ionicons
                 name={expanded === section.id ? "chevron-up" : "chevron-down"}
                 size={18}
-                color={colors.mutedForeground}
+                color={colors.muted}
               />
             </View>
             {expanded === section.id && (
@@ -144,7 +144,7 @@ export default function GuideScreen() {
                 {section.items.map((item, i) => (
                   <View key={i} style={styles.itemRow}>
                     <View style={[styles.dot, { backgroundColor: section.color }]} />
-                    <Text style={[styles.itemText, { color: colors.foreground }]}>{item}</Text>
+                    <Text style={[styles.itemText, { color: colors.text }]}>{item}</Text>
                   </View>
                 ))}
               </View>
@@ -152,14 +152,14 @@ export default function GuideScreen() {
           </Pressable>
         ))}
 
-        <Text style={[styles.emergencyTitle, { color: colors.mutedForeground }]}>EMERGENCY CONTACTS</Text>
+        <Text style={[styles.emergencyTitle, { color: colors.muted }]}>EMERGENCY CONTACTS</Text>
         {EMERGENCY.map((e) => (
           <View key={e.label} style={[styles.emergencyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={[styles.emergencyIcon, { backgroundColor: e.color + "22" }]}>
               <Ionicons name={e.icon} size={20} color={e.color} />
             </View>
             <View style={styles.emergencyInfo}>
-              <Text style={[styles.emergencyLabel, { color: colors.foreground }]}>{e.label}</Text>
+              <Text style={[styles.emergencyLabel, { color: colors.text }]}>{e.label}</Text>
               <Text style={[styles.emergencyNumber, { color: e.color }]}>{e.number}</Text>
             </View>
           </View>

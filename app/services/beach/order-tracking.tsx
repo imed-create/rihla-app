@@ -10,6 +10,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showToast } from '@/components/Toast';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
 import type { OrderStatus } from '@/types/order';
 import { safeGoBack } from '@/utils/safeNavigation';
@@ -30,6 +31,7 @@ const ADVANCE_MS: Record<OrderStatus, number> = {
 };
 
 export default function OrderTrackingScreen() {
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
   const { orders, updateOrderStatus } = useApp();
@@ -79,28 +81,28 @@ export default function OrderTrackingScreen() {
 
   if (!order) {
     return (
-      <View style={[styles.root, { paddingTop: insets.top + 40 }]}>
-        <Text style={styles.missing}>Order not found</Text>
+      <View style={[styles.root, { paddingTop: insets.top + 40, backgroundColor: colors.bg }]}>
+        <Text style={[styles.missing, { color: colors.text }]}>Order not found</Text>
         <Pressable onPress={() => safeGoBack()}>
-          <Text style={styles.link}>Go back</Text>
+          <Text style={[styles.link, { color: RIHLA.accent }]}>Go back</Text>
         </Pressable>
       </View>
     );
   }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <View style={[styles.root, { paddingTop: insets.top, backgroundColor: colors.bg }]}>
       <Pressable onPress={() => safeGoBack()} style={styles.back}>
-        <Ionicons name="arrow-back" size={24} color={RIHLA.dark} />
+        <Ionicons name="arrow-back" size={24} color={colors.text} />
       </Pressable>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24 }}>
-        <Text style={styles.title}>Order tracking</Text>
-        <Text style={styles.orderId}>#{order.id.slice(-6)}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Order tracking</Text>
+        <Text style={[styles.orderId, { color: colors.muted }]}>#{order.id.slice(-6)}</Text>
 
         <View style={styles.stepper}>
           <View style={styles.stepperTrackWrap}>
-          <View style={styles.trackBg}>
+          <View style={[styles.trackBg, { backgroundColor: colors.border }]}>
             <Animated.View style={[styles.trackFill, lineStyle]} />
           </View>
           </View>
@@ -112,8 +114,9 @@ export default function OrderTrackingScreen() {
                 <View
                   style={[
                     styles.circle,
-                    done && styles.circleDone,
-                    active && styles.circleActive,
+                    { backgroundColor: colors.border },
+                    done && { backgroundColor: RIHLA.accent },
+                    active && { backgroundColor: RIHLA.primary },
                   ]}
                 >
                   {done && i < stepIndex ? (
@@ -122,16 +125,16 @@ export default function OrderTrackingScreen() {
                     <Ionicons
                       name={step.icon}
                       size={16}
-                      color={done ? '#fff' : RIHLA.mutedText}
+                      color={done ? '#fff' : colors.muted}
                     />
                   )}
                 </View>
                 <View style={styles.stepText}>
-                  <Text style={[styles.stepLabel, active && styles.stepLabelBold]}>
+                  <Text style={[styles.stepLabel, { color: colors.muted }, active && { fontFamily: 'mon-b', color: colors.text }]}>
                     {step.label}
                   </Text>
                   {timestamps[step.key] ? (
-                    <Text style={styles.stepTime}>{timestamps[step.key]}</Text>
+                    <Text style={[styles.stepTime, { color: colors.muted }]}>{timestamps[step.key]}</Text>
                   ) : null}
                 </View>
               </View>
@@ -139,35 +142,35 @@ export default function OrderTrackingScreen() {
           })}
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Order summary</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Order summary</Text>
           {order.spotLabel ? (
-            <Text style={styles.spot}>Deliver to spot {order.spotLabel}</Text>
+            <Text style={[styles.spot, { color: RIHLA.accent }]}>Deliver to spot {order.spotLabel}</Text>
           ) : null}
           {items.map((item) => (
             <View key={item.id} style={styles.itemRow}>
-              <Text style={styles.itemName}>
+              <Text style={[styles.itemName, { color: colors.text }]}>
                 {item.quantity}× {item.name}
               </Text>
-              <Text style={styles.itemPrice}>{item.priceDZD * item.quantity} DZD</Text>
+              <Text style={[styles.itemPrice, { color: colors.text }]}>{item.priceDZD * item.quantity} DZD</Text>
             </View>
           ))}
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalVal}>{order.totalDZD.toLocaleString()} DZD</Text>
+          <View style={[styles.totalRow, { borderTopColor: colors.border }]}>
+            <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+            <Text style={[styles.totalVal, { color: RIHLA.primary }]}>{order.totalDZD.toLocaleString()} DZD</Text>
           </View>
         </View>
 
         <Pressable
-          style={styles.outlineBtn}
+          style={[styles.outlineBtn, { borderColor: RIHLA.primary }]}
           onPress={() => Linking.openURL('tel:+213555000000')}
         >
           <Ionicons name="call-outline" size={18} color={RIHLA.primary} />
-          <Text style={styles.outlineBtnText}>Contact Beach Staff</Text>
+          <Text style={[styles.outlineBtnText, { color: RIHLA.primary }]}>Contact Beach Staff</Text>
         </Pressable>
 
         {status === 'delivered' && (
-          <Pressable style={styles.rateBtn} onPress={() => showToast('Thanks for your feedback!', 'info')}>
+          <Pressable style={[styles.rateBtn, { backgroundColor: RIHLA.highlight }]} onPress={() => showToast('Thanks for your feedback!', 'info')}>
             <Text style={styles.rateBtnText}>Rate Experience</Text>
           </Pressable>
         )}
@@ -177,10 +180,10 @@ export default function OrderTrackingScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: RIHLA.background },
+  root: { flex: 1 },
   back: { padding: 16 },
-  title: { fontSize: 26, fontFamily: 'mon-b', color: RIHLA.dark },
-  orderId: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, marginBottom: 20 },
+  title: { fontSize: 26, fontFamily: 'mon-b' },
+  orderId: { fontSize: 13, fontFamily: 'mon', marginBottom: 20 },
   stepper: { gap: 16, marginBottom: 24, position: 'relative' },
   stepperTrackWrap: { position: 'absolute', left: 19, top: 12, bottom: 12, width: 4, zIndex: 0 },
   trackBg: {
@@ -189,7 +192,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    backgroundColor: RIHLA.border,
     borderRadius: 2,
   },
   trackFill: {
@@ -205,59 +207,50 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circleDone: { backgroundColor: RIHLA.accent },
-  circleActive: { backgroundColor: RIHLA.primary },
   stepText: { flex: 1 },
-  stepLabel: { fontSize: 15, fontFamily: 'mon', color: RIHLA.mutedText },
-  stepLabelBold: { fontFamily: 'mon-b', color: RIHLA.dark },
-  stepTime: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
+  stepLabel: { fontSize: 15, fontFamily: 'mon' },
+  stepTime: { fontSize: 11, fontFamily: 'mon', marginTop: 2 },
   card: {
-    backgroundColor: RIHLA.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: RIHLA.border,
     padding: 16,
     gap: 8,
     marginBottom: 16,
   },
-  cardTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 4 },
-  spot: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent, marginBottom: 8 },
+  cardTitle: { fontSize: 16, fontFamily: 'mon-b', marginBottom: 4 },
+  spot: { fontSize: 13, fontFamily: 'mon-sb', marginBottom: 8 },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  itemName: { fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
-  itemPrice: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
+  itemName: { fontSize: 14, fontFamily: 'mon' },
+  itemPrice: { fontSize: 14, fontFamily: 'mon-sb' },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 8,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: RIHLA.border,
   },
-  totalLabel: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
-  totalVal: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+  totalLabel: { fontSize: 15, fontFamily: 'mon-b' },
+  totalVal: { fontSize: 18, fontFamily: 'mon-b' },
   outlineBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: RIHLA.primary,
     borderRadius: 14,
     paddingVertical: 14,
     marginBottom: 10,
   },
-  outlineBtnText: { fontFamily: 'mon-b', fontSize: 15, color: RIHLA.primary },
+  outlineBtnText: { fontFamily: 'mon-b', fontSize: 15 },
   rateBtn: {
-    backgroundColor: RIHLA.highlight,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   rateBtnText: { fontFamily: 'mon-b', fontSize: 15, color: '#fff' },
-  missing: { fontSize: 16, fontFamily: 'mon-b', textAlign: 'center', color: RIHLA.dark },
-  link: { textAlign: 'center', color: RIHLA.accent, marginTop: 12, fontFamily: 'mon-sb' },
+  missing: { fontSize: 16, fontFamily: 'mon-b', textAlign: 'center' },
+  link: { textAlign: 'center', marginTop: 12, fontFamily: 'mon-sb' },
 });

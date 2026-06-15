@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function StackHeader({
   title,
@@ -13,6 +14,7 @@ export default function StackHeader({
   right?: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { colors } = useTheme();
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
@@ -22,17 +24,17 @@ export default function StackHeader({
   };
 
   return (
-    <View style={styles.wrap}>
-      <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-        <Ionicons name="chevron-back" size={22} color="#0F172A" />
+    <View style={[styles.wrap, { backgroundColor: colors.bg }]}>
+      <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleBack} activeOpacity={0.8}>
+        <Ionicons name="chevron-back" size={22} color={colors.icon} />
       </TouchableOpacity>
 
       <View style={styles.center}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {title}
         </Text>
         {!!subtitle && (
-          <Text style={styles.subtitle} numberOfLines={1}>
+          <Text style={[styles.subtitle, { color: colors.muted }]} numberOfLines={1}>
             {subtitle}
           </Text>
         )}
@@ -51,21 +53,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fafbfc',
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   center: { flex: 1, gap: 2 },
-  title: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
-  subtitle: { fontSize: 12, fontFamily: 'mon', color: '#64748B' },
+  title: { fontSize: 16, fontFamily: 'mon-b' },
+  subtitle: { fontSize: 12, fontFamily: 'mon' },
   right: { minWidth: 40, alignItems: 'flex-end' },
 });
-

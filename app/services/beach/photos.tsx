@@ -7,7 +7,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 
 const PACKAGES = [
   {
@@ -42,7 +42,7 @@ const PACKAGES = [
 const SLOTS = ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"];
 
 export default function PhotosScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
 
@@ -80,7 +80,7 @@ export default function PhotosScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#FF499E", "#C9184A"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -96,14 +96,14 @@ export default function PhotosScreen() {
       {success ? (
         <View style={styles.successWrap}>
           <Ionicons name="checkmark-circle" size={80} color="#06D6A0" />
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>Booked!</Text>
-          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>Booked!</Text>
+          <Text style={[styles.successSub, { color: colors.muted }]}>
             Your photographer will find you at {slot}. Smile!
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 16 }} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>CHOOSE PACKAGE</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>CHOOSE PACKAGE</Text>
           {PACKAGES.map((p) => (
             <Pressable
               key={p.id}
@@ -117,20 +117,20 @@ export default function PhotosScreen() {
               ]}
               onPress={() => setPkg(p)}
             >
-              <View style={[styles.pkgIcon, { backgroundColor: pkg.id === p.id ? "#FF499E22" : colors.muted }]}>
-                <Ionicons name={p.icon as any} size={28} color={pkg.id === p.id ? "#FF499E" : colors.mutedForeground} />
+              <View style={[styles.pkgIcon, { backgroundColor: pkg.id === p.id ? "#FF499E22" : colors.card }]}>
+                <Ionicons name={p.icon as any} size={28} color={pkg.id === p.id ? "#FF499E" : colors.muted} />
               </View>
               <View style={styles.pkgInfo}>
-                <Text style={[styles.pkgName, { color: colors.foreground }]}>{p.name}</Text>
-                <Text style={[styles.pkgDesc, { color: colors.mutedForeground }]}>{p.desc}</Text>
+                <Text style={[styles.pkgName, { color: colors.text }]}>{p.name}</Text>
+                <Text style={[styles.pkgDesc, { color: colors.muted }]}>{p.desc}</Text>
                 <View style={styles.pkgMeta}>
-                  <View style={[styles.metaChip, { backgroundColor: colors.muted }]}>
-                    <Ionicons name="time-outline" size={12} color={colors.mutedForeground} />
-                    <Text style={[styles.metaText, { color: colors.mutedForeground }]}>{p.duration}</Text>
+                  <View style={[styles.metaChip, { backgroundColor: colors.card }]}>
+                    <Ionicons name="time-outline" size={12} color={colors.muted} />
+                    <Text style={[styles.metaText, { color: colors.muted }]}>{p.duration}</Text>
                   </View>
-                  <View style={[styles.metaChip, { backgroundColor: colors.muted }]}>
-                    <Ionicons name="images-outline" size={12} color={colors.mutedForeground} />
-                    <Text style={[styles.metaText, { color: colors.mutedForeground }]}>{p.photos}</Text>
+                  <View style={[styles.metaChip, { backgroundColor: colors.card }]}>
+                    <Ionicons name="images-outline" size={12} color={colors.muted} />
+                    <Text style={[styles.metaText, { color: colors.muted }]}>{p.photos}</Text>
                   </View>
                 </View>
               </View>
@@ -138,7 +138,7 @@ export default function PhotosScreen() {
             </Pressable>
           ))}
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT TIME</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>SELECT TIME</Text>
           <View style={styles.slotsGrid}>
             {SLOTS.map((s) => (
               <Pressable
@@ -146,22 +146,22 @@ export default function PhotosScreen() {
                 style={[
                   styles.slotChip,
                   {
-                    backgroundColor: slot === s ? "#FF499E" : colors.muted,
+                    backgroundColor: slot === s ? "#FF499E" : colors.card,
                     borderColor: slot === s ? "#FF499E" : colors.border,
                   },
                 ]}
                 onPress={() => setSlot(s)}
               >
-                <Text style={[styles.slotText, { color: slot === s ? "#FFF" : colors.foreground }]}>{s}</Text>
+                <Text style={[styles.slotText, { color: slot === s ? "#FFF" : colors.text }]}>{s}</Text>
               </Pressable>
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>SPECIAL REQUESTS (optional)</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>SPECIAL REQUESTS (optional)</Text>
           <TextInput
-            style={[styles.notesInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+            style={[styles.notesInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
             placeholder="E.g. group photo, sunset backdrop, specific location..."
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={colors.muted}
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -172,7 +172,7 @@ export default function PhotosScreen() {
       )}
 
       {!success && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
           <ConfirmButton label="Book Photographer" onPress={handleBook} loading={loading} price={pkg.price} />
         </View>
       )}

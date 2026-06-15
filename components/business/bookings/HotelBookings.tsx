@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
 type Reservation = {
   id: string; guest: string; room: string; checkIn: string; checkOut: string; nights: number;
@@ -20,8 +22,45 @@ const MOCK_RESERVATIONS: Reservation[] = [
 const STATUS_COLORS: Record<string, string> = { confirmed: '#6366F1', 'checked-in': '#10B981', 'checked-out': '#94A3B8', cancelled: '#EF4444' };
 
 export default function HotelBookings() {
-  const [reservations] = useState(MOCK_RESERVATIONS);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'confirmed' | 'checked-in' | 'checked-out'>('all');
+
+  const dynamicReservations = useMemo(() => {
+    const hotelBookings = bookings.filter(b => b.type === 'hotel');
+    return hotelBookings.map(b => {
+      let rStatus: Reservation['status'] = 'confirmed';
+      if (b.status === 'active') rStatus = 'checked-in';
+      else if (b.status === 'completed') rStatus = 'checked-out';
+      else if (b.status === 'cancelled') rStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        guest: String(b.details.contact_name || 'Guest'),
+        room: String(b.details.room_type || 'Double Room'),
+        checkIn: String(b.details.check_in || new Date().toISOString().split('T')[0]),
+        checkOut: String(b.details.check_out || new Date(Date.now() + 86400000).toISOString().split('T')[0]),
+        nights: Number(b.details.nights || 1),
+        totalDZD: b.price,
+        status: rStatus,
+        guests: Number(b.details.guests || 2),
+      };
+    });
+  }, [bookings]);
+
+  const reservations = useMemo(() => {
+    return [...dynamicReservations, ...MOCK_RESERVATIONS];
+  }, [dynamicReservations]);
+
+  const handleCheckIn = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'active');
+      showToast('Checked in guest!', 'success');
+    } else {
+      showToast('Check-in status updated.', 'success');
+    }
+  };
 
   const filtered = filter === 'all' ? reservations : reservations.filter(r => r.status === filter);
 
@@ -79,7 +118,10 @@ export default function HotelBookings() {
             </View>
             {item.status === 'confirmed' && (
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.checkInBtn}><Ionicons name="enter-outline" size={16} color="#fff" /><Text style={styles.checkInText}>Check In</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.checkInBtn} onPress={() => handleCheckIn(item.id)}>
+                  <Ionicons name="enter-outline" size={16} color="#fff" />
+                  <Text style={styles.checkInText}>Check In</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>

@@ -21,26 +21,25 @@ import FoodCartSheet, { CartLine } from '@/components/beach/FoodCartSheet';
 import DeliverySpotMatrix from '@/components/beach/DeliverySpotMatrix';
 import { FOOD_CATEGORIES, FOOD_MENU } from '@/constants/foodMenu';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { SandSpot, SandZoneId } from '@/constants/beachLayout';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import type { MenuCategory } from '@/types/order';
 import { checkoutHref } from '@/utils/router';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
+import { useFoodCartStore } from '@/store/useFoodCartStore';
 
 const TAB_W = (Dimensions.get('window').width - 32) / 3;
 
-type CartItem = { id: string; name: string; priceDZD: number; qty: number };
-
 export default function FoodScreen() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { occupiedSpotIds, deliverySpotId } = useBeachOccupancy();
+  const { items: cart, addItem, adjustItem, zone, setZone, spotLabel, setSpotLabel, totalItems, totalPrice } = useFoodCartStore();
 
   const [category, setCategory] = useState<MenuCategory>('drinks');
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [zone, setZone] = useState<SandZoneId>('family');
-  const [spot, setSpot] = useState<SandSpot | null>(null);
   const cartScale = useSharedValue(1);
 
   const tabIndex = FOOD_CATEGORIES.findIndex((c) => c.key === category);
@@ -50,8 +49,8 @@ export default function FoodScreen() {
     () => FOOD_MENU.filter((m) => m.category === category),
     [category]
   );
-  const total = cart.reduce((s, i) => s + i.priceDZD * i.qty, 0);
-  const count = cart.reduce((s, i) => s + i.qty, 0);
+  const total = totalPrice();
+  const count = totalItems();
 
   const tabUnderline = useAnimatedStyle(() => ({
     transform: [{ translateX: tabX.value }],
@@ -71,11 +70,7 @@ export default function FoodScreen() {
   const addToCart = (item: (typeof FOOD_MENU)[0]) => {
     hapticLight();
     const wasEmpty = cart.length === 0;
-    setCart((prev) => {
-      const ex = prev.find((c) => c.id === item.id);
-      if (ex) return prev.map((c) => (c.id === item.id ? { ...c, qty: c.qty + 1 } : c));
-      return [...prev, { id: item.id, name: item.name, priceDZD: item.priceDZD, qty: 1 }];
-    });
+    addItem({ id: item.id, name: item.name, priceDZD: item.priceDZD });
     if (wasEmpty) {
       cartScale.value = withSpring(1.05, { damping: 8 }, () => {
         cartScale.value = withSpring(1);
@@ -84,18 +79,12 @@ export default function FoodScreen() {
   };
 
   const adjustCart = (id: string, delta: number) => {
-    setCart((prev) => {
-      const ex = prev.find((c) => c.id === id);
-      if (!ex) return prev;
-      const qty = ex.qty + delta;
-      if (qty <= 0) return prev.filter((c) => c.id !== id);
-      return prev.map((c) => (c.id === id ? { ...c, qty } : c));
-    });
+    adjustItem(id, delta);
   };
 
   const goToCheckout = () => {
     if (cart.length === 0) return;
-    const deliveryId = spot?.id ?? deliverySpotId ?? 'Desk';
+    const deliveryId = spotLabel ?? deliverySpotId ?? 'Desk';
     setCartOpen(false);
     hapticLight();
     router.push(checkoutHref(cart, String(deliveryId), 'sidi-fredj'));
@@ -104,7 +93,7 @@ export default function FoodScreen() {
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={[RIHLA.primary, RIHLA.accent]}
         style={[styles.header, { paddingTop: topPad + 12 }]}
@@ -124,17 +113,17 @@ export default function FoodScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100 }}>
         <DeliverySpotMatrix
-          deliveryZone={zone}
+          deliveryZone={zone as SandZoneId ?? 'family'}
           deliverySpotId={deliverySpotId}
-          selectedSpotId={spot?.id ?? null}
+          selectedSpotId={spotLabel ?? null}
           occupiedSpotIds={occupiedSpotIds}
           onSelectSpot={(s: SandSpot) => {
-            setSpot(s);
+            setSpotLabel(s.id);
             setZone(s.zone);
           }}
         />
 
-        <View style={styles.tabs}>
+        <View style={[styles.tabs, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {FOOD_CATEGORIES.map((c) => (
             <Pressable
               key={c.key}
@@ -142,7 +131,7 @@ export default function FoodScreen() {
               onPress={() => c.key !== 'all' && setCat(c.key)}
             >
               <Text style={styles.tabEmoji}>{c.emoji}</Text>
-              <Text style={[styles.tabLabel, category === c.key && styles.tabLabelOn]}>
+              <Text style={[styles.tabLabel, { color: colors.muted }, category === c.key && { fontFamily: 'mon-b', color: RIHLA.primary }]}>
                 {c.label}
               </Text>
             </Pressable>
@@ -153,20 +142,20 @@ export default function FoodScreen() {
         {menu.map((item) => {
           const qty = cart.find((c) => c.id === item.id)?.qty ?? 0;
           return (
-            <View key={item.id} style={styles.card}>
+            <View key={item.id} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={styles.emoji}>{item.emoji}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.nameAr}>{item.nameAr}</Text>
-                <Text style={styles.price}>{item.priceDZD} DZD</Text>
+                <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
+                <Text style={[styles.nameAr, { color: colors.muted }]}>{item.nameAr}</Text>
+                <Text style={[styles.price, { color: RIHLA.accent }]}>{item.priceDZD} DZD</Text>
               </View>
               <View style={styles.qtyCol}>
                 {qty > 0 ? (
                   <>
-                    <Pressable style={styles.minus} onPress={() => adjustCart(item.id, -1)}>
-                      <Ionicons name="remove" size={16} color={RIHLA.dark} />
+                    <Pressable style={[styles.minus, { backgroundColor: colors.border }]} onPress={() => adjustCart(item.id, -1)}>
+                      <Ionicons name="remove" size={16} color={colors.text} />
                     </Pressable>
-                    <Text style={styles.qtyN}>{qty}</Text>
+                    <Text style={[styles.qtyN, { color: colors.text }]}>{qty}</Text>
                   </>
                 ) : null}
                 <Pressable style={styles.plus} onPress={() => addToCart(item)}>
@@ -219,18 +208,15 @@ const styles = StyleSheet.create({
   cartBadgeText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: RIHLA.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: RIHLA.border,
     marginBottom: 14,
     overflow: 'hidden',
     position: 'relative',
   },
   tab: { alignItems: 'center', paddingVertical: 10 },
   tabEmoji: { fontSize: 18 },
-  tabLabel: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
-  tabLabelOn: { fontFamily: 'mon-b', color: RIHLA.primary },
+  tabLabel: { fontSize: 12, fontFamily: 'mon' },
   tabLine: {
     position: 'absolute',
     bottom: 0,
@@ -241,23 +227,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: RIHLA.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: RIHLA.border,
     padding: 14,
     marginBottom: 10,
   },
   emoji: { fontSize: 32 },
-  name: { fontSize: 15, fontFamily: 'mon-sb', color: RIHLA.dark },
-  nameAr: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
-  price: { fontSize: 13, fontFamily: 'mon-b', color: RIHLA.accent, marginTop: 4 },
+  name: { fontSize: 15, fontFamily: 'mon-sb' },
+  nameAr: { fontSize: 12, fontFamily: 'mon' },
+  price: { fontSize: 13, fontFamily: 'mon-b', marginTop: 4 },
   qtyCol: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   minus: {
     width: 30,
     height: 30,
     borderRadius: 8,
-    backgroundColor: RIHLA.border,
     alignItems: 'center',
     justifyContent: 'center',
   },

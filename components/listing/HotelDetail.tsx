@@ -29,6 +29,7 @@ import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import { showToast } from '@/components/Toast';
 import PhotoCarousel from '@/components/shared/PhotoCarousel';
 import { getListingGallery, getCategoryHeroGradient } from '@/utils/listingPhotos';
+import { useTheme } from '@/context/ThemeContext';
 
 const AMENITY_ICONS: Record<string, { emoji: string; label: string }> = {
   wifi: { emoji: '📶', label: 'Free WiFi' },
@@ -110,6 +111,7 @@ export default function HotelDetailScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { colors } = useTheme();
 
   const listing = useMemo(() => getListingById(id ?? ''), [id]);
   const isFavorite = favoriteIds.includes(id ?? '');
@@ -124,12 +126,173 @@ export default function HotelDetailScreen() {
     [listing],
   );
 
+  const styles = useMemo(() => StyleSheet.create({
+    root: { flex: 1 },
+    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: colors.muted },
+    notFoundLink: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent },
+
+    heroWrap: { position: 'relative' },
+    heroNav: {
+      position: 'absolute', left: 16, right: 16, zIndex: 10,
+      flexDirection: 'row', justifyContent: 'space-between',
+    },
+    navCircle: {
+      width: 40, height: 40, borderRadius: 20,
+      backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center',
+    },
+    navRight: { flexDirection: 'row', gap: 8 },
+    heroGradient: {
+      position: 'absolute', bottom: 0, left: 0, right: 0, height: 160,
+      justifyContent: 'flex-end',
+    },
+    heroOverlay: { paddingHorizontal: 20, paddingBottom: 16, gap: 4 },
+    starsRow: { flexDirection: 'row', gap: 2, marginBottom: 4 },
+    heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
+    heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    heroLocation: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
+    heroRating: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+    ratingBadge: {
+      flexDirection: 'row', alignItems: 'center', gap: 3,
+      backgroundColor: RIHLA.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+    },
+    ratingBadgeText: { fontSize: 13, fontFamily: 'mon-b', color: '#fff' },
+    heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+
+    statsBar: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      marginHorizontal: 20, marginTop: 16, backgroundColor: colors.card,
+      borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12,
+    },
+    statItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+    statValue: { fontSize: 12, fontFamily: 'mon-sb', color: colors.muted },
+    statDivider: { width: 1, height: 20, backgroundColor: colors.border },
+
+    breakfastBanner: {
+      flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 10,
+      padding: 12, borderRadius: 10, backgroundColor: '#F0FDFA', borderWidth: 1, borderColor: '#D1FAE5',
+    },
+    breakfastEmoji: { fontSize: 18 },
+    breakfastText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
+
+    section: { paddingHorizontal: 20, paddingTop: 24 },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    sectionTitle: { fontSize: 18, fontFamily: 'mon-b', color: colors.text },
+    nightCount: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
+
+    amenityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    amenityItem: {
+      flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10,
+      borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+    },
+    amenityEmoji: { fontSize: 16 },
+    amenityLabel: { fontSize: 12, fontFamily: 'mon-sb', color: colors.muted },
+    showAllBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10,
+      paddingVertical: 8,
+    },
+    showAllText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary },
+
+    calendarScroll: { paddingVertical: 12, gap: 6, paddingHorizontal: 4 },
+    dayCell: {
+      width: 64, height: 80, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
+      backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', gap: 1,
+    },
+    dayCellUnavailable: { backgroundColor: colors.card, opacity: 0.5 },
+    dayCellSelected: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
+    dayCellInRange: { backgroundColor: '#EFF6FF', borderColor: '#EFF6FF' },
+    dayCellToday: { borderColor: RIHLA.accent, borderWidth: 2 },
+    dayName: { fontSize: 10, fontFamily: 'mon-sb', color: colors.muted },
+    dayNum: { fontSize: 18, fontFamily: 'mon-b', color: colors.text },
+    dayMonth: { fontSize: 9, fontFamily: 'mon', color: colors.muted },
+    dayPrice: { fontSize: 9, fontFamily: 'mon-sb', color: RIHLA.accent },
+    dayTextDisabled: { color: colors.muted },
+    soldOutDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#EF4444', marginTop: 2 },
+    dateHint: { fontSize: 13, fontFamily: 'mon', color: RIHLA.accent, marginTop: 6 },
+    dateSummary: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+    dateSelected: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary },
+
+    roomList: { gap: 10 },
+    roomCard: {
+      flexDirection: 'row', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1.5,
+      borderColor: colors.border, overflow: 'hidden', position: 'relative',
+    },
+    roomCardUnavailable: { opacity: 0.5 },
+    roomCardSelected: { borderColor: RIHLA.accent, backgroundColor: colors.card },
+    roomAccent: { width: 4 },
+    roomContent: { flex: 1, padding: 16 },
+    roomTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    roomInfo: { flex: 1, gap: 4 },
+    roomName: { fontSize: 16, fontFamily: 'mon-b', color: colors.text },
+    roomBeds: { fontSize: 12, fontFamily: 'mon', color: colors.muted },
+    roomPriceWrap: { alignItems: 'flex-end' },
+    roomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+    roomPriceUnit: { fontSize: 10, fontFamily: 'mon', color: colors.muted },
+    roomAmenities: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+    roomAmenityPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: RIHLA.muted },
+    roomAmenityText: { fontSize: 10, fontFamily: 'mon', color: colors.muted },
+    soldOutBadge: { position: 'absolute', top: 14, right: 14 },
+    soldOutText: { fontSize: 11, fontFamily: 'mon-b', color: '#EF4444', backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+    selectedBadge: { position: 'absolute', top: 14, right: 14 },
+
+    description: { fontSize: 14, fontFamily: 'mon', color: colors.muted, lineHeight: 22, marginTop: 4 },
+    tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+    tag: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: RIHLA.primary + '08', borderWidth: 1, borderColor: RIHLA.primary + '15' },
+    tagText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.primary },
+
+    reviewHeader: { marginBottom: 12 },
+    reviewSummary: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    reviewBigRating: {
+      width: 52, height: 52, borderRadius: 12, backgroundColor: RIHLA.primary,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    reviewBigNumber: { fontSize: 22, fontFamily: 'mon-b', color: '#fff' },
+    reviewSectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: colors.text },
+    reviewSectionSub: { fontSize: 12, fontFamily: 'mon', color: colors.muted },
+
+    starDistribution: { backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 14, marginBottom: 10 },
+    starRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+    starLabel: { fontSize: 12, fontFamily: 'mon-b', color: colors.muted, width: 12, textAlign: 'right' },
+    starBar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: 'hidden' },
+    starBarFill: { height: '100%', borderRadius: 3, backgroundColor: '#FFD166' },
+    starPct: { fontSize: 11, fontFamily: 'mon', color: colors.muted, width: 28, textAlign: 'right' },
+
+    reviewCard: { backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14, marginBottom: 8 },
+    reviewCardHeader: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+    reviewAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: RIHLA.primary + '15', alignItems: 'center', justifyContent: 'center' },
+    reviewAvatarText: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
+    reviewNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    reviewerName: { fontSize: 14, fontFamily: 'mon-b', color: colors.text },
+    verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    verifiedText: { fontSize: 10, fontFamily: 'mon-sb', color: RIHLA.accent },
+    reviewStars: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 },
+    reviewDate: { fontSize: 11, fontFamily: 'mon', color: colors.muted, marginLeft: 6 },
+    reviewText: { fontSize: 13, fontFamily: 'mon', color: colors.muted, lineHeight: 20 },
+
+    bottomBar: {
+      position: 'absolute', left: 0, right: 0, bottom: 0,
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+      paddingHorizontal: 20, paddingTop: 14,
+      backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border,
+      shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 12,
+    },
+    bottomPriceSection: {},
+    bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+    bottomUnit: { fontSize: 11, fontFamily: 'mon', color: colors.muted },
+    bookBtn: {
+      backgroundColor: RIHLA.accent, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 14,
+      shadowColor: RIHLA.accent, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6,
+    },
+    bookBtnDisabled: { opacity: 0.5 },
+    bookBtnText: { fontSize: 16, fontFamily: 'mon-b', color: '#fff' },
+  }), [colors]);
+
   if (!listing || listing.category !== 'hotel') {
     return (
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.notFound}>
-          <Ionicons name="bed-outline" size={48} color="#94A3B8" />
+          <Ionicons name="bed-outline" size={48} color={colors.muted} />
           <Text style={styles.notFoundText}>Hotel not found</Text>
           <Pressable onPress={() => safeGoBack()}>
             <Text style={styles.notFoundLink}>← Go back</Text>
@@ -147,7 +310,7 @@ export default function HotelDetailScreen() {
   const displayAmenities = showAllAmenities ? m.amenities : m.amenities.slice(0, 6);
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}>
         {/* ── HERO PHOTO CAROUSEL ── */}
@@ -322,11 +485,11 @@ export default function HotelDetailScreen() {
                 disabled={!room.available}
               >
                 {/* Room image accent bar */}
-                <View style={[styles.roomAccent, { backgroundColor: selectedRoom === room.id ? RIHLA.accent : RIHLA.border }]} />
+                <View style={[styles.roomAccent, { backgroundColor: selectedRoom === room.id ? RIHLA.accent : colors.border }]} />
                 <View style={styles.roomContent}>
                   <View style={styles.roomTop}>
                     <View style={styles.roomInfo}>
-                      <Text style={[styles.roomName, !room.available && { color: '#94A3B8' }]}>{room.name}</Text>
+                      <Text style={[styles.roomName, !room.available && { color: colors.muted }]}>{room.name}</Text>
                       <Text style={styles.roomBeds}>{room.bed_type} · {room.size_sqm}m² · Max {room.max_guests} {room.max_guests === 1 ? 'guest' : 'guests'}</Text>
                     </View>
                     <View style={styles.roomPriceWrap}>
@@ -467,176 +630,3 @@ export default function HotelDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
-  notFoundLink: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent },
-
-  // Hero
-  heroWrap: { position: 'relative' },
-  heroNav: {
-    position: 'absolute', left: 16, right: 16, zIndex: 10,
-    flexDirection: 'row', justifyContent: 'space-between',
-  },
-  navCircle: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center',
-  },
-  navRight: { flexDirection: 'row', gap: 8 },
-  heroGradient: {
-    position: 'absolute', bottom: 0, left: 0, right: 0, height: 160,
-    justifyContent: 'flex-end',
-  },
-  heroOverlay: { paddingHorizontal: 20, paddingBottom: 16, gap: 4 },
-  starsRow: { flexDirection: 'row', gap: 2, marginBottom: 4 },
-  heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
-  heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroLocation: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
-  heroRating: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  ratingBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: RIHLA.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
-  },
-  ratingBadgeText: { fontSize: 13, fontFamily: 'mon-b', color: '#fff' },
-  heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
-
-  // Stats bar
-  statsBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    marginHorizontal: 20, marginTop: 16, backgroundColor: '#fff',
-    borderRadius: 12, borderWidth: 1, borderColor: RIHLA.border, padding: 12,
-  },
-  statItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  statValue: { fontSize: 12, fontFamily: 'mon-sb', color: '#475569' },
-  statDivider: { width: 1, height: 20, backgroundColor: RIHLA.border },
-
-  // Breakfast
-  breakfastBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 10,
-    padding: 12, borderRadius: 10, backgroundColor: '#F0FDFA', borderWidth: 1, borderColor: '#D1FAE5',
-  },
-  breakfastEmoji: { fontSize: 18 },
-  breakfastText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
-
-  // Sections
-  section: { paddingHorizontal: 20, paddingTop: 24 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
-  nightCount: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
-
-  // Amenities
-  amenityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  amenityItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10,
-    borderRadius: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: RIHLA.border,
-  },
-  amenityEmoji: { fontSize: 16 },
-  amenityLabel: { fontSize: 12, fontFamily: 'mon-sb', color: '#334155' },
-  showAllBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10,
-    paddingVertical: 8,
-  },
-  showAllText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary },
-
-  // Calendar
-  calendarScroll: { paddingVertical: 12, gap: 6, paddingHorizontal: 4 },
-  dayCell: {
-    width: 64, height: 80, borderRadius: 12, borderWidth: 1, borderColor: RIHLA.border,
-    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 1,
-  },
-  dayCellUnavailable: { backgroundColor: '#F8FAFC', opacity: 0.5 },
-  dayCellSelected: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
-  dayCellInRange: { backgroundColor: '#EFF6FF', borderColor: '#EFF6FF' },
-  dayCellToday: { borderColor: RIHLA.accent, borderWidth: 2 },
-  dayName: { fontSize: 10, fontFamily: 'mon-sb', color: '#94A3B8' },
-  dayNum: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
-  dayMonth: { fontSize: 9, fontFamily: 'mon', color: '#94A3B8' },
-  dayPrice: { fontSize: 9, fontFamily: 'mon-sb', color: RIHLA.accent },
-  dayTextDisabled: { color: '#CBD5E1' },
-  soldOutDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#EF4444', marginTop: 2 },
-  dateHint: { fontSize: 13, fontFamily: 'mon', color: RIHLA.accent, marginTop: 6 },
-  dateSummary: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  dateSelected: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary },
-
-  // Rooms
-  roomList: { gap: 10 },
-  roomCard: {
-    flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1.5,
-    borderColor: RIHLA.border, overflow: 'hidden', position: 'relative',
-  },
-  roomCardUnavailable: { opacity: 0.5 },
-  roomCardSelected: { borderColor: RIHLA.accent, backgroundColor: '#F0FDFA' },
-  roomAccent: { width: 4 },
-  roomContent: { flex: 1, padding: 16 },
-  roomTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  roomInfo: { flex: 1, gap: 4 },
-  roomName: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  roomBeds: { fontSize: 12, fontFamily: 'mon', color: '#64748B' },
-  roomPriceWrap: { alignItems: 'flex-end' },
-  roomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
-  roomPriceUnit: { fontSize: 10, fontFamily: 'mon', color: '#94A3B8' },
-  roomAmenities: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
-  roomAmenityPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: RIHLA.muted },
-  roomAmenityText: { fontSize: 10, fontFamily: 'mon', color: '#475569' },
-  soldOutBadge: { position: 'absolute', top: 14, right: 14 },
-  soldOutText: { fontSize: 11, fontFamily: 'mon-b', color: '#EF4444', backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  selectedBadge: { position: 'absolute', top: 14, right: 14 },
-
-  // Description
-  description: { fontSize: 14, fontFamily: 'mon', color: '#475569', lineHeight: 22, marginTop: 4 },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  tag: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: RIHLA.primary + '08', borderWidth: 1, borderColor: RIHLA.primary + '15' },
-  tagText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.primary },
-
-  // Reviews
-  reviewHeader: { marginBottom: 12 },
-  reviewSummary: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  reviewBigRating: {
-    width: 52, height: 52, borderRadius: 12, backgroundColor: RIHLA.primary,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  reviewBigNumber: { fontSize: 22, fontFamily: 'mon-b', color: '#fff' },
-  reviewSectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  reviewSectionSub: { fontSize: 12, fontFamily: 'mon', color: '#94A3B8' },
-
-  // Star distribution
-  starDistribution: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: RIHLA.border, padding: 14, marginBottom: 10 },
-  starRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  starLabel: { fontSize: 12, fontFamily: 'mon-b', color: '#475569', width: 12, textAlign: 'right' },
-  starBar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: '#F1F5F9', overflow: 'hidden' },
-  starBarFill: { height: '100%', borderRadius: 3, backgroundColor: '#FFD166' },
-  starPct: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8', width: 28, textAlign: 'right' },
-
-  // Review cards
-  reviewCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14, marginBottom: 8 },
-  reviewCardHeader: { flexDirection: 'row', gap: 10, marginBottom: 8 },
-  reviewAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: RIHLA.primary + '15', alignItems: 'center', justifyContent: 'center' },
-  reviewAvatarText: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.primary },
-  reviewNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  reviewerName: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.dark },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  verifiedText: { fontSize: 10, fontFamily: 'mon-sb', color: RIHLA.accent },
-  reviewStars: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 },
-  reviewDate: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8', marginLeft: 6 },
-  reviewText: { fontSize: 13, fontFamily: 'mon', color: '#475569', lineHeight: 20 },
-
-  // Bottom bar
-  bottomBar: {
-    position: 'absolute', left: 0, right: 0, bottom: 0,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-    paddingHorizontal: 20, paddingTop: 14,
-    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: RIHLA.border,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 12,
-  },
-  bottomPriceSection: {},
-  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
-  bottomUnit: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  bookBtn: {
-    backgroundColor: RIHLA.accent, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 14,
-    shadowColor: RIHLA.accent, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6,
-  },
-  bookBtnDisabled: { opacity: 0.5 },
-  bookBtnText: { fontSize: 16, fontFamily: 'mon-b', color: '#fff' },
-});

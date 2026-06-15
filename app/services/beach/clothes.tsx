@@ -6,8 +6,9 @@ import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 
 const PRODUCTS = [
   { id: "1", name: "Men's Board Shorts", price: 1800, sizes: ["S", "M", "L", "XL"], color: "#00a896" },
@@ -19,7 +20,7 @@ const PRODUCTS = [
 ];
 
 export default function ClothesScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
 
@@ -57,7 +58,7 @@ export default function ClothesScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#FF6B6B", "#EE5A5A"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -73,14 +74,14 @@ export default function ClothesScreen() {
       {success ? (
         <View style={styles.successWrap}>
           <Ionicons name="checkmark-circle" size={80} color="#06D6A0" />
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>Purchase Complete!</Text>
-          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>Purchase Complete!</Text>
+          <Text style={[styles.successSub, { color: colors.muted }]}>
             Your item will be ready for pickup at the store counter
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 16 }} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT ITEM</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>SELECT ITEM</Text>
           <View style={styles.grid}>
             {PRODUCTS.map((p) => (
               <Pressable
@@ -101,10 +102,10 @@ export default function ClothesScreen() {
                 <View style={[styles.productIcon, { backgroundColor: p.color + "22" }]}>
                   <MaterialCommunityIcons name="tshirt-crew-outline" size={28} color={p.color} />
                 </View>
-                <Text style={[styles.productName, { color: colors.foreground }]} numberOfLines={2}>
+                <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
                   {p.name}
                 </Text>
-                <Text style={[styles.productPrice, { color: colors.primary }]}>
+                <Text style={[styles.productPrice, { color: RIHLA.primary }]}>
                   {p.price} DZD
                 </Text>
                 {selected === p.id && (
@@ -118,7 +119,7 @@ export default function ClothesScreen() {
 
           {product && (
             <>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT SIZE</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>SELECT SIZE</Text>
               <View style={styles.sizeRow}>
                 {product.sizes.map((s) => (
                   <Pressable
@@ -126,13 +127,13 @@ export default function ClothesScreen() {
                     style={[
                       styles.sizeChip,
                       {
-                        backgroundColor: size === s ? "#FF6B6B" : colors.muted,
+                        backgroundColor: size === s ? "#FF6B6B" : colors.card,
                         borderColor: size === s ? "#FF6B6B" : colors.border,
                       },
                     ]}
                     onPress={() => setSize(s)}
                   >
-                    <Text style={[styles.sizeText, { color: size === s ? "#FFF" : colors.foreground }]}>
+                    <Text style={[styles.sizeText, { color: size === s ? "#FFF" : colors.text }]}>
                       {s}
                     </Text>
                   </Pressable>
@@ -144,7 +145,7 @@ export default function ClothesScreen() {
       )}
 
       {!success && product && size && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
           <ConfirmButton label="Buy Now" onPress={handleBuy} loading={loading} price={product.price} />
         </View>
       )}

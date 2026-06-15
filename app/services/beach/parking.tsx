@@ -14,8 +14,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 
 const ZONES = [
   { id: "A", label: "Zone A", spots: ["A-01", "A-02", "A-03", "A-04", "A-05"] },
@@ -31,7 +32,7 @@ const DURATIONS = [
 ];
 
 export default function ParkingScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
 
@@ -75,7 +76,7 @@ export default function ParkingScreen() {
       : insets.top;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#023E58", "#034F6E"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -91,10 +92,10 @@ export default function ParkingScreen() {
       {success ? (
         <View style={styles.successWrap}>
           <Ionicons name="checkmark-circle" size={80} color="#06D6A0" />
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>
             Spot Reserved!
           </Text>
-          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+          <Text style={[styles.successSub, { color: colors.muted }]}>
             You have 20 minutes to arrive before auto-cancel
           </Text>
         </View>
@@ -107,7 +108,7 @@ export default function ParkingScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>
+          <Text style={[styles.label, { color: colors.muted }]}>
             SELECT ZONE
           </Text>
           <View style={styles.row}>
@@ -118,7 +119,7 @@ export default function ParkingScreen() {
                   styles.chip,
                   {
                     backgroundColor:
-                      zone.id === z.id ? "#023E58" : colors.muted,
+                      zone.id === z.id ? "#023E58" : colors.card,
                     borderColor:
                       zone.id === z.id ? "#023E58" : colors.border,
                   },
@@ -132,7 +133,7 @@ export default function ParkingScreen() {
                   style={[
                     styles.chipText,
                     {
-                      color: zone.id === z.id ? "#FFF" : colors.foreground,
+                      color: zone.id === z.id ? "#FFF" : colors.text,
                     },
                   ]}
                 >
@@ -142,7 +143,7 @@ export default function ParkingScreen() {
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>
+          <Text style={[styles.label, { color: colors.muted }]}>
             SELECT SPOT
           </Text>
           <View style={styles.spotGrid}>
@@ -162,7 +163,7 @@ export default function ParkingScreen() {
                 <Text
                   style={[
                     styles.spotText,
-                    { color: spot === s ? "#FFF" : colors.foreground },
+                    { color: spot === s ? "#FFF" : colors.text },
                   ]}
                 >
                   {s}
@@ -171,7 +172,7 @@ export default function ParkingScreen() {
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>
+          <Text style={[styles.label, { color: colors.muted }]}>
             DURATION
           </Text>
           <View style={styles.row}>
@@ -182,7 +183,7 @@ export default function ParkingScreen() {
                   styles.chip,
                   {
                     backgroundColor:
-                      duration.label === d.label ? "#023E58" : colors.muted,
+                      duration.label === d.label ? "#023E58" : colors.card,
                     borderColor:
                       duration.label === d.label ? "#023E58" : colors.border,
                   },
@@ -194,7 +195,7 @@ export default function ParkingScreen() {
                     styles.chipText,
                     {
                       color:
-                        duration.label === d.label ? "#FFF" : colors.foreground,
+                        duration.label === d.label ? "#FFF" : colors.text,
                     },
                   ]}
                 >
@@ -204,7 +205,7 @@ export default function ParkingScreen() {
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>
+          <Text style={[styles.label, { color: colors.muted }]}>
             LICENSE PLATE
           </Text>
           <TextInput
@@ -213,11 +214,11 @@ export default function ParkingScreen() {
               {
                 backgroundColor: colors.card,
                 borderColor: colors.border,
-                color: colors.foreground,
+                color: colors.text,
               },
             ]}
             placeholder="e.g. 123 ALG 16"
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor={colors.muted}
             value={plate}
             onChangeText={setPlate}
             autoCapitalize="characters"
@@ -226,24 +227,24 @@ export default function ParkingScreen() {
           <View
             style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           >
-            <Text style={[styles.summaryTitle, { color: colors.foreground }]}>
+            <Text style={[styles.summaryTitle, { color: colors.text }]}>
               Booking Summary
             </Text>
             <View style={styles.summaryRow}>
-              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Spot</Text>
-              <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
+              <Text style={{ color: colors.muted, fontSize: 13 }}>Spot</Text>
+              <Text style={{ color: colors.text, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
                 {spot}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Duration</Text>
-              <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
+              <Text style={{ color: colors.muted, fontSize: 13 }}>Duration</Text>
+              <Text style={{ color: colors.text, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
                 {duration.label}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Total</Text>
-              <Text style={{ color: colors.primary, fontFamily: "Inter_700Bold", fontSize: 16 }}>
+              <Text style={{ color: colors.muted, fontSize: 13 }}>Total</Text>
+              <Text style={{ color: RIHLA.primary, fontFamily: "Inter_700Bold", fontSize: 16 }}>
                 {duration.price} DZD
               </Text>
             </View>
@@ -261,7 +262,7 @@ export default function ParkingScreen() {
         <View
           style={[
             styles.footer,
-            { paddingBottom: insets.bottom + 16, backgroundColor: colors.background },
+            { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg },
           ]}
         >
           <ConfirmButton

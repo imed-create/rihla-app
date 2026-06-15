@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { getWilayaByCode } from '@/constants/wilayas';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
 import { MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
@@ -45,10 +46,11 @@ const CATEGORY_GRADIENTS: Record<string, [string, string]> = {
 function ListingCard({ listing }: { listing: Listing }) {
   const catDef = MARKETPLACE_CATEGORIES.find((c) => c.key === listing.category);
   const catColor = catDef?.color ?? RIHLA.accent;
+  const { colors } = useTheme();
 
   return (
     <Pressable
-      style={styles.listingCard}
+      style={[styles.listingCard, { borderTopColor: colors.border }]}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         router.push(`/${listing.category}/${listing.id}` as any);
@@ -59,7 +61,7 @@ function ListingCard({ listing }: { listing: Listing }) {
 
       <View style={styles.cardBody}>
         <View style={styles.cardTop}>
-          <Text style={styles.cardTitle} numberOfLines={1}>{listing.title}</Text>
+          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>{listing.title}</Text>
           {listing.is_vip && (
             <View style={styles.vipBadge}>
               <Text style={styles.vipText}>VIP</Text>
@@ -67,14 +69,14 @@ function ListingCard({ listing }: { listing: Listing }) {
           )}
         </View>
 
-        <Text style={styles.cardDesc} numberOfLines={2}>{listing.description}</Text>
+        <Text style={[styles.cardDesc, { color: colors.muted }]} numberOfLines={2}>{listing.description}</Text>
 
         <View style={styles.cardBottom}>
           {/* Rating */}
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={12} color={RIHLA.highlight} />
-            <Text style={styles.rating}>{listing.rating.toFixed(1)}</Text>
-            <Text style={styles.ratingCount}>({listing.review_count})</Text>
+            <Text style={[styles.rating, { color: colors.text }]}>{listing.rating.toFixed(1)}</Text>
+            <Text style={[styles.ratingCount, { color: colors.muted }]}>({listing.review_count})</Text>
           </View>
 
           {/* Price */}
@@ -88,7 +90,7 @@ function ListingCard({ listing }: { listing: Listing }) {
 
       {/* Chevron */}
       <View style={styles.cardArrow}>
-        <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+        <Ionicons name="chevron-forward" size={16} color={colors.muted} />
       </View>
     </Pressable>
   );
@@ -108,12 +110,13 @@ function CategorySection({
   const catDef = MARKETPLACE_CATEGORIES.find((c) => c.key === category);
   if (!catDef) return null;
   const [expanded, setExpanded] = useState(true);
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.categorySection}>
+    <View style={[styles.categorySection, { backgroundColor: colors.card, borderColor: colors.border }]}>
       {/* Section header */}
       <Pressable
-        style={styles.sectionHeader}
+        style={[styles.sectionHeader, { borderBottomColor: colors.border }]}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           setExpanded(!expanded);
@@ -123,13 +126,13 @@ function CategorySection({
           <Ionicons name={catDef.icon as any} size={18} color={catDef.color} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.sectionTitle}>{catDef.labelPlural}</Text>
-          <Text style={styles.sectionCount}>{listings.length} in {wilayaName}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{catDef.labelPlural}</Text>
+          <Text style={[styles.sectionCount, { color: colors.muted }]}>{listings.length} in {wilayaName}</Text>
         </View>
         <Ionicons
           name={expanded ? 'chevron-up' : 'chevron-down'}
           size={18}
-          color="#94A3B8"
+          color={colors.muted}
         />
       </Pressable>
 
@@ -146,6 +149,7 @@ function CategorySection({
 export default function WilayaHubScreen() {
   const { wilayaId } = useLocalSearchParams<{ wilayaId: string }>();
   const wilaya = getWilayaByCode(wilayaId ?? '');
+  const { colors } = useTheme();
 
   const [activeTab, setActiveTab] = useState<'all' | MarketplaceCategory>('all');
 
@@ -187,10 +191,10 @@ export default function WilayaHubScreen() {
 
   if (!wilaya) {
     return (
-      <SafeAreaView style={styles.root}>
+      <SafeAreaView style={[styles.root, { backgroundColor: colors.bg }]}>
         <View style={styles.errorWrap}>
           <Ionicons name="location-outline" size={48} color={RIHLA.border} />
-          <Text style={styles.errorText}>Wilaya not found</Text>
+          <Text style={[styles.errorText, { color: colors.text }]}>Wilaya not found</Text>
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
@@ -200,7 +204,7 @@ export default function WilayaHubScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
 
       {/* ── HERO HEADER ─────────────────────────────── */}
@@ -243,7 +247,7 @@ export default function WilayaHubScreen() {
       </View>
 
       {/* ── CATEGORY FILTER TABS ─────────────────────── */}
-      <View style={styles.tabsWrap}>
+      <View style={[styles.tabsWrap, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -251,13 +255,13 @@ export default function WilayaHubScreen() {
         >
           {/* All Tab */}
           <Pressable
-            style={[styles.tab, activeTab === 'all' && styles.tabActive]}
+            style={[styles.tab, { borderColor: colors.border, backgroundColor: colors.card }, activeTab === 'all' && styles.tabActive]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setActiveTab('all');
             }}
           >
-            <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: colors.muted }, activeTab === 'all' && styles.tabTextActive]}>
               All ({totalCount})
             </Text>
           </Pressable>
@@ -271,6 +275,7 @@ export default function WilayaHubScreen() {
                 key={cat.key}
                 style={[
                   styles.tab,
+                  { borderColor: colors.border, backgroundColor: colors.card },
                   activeTab === cat.key && [styles.tabActive, { borderColor: cat.color, backgroundColor: cat.color + '12' }],
                 ]}
                 onPress={() => {
@@ -281,11 +286,12 @@ export default function WilayaHubScreen() {
                 <Ionicons
                   name={cat.icon as any}
                   size={14}
-                  color={activeTab === cat.key ? cat.color : '#94A3B8'}
+                  color={activeTab === cat.key ? cat.color : colors.muted}
                 />
                 <Text
                   style={[
                     styles.tabText,
+                    { color: colors.muted },
                     activeTab === cat.key && [styles.tabTextActive, { color: cat.color }],
                   ]}
                 >
@@ -306,8 +312,8 @@ export default function WilayaHubScreen() {
         {Object.keys(grouped).length === 0 ? (
           <View style={styles.emptyWrap}>
             <Ionicons name="search-outline" size={48} color={RIHLA.border} />
-            <Text style={styles.emptyTitle}>No listings yet</Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No listings yet</Text>
+            <Text style={[styles.emptyText, { color: colors.muted }]}>
               Businesses in {wilaya.name} will appear here once they join RIHLA.
             </Text>
           </View>
@@ -328,10 +334,10 @@ export default function WilayaHubScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  root: { flex: 1 },
 
   // Hero (Uber dark solid)
-  hero: { paddingBottom: 20, backgroundColor: '#0a2540' },
+  hero: { paddingBottom: 20, backgroundColor: RIHLA.primary },
   heroInner: { paddingHorizontal: 20 },
   heroBack: {
     width: 40, height: 40, borderRadius: 20,
@@ -353,16 +359,15 @@ const styles = StyleSheet.create({
   featurePillText: { fontSize: 11, fontFamily: 'mon-sb', color: '#FFFFFF' },
 
   // Tabs
-  tabsWrap: { backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  tabsWrap: { borderBottomWidth: 1 },
   tabsScroll: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 999, borderWidth: 1.5, borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+    borderRadius: 999, borderWidth: 1.5,
   },
   tabActive: { borderColor: RIHLA.accent, backgroundColor: RIHLA.accent + '12' },
-  tabText: { fontSize: 12, fontFamily: 'mon-sb', color: '#94A3B8' },
+  tabText: { fontSize: 12, fontFamily: 'mon-sb' },
   tabTextActive: { color: RIHLA.accent },
 
   // Scroll
@@ -371,56 +376,54 @@ const styles = StyleSheet.create({
 
   // Category section
   categorySection: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     marginBottom: 8,
   },
   sectionHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     padding: 14,
-    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    borderBottomWidth: 1,
   },
   catIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  sectionTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A' },
-  sectionCount: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8', marginTop: 1 },
+  sectionTitle: { fontSize: 15, fontFamily: 'mon-b' },
+  sectionCount: { fontSize: 11, fontFamily: 'mon', marginTop: 1 },
 
   // Listing card
   listingCard: {
     flexDirection: 'row', alignItems: 'center',
-    borderTopWidth: 1, borderTopColor: '#F1F5F9',
+    borderTopWidth: 1,
     paddingRight: 12,
     overflow: 'hidden',
   },
   cardAccent: { width: 4, alignSelf: 'stretch' },
   cardBody: { flex: 1, padding: 12, gap: 4 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardTitle: { flex: 1, fontSize: 14, fontFamily: 'mon-sb', color: '#0F172A' },
+  cardTitle: { flex: 1, fontSize: 14, fontFamily: 'mon-sb' },
   vipBadge: {
     backgroundColor: RIHLA.highlight + '20',
     paddingHorizontal: 7, paddingVertical: 2,
     borderRadius: 6,
   },
   vipText: { fontSize: 10, fontFamily: 'mon-b', color: RIHLA.highlight },
-  cardDesc: { fontSize: 12, fontFamily: 'mon', color: '#64748B', lineHeight: 16 },
+  cardDesc: { fontSize: 12, fontFamily: 'mon', lineHeight: 16 },
   cardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  rating: { fontSize: 12, fontFamily: 'mon-b', color: '#0F172A' },
-  ratingCount: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
+  rating: { fontSize: 12, fontFamily: 'mon-b' },
+  ratingCount: { fontSize: 11, fontFamily: 'mon' },
   priceRow: { alignItems: 'flex-end' },
   price: { fontSize: 13, fontFamily: 'mon-b' },
   cardArrow: { paddingLeft: 4 },
 
   // Error
   errorWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  errorText: { fontSize: 18, fontFamily: 'mon-sb', color: '#1a1a1a' },
+  errorText: { fontSize: 18, fontFamily: 'mon-sb' },
   backBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
   backBtnText: { fontSize: 14, fontFamily: 'mon-b', color: '#FFFFFF' },
 
   // Empty
   emptyWrap: { alignItems: 'center', justifyContent: 'center', padding: 48, gap: 12 },
-  emptyTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#1a1a1a' },
-  emptyText: { fontSize: 14, fontFamily: 'mon', color: '#64748B', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 18, fontFamily: 'mon-b' },
+  emptyText: { fontSize: 14, fontFamily: 'mon', textAlign: 'center', lineHeight: 20 },
 });

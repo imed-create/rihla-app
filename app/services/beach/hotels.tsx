@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColors } from "@/hooks/useColors";
+import { RIHLA } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 const LISTINGS = [
   {
@@ -60,7 +61,7 @@ const LISTINGS = [
 const TYPES = ["All", "Hotel", "Villa", "Apartment", "House"];
 
 export default function HotelsScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [typeFilter, setTypeFilter] = useState("All");
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top;
@@ -75,7 +76,7 @@ export default function HotelsScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#1A6B3A", "#145C30"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -100,13 +101,13 @@ export default function HotelsScreen() {
               style={[
                 styles.filterChip,
                 {
-                  backgroundColor: typeFilter === t ? "#1A6B3A" : colors.muted,
+                  backgroundColor: typeFilter === t ? "#1A6B3A" : colors.card,
                   borderColor: typeFilter === t ? "#1A6B3A" : colors.border,
                 },
               ]}
               onPress={() => setTypeFilter(t)}
             >
-              <Text style={[styles.filterText, { color: typeFilter === t ? "#FFF" : colors.foreground }]}>
+              <Text style={[styles.filterText, { color: typeFilter === t ? "#FFF" : colors.text }]}>
                 {t}
               </Text>
             </Pressable>
@@ -134,29 +135,29 @@ export default function HotelsScreen() {
               </LinearGradient>
               <View style={styles.cardBody}>
                 <View style={styles.cardRow}>
-                  <Text style={[styles.cardName, { color: colors.foreground }]}>{listing.name}</Text>
+                  <Text style={[styles.cardName, { color: colors.text }]}>{listing.name}</Text>
                   <View style={styles.ratingRow}>
                     <Ionicons name="star" size={13} color="#F4A261" />
-                    <Text style={[styles.rating, { color: colors.foreground }]}>{listing.rating}</Text>
+                    <Text style={[styles.rating, { color: colors.text }]}>{listing.rating}</Text>
                   </View>
                 </View>
                 <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={14} color={colors.mutedForeground} />
-                  <Text style={[styles.location, { color: colors.mutedForeground }]}>{listing.location}</Text>
+                  <Ionicons name="location-outline" size={14} color={colors.muted} />
+                  <Text style={[styles.location, { color: colors.muted }]}>{listing.location}</Text>
                 </View>
                 <View style={styles.amenitiesRow}>
                   {listing.amenities.map((a) => (
-                    <View key={a} style={[styles.amenityChip, { backgroundColor: colors.muted }]}>
-                      <Text style={[styles.amenityText, { color: colors.mutedForeground }]}>{a}</Text>
+                    <View key={a} style={[styles.amenityChip, { backgroundColor: colors.card }]}>
+                      <Text style={[styles.amenityText, { color: colors.muted }]}>{a}</Text>
                     </View>
                   ))}
                 </View>
                 <View style={styles.cardFooter}>
                   <View>
-                    <Text style={[styles.price, { color: colors.primary }]}>
+                    <Text style={[styles.price, { color: RIHLA.primary }]}>
                       {listing.price.toLocaleString()} DZD
                     </Text>
-                    <Text style={[styles.priceUnit, { color: colors.mutedForeground }]}>per {listing.unit}</Text>
+                    <Text style={[styles.priceUnit, { color: colors.muted }]}>per {listing.unit}</Text>
                   </View>
                   <Pressable style={[styles.contactBtn, { backgroundColor: listing.color }]}>
                     <Feather name="phone" size={14} color="#FFF" />

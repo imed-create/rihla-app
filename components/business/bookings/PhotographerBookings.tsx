@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
 type ShootBooking = { id: string; client: string; package: string; date: string; time: string; location: string; totalDZD: number; status: 'confirmed' | 'in-progress' | 'completed' | 'cancelled' };
 
@@ -15,8 +17,55 @@ const MOCK_SHOOTS: ShootBooking[] = [
 ];
 
 export default function PhotographerBookings() {
-  const [shoots] = useState(MOCK_SHOOTS);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'confirmed' | 'in-progress'>('all');
+
+  const dynamicShoots = useMemo(() => {
+    const photoBookings = bookings.filter(b => b.type === 'photographer');
+    return photoBookings.map(b => {
+      let pStatus: ShootBooking['status'] = 'confirmed';
+      if (b.status === 'active') pStatus = 'in-progress';
+      else if (b.status === 'completed') pStatus = 'completed';
+      else if (b.status === 'cancelled') pStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        client: String(b.details.contact_name || 'Client'),
+        package: String(b.details.package || 'Quick Shoot'),
+        date: String(b.details.date || b.createdAt.split('T')[0]),
+        time: String(b.details.time || '10:00'),
+        location: String(b.details.location || b.subtitle?.split('·')[0]?.trim() || 'TBD'),
+        totalDZD: b.price,
+        status: pStatus,
+      };
+    });
+  }, [bookings]);
+
+  const shoots = useMemo(() => {
+    return [...dynamicShoots, ...MOCK_SHOOTS];
+  }, [dynamicShoots]);
+
+  const handleStartSession = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'active');
+      showToast('Photo session started!', 'success');
+    } else {
+      showToast('Session started.', 'success');
+    }
+  };
+
+  const handleCompleteSession = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'completed');
+      showToast('Session completed! Photos will be delivered.', 'success');
+    } else {
+      showToast('Session marked complete.', 'success');
+    }
+  };
 
   const filtered = filter === 'all' ? shoots : shoots.filter(s => s.status === filter);
 
@@ -66,7 +115,21 @@ export default function PhotographerBookings() {
               <View style={styles.detailChip}><Ionicons name="time-outline" size={12} color={RIHLA.mutedText} /><Text style={styles.detailText}>{item.time}</Text></View>
               <View style={styles.detailChip}><Ionicons name="location-outline" size={12} color={RIHLA.mutedText} /><Text style={styles.detailText}>{item.location}</Text></View>
             </View>
-            <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+              {item.status === 'confirmed' && (
+                <TouchableOpacity style={styles.startBtn} onPress={() => handleStartSession(item.id)}>
+                  <Ionicons name="camera" size={14} color="#fff" />
+                  <Text style={styles.startBtnText}>Start Session</Text>
+                </TouchableOpacity>
+              )}
+              {item.status === 'in-progress' && (
+                <TouchableOpacity style={styles.completeBtn} onPress={() => handleCompleteSession(item.id)}>
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                  <Text style={styles.completeBtnText}>Deliver Photos</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         )}
         contentContainerStyle={{ paddingBottom: 20 }}
@@ -97,5 +160,10 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F8FAFC', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   detailText: { fontSize: 10, fontFamily: 'mon', color: RIHLA.mutedText },
-  priceText: { fontSize: 15, fontFamily: 'mon-b', color: '#FF499E', marginTop: 8 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIHLA.border },
+  priceText: { fontSize: 15, fontFamily: 'mon-b', color: '#FF499E' },
+  startBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FF499E', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  startBtnText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
+  completeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10B981', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  completeBtnText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
 });

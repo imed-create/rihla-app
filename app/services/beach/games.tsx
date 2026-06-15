@@ -7,8 +7,9 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-n
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
 import VisualSlotGrid, { VisualSlot } from "@/components/beach/VisualSlotGrid";
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 import { useBeachOccupancy } from "@/hooks/useBeachOccupancy";
 import { safeGoBack } from "@/utils/safeNavigation";
 
@@ -41,7 +42,7 @@ function buildSlots(gameId: string, layout: "court" | "gear"): VisualSlot[] {
 }
 
 export default function GamesScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
   const { occupiedAssetSlots } = useBeachOccupancy();
@@ -81,7 +82,7 @@ export default function GamesScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#20C997", "#10B981"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -98,7 +99,7 @@ export default function GamesScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT GAME</Text>
+        <Text style={[styles.label, { color: colors.muted }]}>SELECT GAME</Text>
         <View style={styles.gameList}>
           {GAMES.map((g) => (
             <Pressable
@@ -119,22 +120,22 @@ export default function GamesScreen() {
               }}
               disabled={!g.available}
             >
-              <View style={[styles.gameIcon, { backgroundColor: selected === g.id ? "#20C99722" : colors.muted }]}>
+              <View style={[styles.gameIcon, { backgroundColor: selected === g.id ? "#20C99722" : colors.card }]}>
                 <MaterialCommunityIcons
                   name={g.icon as any}
                   size={24}
-                  color={selected === g.id ? "#20C997" : colors.mutedForeground}
+                  color={selected === g.id ? "#20C997" : colors.muted}
                 />
               </View>
               <View style={styles.gameInfo}>
-                <Text style={[styles.gameName, { color: colors.foreground }]}>{g.name}</Text>
-                <Text style={[styles.gamePrice, { color: colors.mutedForeground }]}>
+                <Text style={[styles.gameName, { color: colors.text }]}>{g.name}</Text>
+                <Text style={[styles.gamePrice, { color: colors.muted }]}>
                   {g.pricePerHour} DA/hr
                 </Text>
               </View>
               {!g.available && (
-                <View style={[styles.unavailBadge, { backgroundColor: colors.muted }]}>
-                  <Text style={{ fontSize: 11, color: colors.mutedForeground, fontFamily: "mon-sb" }}>
+                <View style={[styles.unavailBadge, { backgroundColor: colors.card }]}>
+                  <Text style={{ fontSize: 11, color: colors.muted, fontFamily: "mon-sb" }}>
                     Unavailable
                   </Text>
                 </View>
@@ -156,7 +157,7 @@ export default function GamesScreen() {
               onSelect={setAssetSlotId}
             />
 
-            <Text style={[styles.label, { color: colors.mutedForeground }]}>DURATION</Text>
+            <Text style={[styles.label, { color: colors.muted }]}>DURATION</Text>
             <View style={styles.durationRow}>
               {DURATIONS.map((h) => (
                 <Pressable
@@ -164,19 +165,19 @@ export default function GamesScreen() {
                   style={[
                     styles.durationChip,
                     {
-                      backgroundColor: hours === h ? "#20C997" : colors.muted,
+                      backgroundColor: hours === h ? "#20C997" : colors.card,
                       borderColor: hours === h ? "#20C997" : colors.border,
                     },
                   ]}
                   onPress={() => setHours(h)}
                 >
-                  <Text style={[styles.durationText, { color: hours === h ? "#FFF" : colors.foreground }]}>
+                  <Text style={[styles.durationText, { color: hours === h ? "#FFF" : colors.text }]}>
                     {h}h
                   </Text>
                   <Text
                     style={[
                       styles.durationPrice,
-                      { color: hours === h ? "rgba(255,255,255,0.8)" : colors.mutedForeground },
+                      { color: hours === h ? "rgba(255,255,255,0.8)" : colors.muted },
                     ]}
                   >
                     {game.pricePerHour * h} DA
@@ -189,7 +190,7 @@ export default function GamesScreen() {
       </ScrollView>
 
       {game && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
           <ConfirmButton
             label={assetSlotId ? `Rent · ${price} DA` : "Select a slot"}
             onPress={handleRent}

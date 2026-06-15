@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
 type TicketSale = { id: string; event: string; customer: string; ticketType: string; qty: number; totalDZD: number; status: 'confirmed' | 'checked-in' | 'cancelled'; date: string };
 
@@ -16,8 +18,43 @@ const MOCK_SALES: TicketSale[] = [
 ];
 
 export default function EventBookings() {
-  const [sales] = useState(MOCK_SALES);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'confirmed' | 'checked-in'>('all');
+
+  const dynamicSales = useMemo(() => {
+    const eventBookings = bookings.filter(b => b.type === 'event');
+    return eventBookings.map(b => {
+      let sStatus: TicketSale['status'] = 'confirmed';
+      if (b.status === 'active') sStatus = 'checked-in';
+      else if (b.status === 'cancelled') sStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        event: b.title,
+        customer: String(b.details.contact_name || 'Guest'),
+        ticketType: String(b.details.ticket_type || 'General'),
+        qty: Number(b.details.qty || 1),
+        totalDZD: b.price,
+        status: sStatus,
+        date: b.createdAt.split('T')[0],
+      };
+    });
+  }, [bookings]);
+
+  const sales = useMemo(() => {
+    return [...dynamicSales, ...MOCK_SALES];
+  }, [dynamicSales]);
+
+  const handleCheckIn = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'active');
+      showToast('Attendee checked in!', 'success');
+    } else {
+      showToast('Check-in recorded.', 'success');
+    }
+  };
 
   const filtered = filter === 'all' ? sales : sales.filter(s => s.status === filter);
 
@@ -63,10 +100,18 @@ export default function EventBookings() {
               <Text style={styles.qtyText}>× {item.qty}</Text>
               <Text style={styles.totalPrice}>{item.totalDZD.toLocaleString()} DZD</Text>
             </View>
-            <TouchableOpacity style={styles.checkInBtn}>
-              <Ionicons name="qr-code-outline" size={14} color="#fff" />
-              <Text style={styles.checkInText}>Scan to Check In</Text>
-            </TouchableOpacity>
+            {item.status === 'confirmed' && (
+              <TouchableOpacity style={styles.checkInBtn} onPress={() => handleCheckIn(item.id)}>
+                <Ionicons name="qr-code-outline" size={14} color="#fff" />
+                <Text style={styles.checkInText}>Scan to Check In</Text>
+              </TouchableOpacity>
+            )}
+            {item.status === 'checked-in' && (
+              <View style={styles.checkedInRow}>
+                <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                <Text style={styles.checkedInText}>Checked In</Text>
+              </View>
+            )}
           </View>
         )}
         contentContainerStyle={{ paddingBottom: 20 }}
@@ -101,4 +146,6 @@ const styles = StyleSheet.create({
   totalPrice: { marginLeft: 'auto', fontSize: 15, fontFamily: 'mon-b', color: RIHLA.primary },
   checkInBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#A855F7', paddingVertical: 10, borderRadius: 12, marginTop: 10 },
   checkInText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
+  checkedInRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: RIHLA.border },
+  checkedInText: { fontSize: 12, fontFamily: 'mon-sb', color: '#10B981' },
 });

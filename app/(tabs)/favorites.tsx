@@ -14,17 +14,20 @@ import {
   TouchableOpacity,
   View,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { useFavorites } from '@/store/useFavorites';
 import { MOCK_LISTINGS } from '@/constants/mockListings';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 
 export default function FavoritesScreen() {
+  const { colors, isDark } = useTheme();
   const { favoriteIds, clearFavorites } = useFavorites();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -37,6 +40,171 @@ export default function FavoritesScreen() {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 600);
   }, []);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        root: { flex: 1, backgroundColor: colors.bg },
+
+        headerSection: {
+          paddingHorizontal: 24,
+          paddingTop: 16,
+          paddingBottom: 12,
+        },
+        headerTitle: {
+          fontSize: 28,
+          fontFamily: 'mon-b',
+          color: colors.text,
+          letterSpacing: -0.3,
+        },
+        headerMeta: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: 6,
+        },
+        headerCount: {
+          fontSize: 14,
+          fontFamily: 'mon',
+          color: colors.muted,
+        },
+        clearBtn: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          paddingVertical: 6,
+          paddingHorizontal: 10,
+          borderRadius: 8,
+          backgroundColor: isDark ? colors.card : '#FEF2F2',
+        },
+        clearText: {
+          fontSize: 12,
+          fontFamily: 'mon-sb',
+          color: '#EF4444',
+        },
+
+        listContent: {
+          paddingBottom: 100,
+        },
+
+        card: {
+          flexDirection: 'row',
+          marginHorizontal: 20,
+          marginBottom: 10,
+          backgroundColor: colors.card,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: colors.border,
+          overflow: 'hidden',
+          shadowColor: '#000',
+          shadowOpacity: 0.04,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 2,
+          position: 'relative',
+        },
+        cardImageWrap: {
+          width: 90,
+          height: 90,
+          position: 'relative',
+        },
+        cardImage: {
+          width: 90,
+          height: 90,
+        },
+        cardImagePlaceholder: {
+          width: 90,
+          height: 90,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        cardBadge: {
+          position: 'absolute',
+          top: 6,
+          left: 6,
+          paddingHorizontal: 6,
+          paddingVertical: 2,
+          borderRadius: 4,
+        },
+        cardBadgeText: {
+          fontSize: 8,
+          fontFamily: 'mon-b',
+          color: '#FFFFFF',
+          textTransform: 'uppercase',
+        },
+        cardInfo: {
+          flex: 1,
+          padding: 12,
+          gap: 3,
+          justifyContent: 'center',
+        },
+        cardTitle: {
+          fontSize: 14,
+          fontFamily: 'mon-b',
+          color: colors.text,
+        },
+        cardSub: {
+          fontSize: 12,
+          fontFamily: 'mon',
+          color: colors.muted,
+        },
+        cardPrice: {
+          fontSize: 14,
+          fontFamily: 'mon-b',
+          color: RIHLA.primary,
+        },
+        cardPriceUnit: {
+          fontSize: 10,
+          fontFamily: 'mon',
+          color: colors.muted,
+        },
+        heartBtn: {
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: colors.card,
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 3,
+          shadowColor: '#000',
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          shadowOffset: { width: 0, height: 2 },
+        },
+
+        emptyState: {
+          alignItems: 'center',
+          paddingTop: 80,
+          paddingHorizontal: 40,
+          gap: 8,
+        },
+        emptyIconWrap: {
+          width: 72,
+          height: 72,
+          borderRadius: 36,
+          backgroundColor: colors.border,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 8,
+        },
+        emptyTitle: {
+          fontSize: 18,
+          fontFamily: 'mon-b',
+          color: colors.text,
+        },
+        emptySub: {
+          fontSize: 14,
+          fontFamily: 'mon',
+          color: colors.muted,
+          textAlign: 'center',
+          lineHeight: 20,
+        },
+      }),
+    [colors]
+  );
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -65,7 +233,14 @@ export default function FavoritesScreen() {
                 <TouchableOpacity
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    clearFavorites();
+                    Alert.alert(
+                      'Clear All Saved',
+                      `Remove all ${favoriteListings.length} saved places?`,
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Clear All', style: 'destructive', onPress: () => clearFavorites() },
+                      ]
+                    );
                   }}
                   style={styles.clearBtn}
                 >
@@ -79,7 +254,7 @@ export default function FavoritesScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <View style={styles.emptyIconWrap}>
-              <Ionicons name="heart-outline" size={36} color="#CBD5E1" />
+              <Ionicons name="heart-outline" size={36} color={colors.muted} />
             </View>
             <Text style={styles.emptyTitle}>No saved places yet</Text>
             <Text style={styles.emptySub}>
@@ -137,165 +312,3 @@ export default function FavoritesScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
-
-  headerSection: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontFamily: 'mon-b',
-    color: '#0F172A',
-    letterSpacing: -0.3,
-  },
-  headerMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
-  headerCount: {
-    fontSize: 14,
-    fontFamily: 'mon',
-    color: '#64748B',
-  },
-  clearBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: '#FEF2F2',
-  },
-  clearText: {
-    fontSize: 12,
-    fontFamily: 'mon-sb',
-    color: '#EF4444',
-  },
-
-  listContent: {
-    paddingBottom: 100,
-  },
-
-  card: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginBottom: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-    position: 'relative',
-  },
-  cardImageWrap: {
-    width: 90,
-    height: 90,
-    position: 'relative',
-  },
-  cardImage: {
-    width: 90,
-    height: 90,
-  },
-  cardImagePlaceholder: {
-    width: 90,
-    height: 90,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBadge: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  cardBadgeText: {
-    fontSize: 8,
-    fontFamily: 'mon-b',
-    color: '#FFFFFF',
-    textTransform: 'uppercase',
-  },
-  cardInfo: {
-    flex: 1,
-    padding: 12,
-    gap: 3,
-    justifyContent: 'center',
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontFamily: 'mon-b',
-    color: '#0F172A',
-  },
-  cardSub: {
-    fontSize: 12,
-    fontFamily: 'mon',
-    color: '#64748B',
-  },
-  cardPrice: {
-    fontSize: 14,
-    fontFamily: 'mon-b',
-    color: RIHLA.primary,
-  },
-  cardPriceUnit: {
-    fontSize: 10,
-    fontFamily: 'mon',
-    color: '#94A3B8',
-  },
-  heartBtn: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-
-  // Empty state
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 80,
-    paddingHorizontal: 40,
-    gap: 8,
-  },
-  emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontFamily: 'mon-b',
-    color: '#0F172A',
-  },
-  emptySub: {
-    fontSize: 14,
-    fontFamily: 'mon',
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});

@@ -148,14 +148,14 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0D0D0D',
   },
   slide: {
     overflow: 'hidden',
   },
   image: {
     width: '100%',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0D0D0D',
   },
   imageHidden: {
     opacity: 0,
@@ -164,18 +164,18 @@ const styles = StyleSheet.create({
   skeleton: {
     position: 'absolute',
     width: '100%',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0D0D0D',
     alignItems: 'center',
     justifyContent: 'center',
   },
   errorSlide: {
     width: '100%',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0D0D0D',
     alignItems: 'center',
     justifyContent: 'center',
   },
   placeholder: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0D0D0D',
     alignItems: 'center',
     justifyContent: 'center',
   },

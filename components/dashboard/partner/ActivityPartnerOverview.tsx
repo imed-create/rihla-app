@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const INITIAL_SLOTS = [
   { id: '1', time: '09:00 - 11:00', title: 'Casbah Photography Session', package: 'Premium Video + 30 Pixels', guest: 'Lyna K.', status: 'ready' },
@@ -11,6 +12,7 @@ const INITIAL_SLOTS = [
 
 export default function ActivityPartnerOverview() {
   const [slots, setSlots] = useState(INITIAL_SLOTS);
+  const { colors } = useTheme();
 
   const toggleDelivery = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -29,14 +31,14 @@ export default function ActivityPartnerOverview() {
   return (
     <View style={styles.container}>
       {/* ── TIME SLOT ALLOCATION ── */}
-      <Text style={styles.sectionTitle}>Booked Photo & Adventure Slots</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Booked Photo & Adventure Slots</Text>
       <View style={styles.slotList}>
         {slots.map(slot => (
-          <View key={slot.id} style={styles.slotCard}>
+          <View key={slot.id} style={[styles.slotCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.slotHeader}>
               <View style={styles.slotTimeBlock}>
                 <Ionicons name="time-outline" size={16} color={RIHLA.accent} />
-                <Text style={styles.slotTime}>{slot.time}</Text>
+                <Text style={[styles.slotTime, { color: colors.text }]}>{slot.time}</Text>
               </View>
               <View style={[styles.statusBadge, { backgroundColor: slot.status === 'delivered' ? '#ECFDF5' : '#FFFBEB' }]}>
                 <Text style={[styles.statusBadgeText, { color: slot.status === 'delivered' ? '#10B981' : '#D97706' }]}>
@@ -46,8 +48,8 @@ export default function ActivityPartnerOverview() {
             </View>
 
             <View style={styles.slotBody}>
-              <Text style={styles.slotTitle}>{slot.title}</Text>
-              <Text style={styles.slotGuest}>Client: {slot.guest} · Package: {slot.package}</Text>
+              <Text style={[styles.slotTitle, { color: colors.text }]}>{slot.title}</Text>
+              <Text style={[styles.slotGuest, { color: colors.muted }]}>Client: {slot.guest} · Package: {slot.package}</Text>
             </View>
 
             <Pressable
@@ -68,26 +70,24 @@ export default function ActivityPartnerOverview() {
 
 const styles = StyleSheet.create({
   container: { gap: 16, marginTop: 8 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b' },
   
   slotList: { gap: 12 },
   slotCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     padding: 16,
     gap: 12,
   },
   slotHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   slotTimeBlock: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  slotTime: { fontSize: 12, fontFamily: 'mon-b', color: RIHLA.dark },
+  slotTime: { fontSize: 12, fontFamily: 'mon-b' },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusBadgeText: { fontSize: 9, fontFamily: 'mon-sb' },
   
   slotBody: { gap: 4 },
-  slotTitle: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.dark },
-  slotGuest: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
+  slotTitle: { fontSize: 14, fontFamily: 'mon-b' },
+  slotGuest: { fontSize: 12, fontFamily: 'mon' },
   
   deliverBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: RIHLA.accent },
   deliverBtnActive: { backgroundColor: '#10B981' },

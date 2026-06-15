@@ -19,6 +19,7 @@ import {
   TextInput,
   Platform,
   useWindowDimensions,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,7 +31,21 @@ import type { MarketplaceCategory, Listing } from '@/types/service';
 import { getListingWilayas } from '@/constants/mockListings';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight } from '@/utils/haptics';
+import { useTheme } from '@/context/ThemeContext';
 import EmptyState from '@/components/shared/EmptyState';
+
+// ── CUSTOM TRAVELER PORTALS ──
+import HotelPortal from '@/components/traveler/dashboards/HotelPortal';
+import RestaurantPortal from '@/components/traveler/dashboards/RestaurantPortal';
+import BeachPortal from '@/components/traveler/dashboards/BeachPortal';
+import RentalPortal from '@/components/traveler/dashboards/RentalPortal';
+import ActivityPortal from '@/components/traveler/dashboards/ActivityPortal';
+import EventPortal from '@/components/traveler/dashboards/EventPortal';
+import GuidePortal from '@/components/traveler/dashboards/GuidePortal';
+import PhotographerPortal from '@/components/traveler/dashboards/PhotographerPortal';
+import DriverPortal from '@/components/traveler/dashboards/DriverPortal';
+import ExperiencePortal from '@/components/traveler/dashboards/ExperiencePortal';
+
 
 // ── Sort options ──
 type SortKey = 'recommended' | 'price_low' | 'price_high' | 'rating';
@@ -59,23 +74,24 @@ const CATEGORY_FILTERS: Record<MarketplaceCategory, string[]> = {
 
 function getDetailRoute(item: Listing): string {
   switch (item.category) {
-    case 'hotel': return `/listing/hotel/${item.id}`;
-    case 'restaurant': return `/listing/restaurant/${item.id}`;
-    case 'beach': return `/listing/beach/${item.id}`;
-    case 'rental': return `/listing/rental/${item.id}`;
-    case 'activity': return `/listing/activity/${item.id}`;
-    case 'event': return `/listing/event/${item.id}`;
-    case 'guide': return `/listing/guide/${item.id}`;
-    case 'photographer': return `/listing/photographer/${item.id}`;
-    case 'driver': return `/listing/driver/${item.id}`;
-    case 'experience': return `/listing/experience/${item.id}`;
-    default: return `/listing/${item.id}`;
+    case 'hotel': return `/services/hotel/${item.id}`;
+    case 'restaurant': return `/services/restaurant/${item.id}`;
+    case 'beach': return `/services/beach/${item.id}`;
+    case 'rental': return `/services/rental/${item.id}`;
+    case 'event': return `/services/event/${item.id}`;
+    case 'guide': return `/services/guide/${item.id}`;
+    case 'photographer': return `/services/photographer/${item.id}`;
+    case 'experience': return `/services/experience/${item.id}`;
+    case 'activity': return `/services/coming-soon?name=Activity`;
+    case 'driver': return `/services/coming-soon?name=Driver`;
+    default: return `/services/coming-soon?name=${encodeURIComponent(item.category)}`;
   }
 }
 
 export default function MarketplaceCategoryScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
   const isWide = Platform.OS === 'web' && width >= 900;
@@ -93,6 +109,7 @@ export default function MarketplaceCategoryScreen() {
   const [minRating, setMinRating] = useState(0);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSearchList, setShowSearchList] = useState(false);
 
   const hasActiveFilters = selectedWilaya || familyFriendly || isVip || minRating > 0 || activeFilters.length > 0;
 
@@ -149,11 +166,19 @@ export default function MarketplaceCategoryScreen() {
   // ── Listing Card ──
   const renderListingCard = useCallback(({ item }: { item: Listing }) => (
     <Pressable
-      style={[styles.card, isWide && { width: '48%' }]}
+      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, isWide && { width: '48%' }]}
       onPress={() => router.push(getDetailRoute(item) as any)}
     >
       <View style={[styles.cardImage, { backgroundColor: catDef.color + '15' }]}>
-        <Ionicons name={catDef.icon as any} size={32} color={catDef.color} />
+        {item.cover_image_url ? (
+          <Image
+            source={{ uri: item.cover_image_url }}
+            style={StyleSheet.absoluteFillObject}
+            resizeMode="cover"
+          />
+        ) : (
+          <Ionicons name={catDef.icon as any} size={32} color={catDef.color} />
+        )}
         {item.is_featured && (
           <View style={styles.featBadge}>
             <Ionicons name="star" size={10} color="#fff" />
@@ -167,25 +192,25 @@ export default function MarketplaceCategoryScreen() {
         )}
       </View>
       <View style={styles.cardInfo}>
-        <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+        <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
+        <Text style={[styles.cardDesc, { color: colors.muted }]} numberOfLines={2}>{item.description}</Text>
         <View style={styles.cardMeta}>
           <View style={styles.cardRating}>
             <Ionicons name="star" size={13} color="#FFD166" />
-            <Text style={styles.cardRatingText}>{item.rating}</Text>
-            <Text style={styles.cardReviewCount}>({item.review_count})</Text>
+            <Text style={[styles.cardRatingText, { color: colors.text }]}>{item.rating}</Text>
+            <Text style={[styles.cardReviewCount, { color: colors.muted }]}>({item.review_count})</Text>
           </View>
           <Text style={styles.cardPrice}>{item.price_dzd.toLocaleString()} DZD</Text>
         </View>
         <View style={styles.cardFooter}>
           <View style={styles.cardLocation}>
-            <Ionicons name="location-outline" size={12} color={RIHLA.mutedText} />
-            <Text style={styles.cardLocationText}>{item.wilaya}</Text>
+            <Ionicons name="location-outline" size={12} color={colors.muted} />
+            <Text style={[styles.cardLocationText, { color: colors.muted }]}>{item.wilaya}</Text>
           </View>
           <View style={styles.cardTags}>
             {item.tags.slice(0, 2).map((t) => (
-              <View key={t} style={styles.miniTag}>
-                <Text style={styles.miniTagText}>{t}</Text>
+              <View key={t} style={[styles.miniTag, { backgroundColor: colors.bg }]}>
+                <Text style={[styles.miniTagText, { color: colors.muted }]}>{t}</Text>
               </View>
             ))}
           </View>
@@ -194,12 +219,40 @@ export default function MarketplaceCategoryScreen() {
     </Pressable>
   ), [isWide, catDef]);
 
+  const renderPortal = () => {
+    const handleSearchAll = () => setShowSearchList(true);
+    switch (catKey) {
+      case 'hotel':
+        return <HotelPortal onSearchAll={handleSearchAll} onFilterWilaya={setSelectedWilaya} selectedWilaya={selectedWilaya} />;
+      case 'restaurant':
+        return <RestaurantPortal onSearchAll={handleSearchAll} />;
+      case 'beach':
+        return <BeachPortal onSearchAll={handleSearchAll} />;
+      case 'rental':
+        return <RentalPortal onSearchAll={handleSearchAll} />;
+      case 'activity':
+        return <ActivityPortal onSearchAll={handleSearchAll} />;
+      case 'event':
+        return <EventPortal onSearchAll={handleSearchAll} />;
+      case 'guide':
+        return <GuidePortal onSearchAll={handleSearchAll} />;
+      case 'photographer':
+        return <PhotographerPortal onSearchAll={handleSearchAll} />;
+      case 'driver':
+        return <DriverPortal onSearchAll={handleSearchAll} />;
+      case 'experience':
+        return <ExperiencePortal onSearchAll={handleSearchAll} />;
+      default:
+        return <HotelPortal onSearchAll={handleSearchAll} onFilterWilaya={setSelectedWilaya} selectedWilaya={selectedWilaya} />;
+    }
+  };
+
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* ── HEADER ── */}
-      <View style={[styles.header, { paddingTop: topPad + 12 }]}>
+      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: catDef.color }]}>
         <Pressable onPress={() => safeGoBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </Pressable>
@@ -209,12 +262,31 @@ export default function MarketplaceCategoryScreen() {
         </View>
         <View style={styles.headerRight}>
           <Pressable
-            onPress={() => setShowFilters(!showFilters)}
+            onPress={() => {
+              hapticLight();
+              if (showSearchList) {
+                setShowFilters(!showFilters);
+              } else {
+                setShowSearchList(true);
+              }
+            }}
             style={[styles.filterToggle, showFilters && styles.filterToggleActive]}
           >
-            <Ionicons name="options-outline" size={18} color="#fff" />
+            <Ionicons name={showSearchList ? "options-outline" : "search"} size={18} color="#fff" />
           </Pressable>
-          {hasActiveFilters && (
+          {showSearchList ? (
+            <Pressable
+              onPress={() => {
+                hapticLight();
+                setShowSearchList(false);
+                setShowFilters(false);
+              }}
+              style={styles.filterToggle}
+            >
+              <Ionicons name="grid-outline" size={18} color="#fff" />
+            </Pressable>
+          ) : null}
+          {hasActiveFilters && showSearchList && (
             <Pressable onPress={resetAll} style={styles.resetBtn}>
               <Text style={styles.resetText}>Reset</Text>
             </Pressable>
@@ -222,148 +294,157 @@ export default function MarketplaceCategoryScreen() {
         </View>
       </View>
 
-      {/* ── SEARCH BAR ── */}
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={18} color="#888" />
-        <TextInput
-          placeholder={`Search ${catDef.labelPlural.toLowerCase()}...`}
-          placeholderTextColor="#888"
-          style={styles.searchInput}
-          value={query}
-          onChangeText={setQuery}
-        />
-        {query !== '' && (
-          <Pressable onPress={() => setQuery('')}>
-            <Ionicons name="close-circle" size={18} color="#888" />
-          </Pressable>
-        )}
-      </View>
-
-      {/* ── WILAYA CHIPS ── */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={['All', ...WILAYAS]}
-        keyExtractor={(w) => w}
-        contentContainerStyle={styles.chipRow}
-        renderItem={({ item: w }) => (
-          <Pressable
-            style={[styles.chip, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && styles.chipActive]}
-            onPress={() => { hapticLight(); setSelectedWilaya(w === 'All' ? null : w); }}
-          >
-            <Text style={[styles.chipText, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && styles.chipTextActive]}>
-              {w}
-            </Text>
-          </Pressable>
-        )}
-      />
-
-      {/* ── EXPANDABLE FILTERS ── */}
-      {showFilters && (
-        <View style={styles.filterPanel}>
-          {/* Category-specific tag filters */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagChipRow}>
-            {categoryFilters.map((f) => (
-              <Pressable
-                key={f}
-                style={[styles.tagChip, activeFilters.includes(f) && { backgroundColor: catDef.color, borderColor: catDef.color }]}
-                onPress={() => toggleFilter(f)}
-              >
-                <Text style={[styles.tagChipText, activeFilters.includes(f) && { color: '#fff' }]}>{f}</Text>
+      {!showSearchList ? (
+        renderPortal()
+      ) : (
+        <>
+          {/* ── SEARCH BAR ── */}
+          <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Ionicons name="search" size={18} color={colors.muted} />
+            <TextInput
+              placeholder={`Search ${catDef.labelPlural.toLowerCase()}...`}
+              placeholderTextColor={colors.muted}
+              style={[styles.searchInput, { color: colors.text }]}
+              value={query}
+              onChangeText={setQuery}
+            />
+            {query !== '' && (
+              <Pressable onPress={() => setQuery('')}>
+                <Ionicons name="close-circle" size={18} color={colors.muted} />
               </Pressable>
-            ))}
-          </ScrollView>
-
-          {/* Sort */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-            {SORT_OPTIONS.map((s) => (
-              <Pressable
-                key={s.key}
-                style={[styles.sortChip, selectedSort === s.key && styles.sortChipActive]}
-                onPress={() => { hapticLight(); setSelectedSort(s.key); }}
-              >
-                <Text style={[styles.sortText, selectedSort === s.key && styles.sortTextActive]}>{s.label}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          {/* Toggles */}
-          <View style={styles.toggleRow}>
-            <Pressable style={[styles.toggle, familyFriendly && styles.toggleActive]} onPress={() => { hapticLight(); setFamilyFriendly(!familyFriendly); }}>
-              <Text style={[styles.toggleText, familyFriendly && styles.toggleTextActive]}>👨‍👩‍👧 Family</Text>
-            </Pressable>
-            <Pressable style={[styles.toggle, isVip && styles.toggleActive]} onPress={() => { hapticLight(); setIsVip(!isVip); }}>
-              <Text style={[styles.toggleText, isVip && styles.toggleTextActive]}>⭐ VIP</Text>
-            </Pressable>
-            <Pressable style={[styles.toggle, minRating >= 4.5 && styles.toggleActive]} onPress={() => { hapticLight(); setMinRating(minRating >= 4.5 ? 0 : 4.5); }}>
-              <Text style={[styles.toggleText, minRating >= 4.5 && styles.toggleTextActive]}>🏆 4.5+</Text>
-            </Pressable>
+            )}
           </View>
-        </View>
-      )}
 
-      {/* ── RESULTS HEADER ── */}
-      <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>{results.length} listing{results.length !== 1 ? 's' : ''}</Text>
-        {hasActiveFilters && (
-          <Pressable onPress={resetAll}>
-            <Text style={styles.clearAll}>Clear filters</Text>
-          </Pressable>
-        )}
-      </View>
-
-      {/* ── LISTINGS ── */}
-      <FlatList
-        data={results}
-        keyExtractor={(l) => l.id}
-        numColumns={isWide ? 2 : 1}
-        key={isWide ? 'wide' : 'narrow'}
-        columnWrapperStyle={isWide ? { gap: 16 } : undefined}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100, maxWidth: 1180, alignSelf: 'center', width: '100%' }]}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <EmptyState
-              icon={catDef.icon as any}
-              title={`No ${catDef.labelPlural.toLowerCase()} found`}
-              subtitle="Try adjusting your filters or search query"
+          {/* ── WILAYA CHIPS ── */}
+          <View style={{ height: 48 }}>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={['All', ...WILAYAS]}
+              keyExtractor={(w) => w}
+              contentContainerStyle={styles.chipRow}
+              renderItem={({ item: w }) => (
+                <Pressable
+                  style={[styles.chip, { backgroundColor: colors.card, borderColor: colors.border }, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && styles.chipActive]}
+                  onPress={() => { hapticLight(); setSelectedWilaya(w === 'All' ? null : w); }}
+                >
+                  <Text style={[styles.chipText, { color: colors.muted }, (selectedWilaya === w || (w === 'All' && !selectedWilaya)) && styles.chipTextActive]}>
+                    {w}
+                  </Text>
+                </Pressable>
+              )}
             />
           </View>
-        }
-        renderItem={renderListingCard}
-      />
+
+          {/* ── EXPANDABLE FILTERS ── */}
+          {showFilters && (
+            <View style={styles.filterPanel}>
+              {/* Category-specific tag filters */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagChipRow}>
+                {categoryFilters.map((f) => (
+                  <Pressable
+                    key={f}
+                    style={[styles.tagChip, { backgroundColor: colors.card, borderColor: colors.border }, activeFilters.includes(f) && { backgroundColor: catDef.color, borderColor: catDef.color }]}
+                    onPress={() => toggleFilter(f)}
+                  >
+                    <Text style={[styles.tagChipText, { color: colors.muted }, activeFilters.includes(f) && { color: '#fff' }]}>{f}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              {/* Sort */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+                {SORT_OPTIONS.map((s) => (
+                  <Pressable
+                    key={s.key}
+                    style={[styles.sortChip, { backgroundColor: colors.bg }, selectedSort === s.key && [styles.sortChipActive, { backgroundColor: colors.text }]]}
+                    onPress={() => { hapticLight(); setSelectedSort(s.key); }}
+                  >
+                    <Text style={[styles.sortText, { color: colors.muted }, selectedSort === s.key && styles.sortTextActive]}>{s.label}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              {/* Toggles */}
+              <View style={styles.toggleRow}>
+                <Pressable style={[styles.toggle, { backgroundColor: colors.card, borderColor: colors.border }, familyFriendly && styles.toggleActive]} onPress={() => { hapticLight(); setFamilyFriendly(!familyFriendly); }}>
+                  <Text style={[styles.toggleText, { color: colors.muted }, familyFriendly && styles.toggleTextActive]}>👨‍👩‍👧 Family</Text>
+                </Pressable>
+                <Pressable style={[styles.toggle, { backgroundColor: colors.card, borderColor: colors.border }, isVip && styles.toggleActive]} onPress={() => { hapticLight(); setIsVip(!isVip); }}>
+                  <Text style={[styles.toggleText, { color: colors.muted }, isVip && styles.toggleTextActive]}>⭐ VIP</Text>
+                </Pressable>
+                <Pressable style={[styles.toggle, { backgroundColor: colors.card, borderColor: colors.border }, minRating >= 4.5 && styles.toggleActive]} onPress={() => { hapticLight(); setMinRating(minRating >= 4.5 ? 0 : 4.5); }}>
+                  <Text style={[styles.toggleText, { color: colors.muted }, minRating >= 4.5 && styles.toggleTextActive]}>🏆 4.5+</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {/* ── RESULTS HEADER ── */}
+          <View style={styles.resultsHeader}>
+            <Text style={[styles.resultsCount, { color: colors.muted }]}>{results.length} listing{results.length !== 1 ? 's' : ''}</Text>
+            {hasActiveFilters && (
+              <Pressable onPress={resetAll}>
+                <Text style={styles.clearAll}>Clear filters</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {/* ── LISTINGS ── */}
+          <FlatList
+            data={results}
+            keyExtractor={(l) => l.id}
+            numColumns={isWide ? 2 : 1}
+            key={isWide ? 'wide' : 'narrow'}
+            columnWrapperStyle={isWide ? { gap: 16 } : undefined}
+            contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100, maxWidth: 1180, alignSelf: 'center', width: '100%' }]}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyWrap}>
+                <EmptyState
+                  icon={catDef.icon as any}
+                  title={`No ${catDef.labelPlural.toLowerCase()} found`}
+                  subtitle="Try adjusting your filters or search query"
+                />
+              </View>
+            }
+            renderItem={renderListingCard}
+          />
+        </>
+      )}
     </View>
   );
 }
 
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  // Header (Uber dark solid)
-  header: { paddingHorizontal: 16, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0d0d0d' },
+  // Header
+  header: { paddingHorizontal: 16, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#fff' },
+  headerTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.white },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   filterToggle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   filterToggleActive: { backgroundColor: 'rgba(255,255,255,0.35)' },
   resetBtn: { paddingHorizontal: 10, paddingVertical: 6 },
-  resetText: { fontSize: 13, fontFamily: 'mon-sb', color: '#fff' },
+  resetText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.white },
 
   // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginTop: 12, marginBottom: 8,
-    backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 16, height: 48,
+    borderRadius: 999, paddingHorizontal: 16, height: 48,
     borderWidth: 1, borderColor: RIHLA.border,
   },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon', color: RIHLA.dark },
+  searchInput: { flex: 1, fontSize: 14, fontFamily: 'mon' },
 
   // Chips
   chipRow: { paddingHorizontal: 20, gap: 8, paddingVertical: 6 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: RIHLA.border,
   },
   chipActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
   chipText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
@@ -374,12 +455,12 @@ const styles = StyleSheet.create({
   tagChipRow: { paddingHorizontal: 20, gap: 8, paddingVertical: 4 },
   tagChip: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
-    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: RIHLA.border,
   },
   tagChipText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText },
 
   // Sort
-  sortChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: '#f0f0f0' },
+  sortChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
   sortChipActive: { backgroundColor: RIHLA.dark },
   sortText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText },
   sortTextActive: { color: '#fff' },
@@ -388,7 +469,7 @@ const styles = StyleSheet.create({
   toggleRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20 },
   toggle: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
-    borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: RIHLA.border,
   },
   toggleActive: { backgroundColor: RIHLA.primary + '12', borderColor: RIHLA.primary },
   toggleText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
@@ -404,7 +485,7 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
+    borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border,
     overflow: 'hidden', marginBottom: 4,
   },
   cardImage: { height: 120, alignItems: 'center', justifyContent: 'center', position: 'relative' },

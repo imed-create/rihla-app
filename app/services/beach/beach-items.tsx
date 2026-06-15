@@ -7,8 +7,9 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-n
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
 import VisualSlotGrid, { VisualSlot } from "@/components/beach/VisualSlotGrid";
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 import { useBeachOccupancy } from "@/hooks/useBeachOccupancy";
 import { safeGoBack } from "@/utils/safeNavigation";
 
@@ -50,7 +51,7 @@ function buildDockSlots(itemId: string, count: number): VisualSlot[] {
 }
 
 export default function BeachItemsScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
   const { occupiedAssetSlots } = useBeachOccupancy();
@@ -92,7 +93,7 @@ export default function BeachItemsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#0a2540", "#023E58"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -109,7 +110,7 @@ export default function BeachItemsScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT ACTIVITY</Text>
+        <Text style={[styles.label, { color: colors.muted }]}>SELECT ACTIVITY</Text>
         <View style={styles.itemRow}>
           {ITEMS.map((item) => (
             <Pressable
@@ -131,8 +132,8 @@ export default function BeachItemsScreen() {
               <LinearGradient colors={[item.color, item.color + "BB"]} style={styles.itemIconBg}>
                 <MaterialCommunityIcons name={item.icon as any} size={36} color="#FFFFFF" />
               </LinearGradient>
-              <Text style={[styles.itemName, { color: colors.foreground }]}>{item.name}</Text>
-              <Text style={[styles.itemDesc, { color: colors.mutedForeground }]} numberOfLines={2}>
+              <Text style={[styles.itemName, { color: colors.text }]}>{item.name}</Text>
+              <Text style={[styles.itemDesc, { color: colors.muted }]} numberOfLines={2}>
                 {item.desc}
               </Text>
             </Pressable>
@@ -149,7 +150,7 @@ export default function BeachItemsScreen() {
           onSelect={setAssetSlotId}
         />
 
-        <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT DURATION</Text>
+        <Text style={[styles.label, { color: colors.muted }]}>SELECT DURATION</Text>
         <View style={styles.priceRow}>
           {selectedItem.prices.map((p) => (
             <Pressable
@@ -167,7 +168,7 @@ export default function BeachItemsScreen() {
               <Text
                 style={[
                   styles.priceDuration,
-                  { color: selectedPrice.label === p.label ? "#FFF" : colors.foreground },
+                  { color: selectedPrice.label === p.label ? "#FFF" : colors.text },
                 ]}
               >
                 {p.label}
@@ -177,7 +178,7 @@ export default function BeachItemsScreen() {
                   styles.priceAmount,
                   {
                     color:
-                      selectedPrice.label === p.label ? "rgba(255,255,255,0.9)" : colors.primary,
+                      selectedPrice.label === p.label ? "rgba(255,255,255,0.9)" : RIHLA.primary,
                   },
                 ]}
               >
@@ -195,7 +196,7 @@ export default function BeachItemsScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
         <ConfirmButton
           label={assetSlotId ? `Book ${selectedItem.name}` : "Select a dock slot"}
           onPress={handleBook}

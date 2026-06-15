@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
 type GuideClient = { id: string; client: string; tour: string; date: string; language: string; groupSize: number; totalDZD: number; status: 'confirmed' | 'in-progress' | 'completed' | 'cancelled'; guideName: string };
 
@@ -15,8 +17,56 @@ const MOCK_CLIENTS: GuideClient[] = [
 ];
 
 export default function GuideBookings() {
-  const [clients] = useState(MOCK_CLIENTS);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'confirmed' | 'in-progress'>('all');
+
+  const dynamicClients = useMemo(() => {
+    const guideBookings = bookings.filter(b => b.type === 'guide');
+    return guideBookings.map(b => {
+      let gStatus: GuideClient['status'] = 'confirmed';
+      if (b.status === 'active') gStatus = 'in-progress';
+      else if (b.status === 'completed') gStatus = 'completed';
+      else if (b.status === 'cancelled') gStatus = 'cancelled';
+
+      return {
+        id: b.id,
+        client: String(b.details.contact_name || 'Guest'),
+        tour: b.title,
+        date: String(b.details.date || b.createdAt.split('T')[0]),
+        language: String(b.details.languages || 'Arabic'),
+        groupSize: Number(b.details.group_size || 1),
+        totalDZD: b.price,
+        status: gStatus,
+        guideName: String(b.details.guide || 'Guide'),
+      };
+    });
+  }, [bookings]);
+
+  const clients = useMemo(() => {
+    return [...dynamicClients, ...MOCK_CLIENTS];
+  }, [dynamicClients]);
+
+  const handleStartTour = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'active');
+      showToast('Tour started!', 'success');
+    } else {
+      showToast('Tour status updated.', 'success');
+    }
+  };
+
+  const handleCompleteTour = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'completed');
+      showToast('Tour completed!', 'success');
+    } else {
+      showToast('Tour marked complete.', 'success');
+    }
+  };
 
   const filtered = filter === 'all' ? clients : clients.filter(c => c.status === filter);
 
@@ -51,7 +101,7 @@ export default function GuideBookings() {
               <View style={styles.avatar}><Text style={styles.avatarText}>{item.client[0]}</Text></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.clientName}>{item.client}</Text>
-                <Text style={styles.tourName}>{item.tour} · {item.tour}</Text>
+                <Text style={styles.tourName}>{item.tour}</Text>
               </View>
               <View style={[styles.statusBadge, {
                 backgroundColor: item.status === 'confirmed' ? '#EEF2FF' : item.status === 'in-progress' ? '#D1FAE5' : '#F1F5F9'
@@ -66,7 +116,21 @@ export default function GuideBookings() {
               <View style={styles.detailChip}><Ionicons name="language-outline" size={12} color={RIHLA.mutedText} /><Text style={styles.detailText}>{item.language}</Text></View>
               <View style={styles.detailChip}><Ionicons name="people-outline" size={12} color={RIHLA.mutedText} /><Text style={styles.detailText}>{item.groupSize} pax</Text></View>
             </View>
-            <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+              {item.status === 'confirmed' && (
+                <TouchableOpacity style={styles.startBtn} onPress={() => handleStartTour(item.id)}>
+                  <Ionicons name="play-outline" size={14} color="#fff" />
+                  <Text style={styles.startBtnText}>Start Tour</Text>
+                </TouchableOpacity>
+              )}
+              {item.status === 'in-progress' && (
+                <TouchableOpacity style={styles.completeBtn} onPress={() => handleCompleteTour(item.id)}>
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                  <Text style={styles.completeBtnText}>Complete</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         )}
         contentContainerStyle={{ paddingBottom: 20 }}
@@ -98,5 +162,10 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   detailChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F8FAFC', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   detailText: { fontSize: 10, fontFamily: 'mon', color: RIHLA.mutedText },
-  priceText: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.primary, marginTop: 8 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIHLA.border },
+  priceText: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.primary },
+  startBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#6366F1', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  startBtnText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
+  completeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10B981', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  completeBtnText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
 });

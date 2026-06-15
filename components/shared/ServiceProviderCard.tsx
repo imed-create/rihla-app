@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import { formatTime } from '@/lib/map';
 
@@ -49,6 +50,7 @@ export default function ServiceProviderCard({
   onSelect,
   onPress,
 }: ServiceProviderCardProps) {
+  const { colors } = useTheme();
   const catDef = getCategoryDef(provider.category as any);
   const catColor = catDef?.color || RIHLA.primary;
 
@@ -64,6 +66,7 @@ export default function ServiceProviderCard({
       activeOpacity={0.85}
       style={[
         styles.card,
+        { backgroundColor: colors.card },
         selected && {
           borderColor: catColor,
           backgroundColor: catColor + '08',
@@ -78,17 +81,17 @@ export default function ServiceProviderCard({
           <Ionicons name="person" size={22} color={catColor} />
         )}
         {provider.isAvailable !== false && (
-          <View style={styles.onlineDot} />
+          <View style={[styles.onlineDot, { borderColor: colors.card }]} />
         )}
       </View>
 
       {/* Info */}
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>{provider.name}</Text>
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{provider.name}</Text>
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={12} color="#FFD166" />
-            <Text style={styles.rating}>{provider.rating}</Text>
+            <Text style={[styles.rating, { color: colors.text }]}>{provider.rating}</Text>
           </View>
         </View>
 
@@ -110,34 +113,34 @@ export default function ServiceProviderCard({
         <View style={styles.metaRow}>
           {/* Price */}
           <Text style={styles.price}>
-            {provider.priceDZD.toLocaleString()} <Text style={styles.priceUnit}>DZD</Text>
+            {provider.priceDZD.toLocaleString()} <Text style={[styles.priceUnit, { color: colors.muted }]}>DZD</Text>
           </Text>
 
           {/* Separator */}
           {(provider.time != null || provider.seats) && (
-            <Text style={styles.separator}>|</Text>
+            <Text style={[styles.separator, { color: colors.muted }]}>|</Text>
           )}
 
           {/* ETA */}
           {provider.time != null && (
             <View style={styles.metaItem}>
-              <Ionicons name="time-outline" size={12} color="#64748B" />
-              <Text style={styles.metaText}>{formatTime(provider.time)}</Text>
+              <Ionicons name="time-outline" size={12} color={colors.muted} />
+              <Text style={[styles.metaText, { color: colors.muted }]}>{formatTime(provider.time)}</Text>
             </View>
           )}
 
           {/* Seats */}
           {provider.seats != null && (
             <View style={styles.metaItem}>
-              <Ionicons name="people-outline" size={12} color="#64748B" />
-              <Text style={styles.metaText}>{provider.seats} seats</Text>
+              <Ionicons name="people-outline" size={12} color={colors.muted} />
+              <Text style={[styles.metaText, { color: colors.muted }]}>{provider.seats} seats</Text>
             </View>
           )}
         </View>
       </View>
 
       {/* Chevron */}
-      <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
     </TouchableOpacity>
   );
 }

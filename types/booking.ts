@@ -2,6 +2,9 @@ export type IconFamily = 'Ionicons' | 'MaterialCommunityIcons' | 'Feather';
 
 export type AppBookingStatus = 'active' | 'completed' | 'cancelled' | 'pending' | 'confirmed';
 
+/** Booking = service reservations (hotel, guide, event…), Order = transactional (ride, food, beach) */
+export type BookingLane = 'booking' | 'order';
+
 /** Traveler booking stored in AppContext (UI ticket) */
 export type AppBooking = {
   id: string;
@@ -17,6 +20,7 @@ export type AppBooking = {
   expiresAt?: string;
   businessId?: string;
   beachId?: string;
+  lane?: BookingLane;
   details: Record<string, string | number | boolean>;
 };
 

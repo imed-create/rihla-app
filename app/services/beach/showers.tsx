@@ -6,8 +6,9 @@ import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConfirmButton from '@/components/shared/ConfirmButton';
+import { RIHLA } from "@/constants/theme";
 import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
 
 const SLOTS = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
 const PERSON_OPTIONS = [1, 2, 3, 4];
@@ -19,7 +20,7 @@ const ADDONS = [
 ];
 
 export default function ShowersScreen() {
-  const colors = useColors();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
 
@@ -64,7 +65,7 @@ export default function ShowersScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={["#48CAE4", "#00a896"]}
         style={[styles.header, { paddingTop: topPad + 16 }]}
@@ -80,14 +81,14 @@ export default function ShowersScreen() {
       {success ? (
         <View style={styles.successWrap}>
           <Ionicons name="checkmark-circle" size={80} color="#06D6A0" />
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>Booked!</Text>
-          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>Booked!</Text>
+          <Text style={[styles.successSub, { color: colors.muted }]}>
             Your shower cabin is reserved for {slot}. Head to the facilities block.
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 140, gap: 16 }} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>NUMBER OF PEOPLE</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>NUMBER OF PEOPLE</Text>
           <View style={styles.personRow}>
             {PERSON_OPTIONS.map((p) => (
               <Pressable
@@ -95,19 +96,19 @@ export default function ShowersScreen() {
                 style={[
                   styles.personBtn,
                   {
-                    backgroundColor: persons === p ? "#48CAE4" : colors.muted,
+                    backgroundColor: persons === p ? "#48CAE4" : colors.card,
                     borderColor: persons === p ? "#48CAE4" : colors.border,
                   },
                 ]}
                 onPress={() => setPersons(p)}
               >
-                <MaterialCommunityIcons name="account-outline" size={20} color={persons === p ? "#FFF" : colors.mutedForeground} />
-                <Text style={[styles.personText, { color: persons === p ? "#FFF" : colors.foreground }]}>{p}</Text>
+                <MaterialCommunityIcons name="account-outline" size={20} color={persons === p ? "#FFF" : colors.muted} />
+                <Text style={[styles.personText, { color: persons === p ? "#FFF" : colors.text }]}>{p}</Text>
               </Pressable>
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>SELECT TIME SLOT</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>SELECT TIME SLOT</Text>
           <View style={styles.slotsGrid}>
             {SLOTS.map((s) => (
               <Pressable
@@ -115,18 +116,18 @@ export default function ShowersScreen() {
                 style={[
                   styles.slotChip,
                   {
-                    backgroundColor: slot === s ? "#48CAE4" : colors.muted,
+                    backgroundColor: slot === s ? "#48CAE4" : colors.card,
                     borderColor: slot === s ? "#48CAE4" : colors.border,
                   },
                 ]}
                 onPress={() => setSlot(s)}
               >
-                <Text style={[styles.slotText, { color: slot === s ? "#FFF" : colors.foreground }]}>{s}</Text>
+                <Text style={[styles.slotText, { color: slot === s ? "#FFF" : colors.text }]}>{s}</Text>
               </Pressable>
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>ADD-ONS</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>ADD-ONS</Text>
           <View style={styles.addonList}>
             {ADDONS.map((a) => {
               const isOn = addons.includes(a.id);
@@ -144,10 +145,10 @@ export default function ShowersScreen() {
                   onPress={() => toggleAddon(a.id)}
                 >
                   <View>
-                    <Text style={[styles.addonLabel, { color: colors.foreground }]}>{a.label}</Text>
-                    <Text style={[styles.addonPrice, { color: colors.primary }]}>+{a.price} DZD</Text>
+                    <Text style={[styles.addonLabel, { color: colors.text }]}>{a.label}</Text>
+                    <Text style={[styles.addonPrice, { color: RIHLA.primary }]}>+{a.price} DZD</Text>
                   </View>
-                  <View style={[styles.addonCheck, { backgroundColor: isOn ? "#48CAE4" : colors.muted }]}>
+                  <View style={[styles.addonCheck, { backgroundColor: isOn ? "#48CAE4" : colors.card }]}>
                     {isOn && <Ionicons name="checkmark" size={14} color="#FFF" />}
                   </View>
                 </Pressable>
@@ -156,14 +157,14 @@ export default function ShowersScreen() {
           </View>
 
           <View style={[styles.totalRow, { backgroundColor: "#48CAE422", borderColor: "#48CAE444" }]}>
-            <Text style={[styles.totalLabel, { color: colors.mutedForeground }]}>Total</Text>
+            <Text style={[styles.totalLabel, { color: colors.muted }]}>Total</Text>
             <Text style={[styles.totalValue, { color: "#48CAE4" }]}>{total} DZD</Text>
           </View>
         </ScrollView>
       )}
 
       {!success && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.bg }]}>
           <ConfirmButton label="Book Shower" onPress={handleBook} loading={loading} price={total} />
         </View>
       )}

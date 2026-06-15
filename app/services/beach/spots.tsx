@@ -20,6 +20,7 @@ import { showToast } from '@/components/Toast';
 import { SandSpot, SandZoneId, ZONE_CONFIG, makeZoneSpots } from '@/constants/beachLayout';
 import { sandIdToZoneType } from '@/types/beach';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
 import { useBeachOccupancy } from '@/hooks/useBeachOccupancy';
 import { bookingHref } from '@/utils/router';
@@ -33,6 +34,7 @@ const PRICES: Record<SandZoneId, number> = {
 };
 
 export default function SpotsScreen() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
   const { occupiedSpotIds } = useBeachOccupancy();
@@ -107,7 +109,7 @@ export default function SpotsScreen() {
   );
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <LinearGradient
         colors={[RIHLA.primary, RIHLA.accent]}
         style={[styles.header, { paddingTop: topPad + 12 }]}
@@ -137,9 +139,9 @@ export default function SpotsScreen() {
         <ZoneTabs active={zone} onChange={(z) => { setZone(z); setSpot(null); setHoldExpiresAt(null); }} />
 
         <View style={styles.legend}>
-          <Legend label="Available" color={RIHLA.card} border={RIHLA.border} />
+          <Legend label="Available" color={colors.card} border={colors.border} />
           <Legend label="Selected" color={RIHLA.primary} border={RIHLA.primary} />
-          <Legend label="Taken" color={RIHLA.border} border={RIHLA.border} text="#bbb" />
+          <Legend label="Taken" color={colors.border} border={colors.border} text={colors.muted} />
         </View>
 
         <FlatList
@@ -155,11 +157,11 @@ export default function SpotsScreen() {
       {spot && (
         <Animated.View
           entering={SlideInDown.springify().damping(18)}
-          style={[styles.bar, { paddingBottom: insets.bottom + 12 }]}
+          style={[styles.bar, { paddingBottom: insets.bottom + 12, backgroundColor: colors.card, borderTopColor: colors.border }]}
         >
           <View style={styles.barLeft}>
-            <Text style={styles.barSpot}>{spot.id}</Text>
-            <View style={styles.badge}>
+            <Text style={[styles.barSpot, { color: colors.text }]}>{spot.id}</Text>
+            <View style={[styles.badge, { backgroundColor: colors.muted }]}>
               <Text style={styles.badgeText}>{ZONE_CONFIG[zone].label}</Text>
             </View>
           </View>
@@ -199,7 +201,7 @@ function Legend({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: RIHLA.background },
+  root: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 24, alignItems: 'center' },
   backBtn: { position: 'absolute', left: 16, top: 16, padding: 8 },
   headerTitle: { fontSize: 24, fontFamily: 'mon-b', color: '#fff', marginTop: 8 },
@@ -208,7 +210,7 @@ const styles = StyleSheet.create({
   legend: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 8 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendSwatch: { width: 14, height: 14, borderRadius: 4, borderWidth: 2 },
-  legendLabel: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
+  legendLabel: { fontSize: 11, fontFamily: 'mon' },
   gridRow: { gap: 8, marginBottom: 8 },
   bar: {
     position: 'absolute',
@@ -220,19 +222,16 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 16,
     paddingTop: 14,
-    backgroundColor: RIHLA.card,
     borderTopWidth: 1,
-    borderTopColor: RIHLA.border,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 12,
   },
   barLeft: { flex: 1, gap: 4 },
-  barSpot: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
+  barSpot: { fontSize: 16, fontFamily: 'mon-b' },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: RIHLA.muted,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,

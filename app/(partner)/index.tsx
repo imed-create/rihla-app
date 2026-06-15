@@ -11,6 +11,7 @@ import ProQRScanner from '@/components/dashboard/QRScanner';
 import { PRO_THEME } from '@/constants/proNavigation';
 import { RIHLA } from '@/constants/theme';
 import { useTranslation } from '@/context/I18nContext';
+import { useTheme } from '@/context/ThemeContext';
 import { showToast } from '@/components/Toast';
 import {
   partnerEarningsDzd,
@@ -25,6 +26,7 @@ export default function PartnerDashboard() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const theme = PRO_THEME.partner;
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   const todayRequests = useMemo(
     () => serviceRequests.filter((r) => {
@@ -105,17 +107,17 @@ export default function PartnerDashboard() {
         </LinearGradient>
 
         <Pressable
-          style={[styles.onlinePill, partnerOnline ? styles.onlineOn : styles.onlineOff]}
+          style={[styles.onlinePill, partnerOnline ? { backgroundColor: RIHLA.accent + '15', borderColor: RIHLA.accent } : { backgroundColor: colors.muted, borderColor: colors.border }]}
           onPress={toggleOnline}
         >
           <View style={[styles.onlineDot, { backgroundColor: partnerOnline ? RIHLA.accent : RIHLA.mutedText }]} />
-          <Text style={[styles.onlineText, partnerOnline ? styles.onlineTextOn : styles.onlineTextOff]}>
+          <Text style={[styles.onlineText, { color: partnerOnline ? RIHLA.accent : colors.muted }]}>
             {partnerOnline ? 'Online — accepting requests' : 'Offline'}
           </Text>
         </Pressable>
 
         <Pressable
-          style={styles.scanLink}
+          style={[styles.scanLink, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             setScannerOpen(true);
@@ -125,15 +127,15 @@ export default function PartnerDashboard() {
           <Text style={styles.scanLinkText}>Scan traveler ticket →</Text>
         </Pressable>
 
-        <Text style={styles.sectionTitle}>Overview</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Overview</Text>
         <View style={styles.statsGrid}>
           {stats.map((s) => (
-            <View key={s.label} style={styles.statCard}>
+            <View key={s.label} style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={[styles.statIcon, { backgroundColor: s.color + '15' }]}>
                 <Ionicons name={s.icon} size={22} color={s.color} />
               </View>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{s.value}</Text>
+              <Text style={[styles.statLabel, { color: colors.muted }]}>{s.label}</Text>
             </View>
           ))}
         </View>
@@ -169,40 +171,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 2,
   },
-  onlineOn: { backgroundColor: '#E6FAF7', borderColor: RIHLA.accent },
-  onlineOff: { backgroundColor: RIHLA.muted, borderColor: RIHLA.border },
   onlineDot: { width: 12, height: 12, borderRadius: 6 },
   onlineText: { fontSize: 15, fontFamily: 'mon-b' },
-  onlineTextOn: { color: RIHLA.primary },
-  onlineTextOff: { color: RIHLA.mutedText },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b' },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   statCard: {
     width: '47%',
-    backgroundColor: RIHLA.card,
     borderRadius: 16,
     padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: RIHLA.border,
   },
   statIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.dark },
-  statLabel: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
+  statValue: { fontSize: 20, fontFamily: 'mon-b' },
+  statLabel: { fontSize: 11, fontFamily: 'mon' },
   scanLink: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: RIHLA.card,
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: RIHLA.border,
   },
   scanLinkText: { fontFamily: 'mon-sb', fontSize: 14, color: RIHLA.highlight },
-  panel: { backgroundColor: RIHLA.card, borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border, padding: 16, gap: 10, marginTop: 4 },
+  panel: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 10, marginTop: 4 },
   panelHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  panelTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  panelTitle: { fontSize: 15, fontFamily: 'mon-b' },
   checklistRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
-  checklistText: { fontSize: 13, fontFamily: 'mon', color: RIHLA.dark, flex: 1 },
+  checklistText: { fontSize: 13, fontFamily: 'mon', flex: 1 },
 });

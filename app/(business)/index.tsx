@@ -35,6 +35,7 @@ import { RIHLA } from '@/constants/theme';
 import { useTranslation } from '@/context/I18nContext';
 import { getCategoryDef, MARKETPLACE_CATEGORIES } from '@/constants/marketplaceCategories';
 import { useBusinessAssets } from '@/store/useBusinessAssets';
+import { useTheme } from '@/context/ThemeContext';
 
 // Dashboard components
 import HotelOverview from '@/components/dashboard/hotel/HotelOverview';
@@ -79,6 +80,7 @@ export default function BusinessDashboard() {
   const [changingType, setChangingType] = React.useState(false);
   const theme = PRO_THEME.business;
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   const businessType = (user.kycData?.businessType ?? '').toLowerCase();
   const catDef = businessType ? getCategoryDef(businessType as any) : null;
@@ -162,7 +164,7 @@ export default function BusinessDashboard() {
         {/* ── GLOBAL QUICK LINKS ── */}
         {hasListings && (
           <View style={styles.globalActions}>
-            <Text style={styles.sectionTitle}>Business Tools</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Business Tools</Text>
             <View style={styles.actionsGrid}>
               <QuickAction icon="calendar-outline" label="Bookings" color={RIHLA.accent} onPress={() => router.push('/(business)/bookings' as any)} />
               <QuickAction icon="list-outline" label="Listings" color={RIHLA.primary} onPress={() => router.push('/(business)/listings' as any)} />
@@ -179,30 +181,30 @@ export default function BusinessDashboard() {
       <Modal visible={changingType} transparent animationType="slide" onRequestClose={() => setChangingType(false)}>
         <View style={styles.modalBackdrop}>
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setChangingType(false)} />
-          <View style={styles.modalSheet}>
-            <View style={styles.modalKnob} />
-            <Text style={styles.modalTitle}>Switch Dashboard View</Text>
-            <Text style={styles.modalSubtitle}>Switch to see a different business dashboard.</Text>
+          <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
+            <View style={[styles.modalKnob, { backgroundColor: colors.border }]} />
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Switch Dashboard View</Text>
+            <Text style={[styles.modalSubtitle, { color: colors.muted }]}>Switch to see a different business dashboard.</Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
               {MARKETPLACE_CATEGORIES.map((cat) => (
                 <TouchableOpacity
                   key={cat.key}
-                  style={[styles.typeOption, businessType === cat.key && { borderColor: cat.color, backgroundColor: cat.color + '10' }]}
+                  style={[styles.typeOption, { borderColor: colors.border, backgroundColor: colors.bg }, businessType === cat.key && { borderColor: cat.color, backgroundColor: cat.color + '10' }]}
                   onPress={() => handleChangeType(cat.key)}
                 >
                   <View style={[styles.typeOptionIcon, { backgroundColor: cat.color + '18' }]}>
                     <Ionicons name={cat.icon as any} size={22} color={cat.color} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.typeOptionLabel}>{cat.label}</Text>
-                    <Text style={styles.typeOptionDesc}>{cat.description}</Text>
+                    <Text style={[styles.typeOptionLabel, { color: colors.text }]}>{cat.label}</Text>
+                    <Text style={[styles.typeOptionDesc, { color: colors.muted }]}>{cat.description}</Text>
                   </View>
                   {businessType === cat.key && <Ionicons name="checkmark-circle" size={20} color={cat.color} />}
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TouchableOpacity style={styles.modalCancel} onPress={() => setChangingType(false)}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+            <TouchableOpacity style={[styles.modalCancel, { backgroundColor: colors.bg }]} onPress={() => setChangingType(false)}>
+              <Text style={[styles.modalCancelText, { color: colors.muted }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -225,20 +227,21 @@ function ZeroStateHub({
 }) {
   const isHotel = businessType === 'hotel';
   const color = catDef?.color ?? '#0a2540';
+  const { colors } = useTheme();
 
   return (
     <View style={styles.zeroRoot}>
       {/* Welcome card */}
-      <View style={styles.zeroWelcome}>
+      <View style={[styles.zeroWelcome, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={[styles.zeroIconRing, { borderColor: color + '20' }]}>
           <View style={[styles.zeroIconCircle, { backgroundColor: color + '12' }]}>
             <Ionicons name={catDef ? (catDef.icon as any) : 'business-outline'} size={36} color={color} />
           </View>
         </View>
-        <Text style={styles.zeroTitle}>
+        <Text style={[styles.zeroTitle, { color: colors.text }]}>
           Welcome to your {catDef?.label ?? 'Business'} Dashboard
         </Text>
-        <Text style={styles.zeroSubtitle}>
+        <Text style={[styles.zeroSubtitle, { color: colors.muted }]}>
           You're verified and ready to start! List your first {isHotel ? 'property' : 'offering'} to begin receiving bookings from travelers across Algeria.
         </Text>
 
@@ -277,8 +280,8 @@ function ZeroStateHub({
 
       {/* Help text */}
       <View style={styles.zeroHelp}>
-        <Ionicons name="information-circle-outline" size={16} color="#64748B" />
-        <Text style={styles.zeroHelpText}>
+        <Ionicons name="information-circle-outline" size={16} color={colors.muted} />
+        <Text style={[styles.zeroHelpText, { color: colors.muted }]}>
           Need help getting started? Check the guide or contact our support team.
         </Text>
       </View>
@@ -287,41 +290,44 @@ function ZeroStateHub({
 }
 
 function FeatureRow({ icon, text, color }: { icon: string; text: string; color: string }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.featureRow}>
       <View style={[styles.featureIcon, { backgroundColor: color + '12' }]}>
         <Ionicons name={icon as any} size={16} color={color} />
       </View>
-      <Text style={styles.featureText}>{text}</Text>
+      <Text style={[styles.featureText, { color: colors.text }]}>{text}</Text>
     </View>
   );
 }
 
 function QuickAction({ icon, label, color, onPress }: { icon: string; label: string; color: string; onPress: () => void }) {
+  const { colors } = useTheme();
   return (
     <Pressable style={styles.globalAction} onPress={onPress}>
       <View style={[styles.globalActionIcon, { backgroundColor: color + '18' }]}>
         <Ionicons name={icon as any} size={20} color={color} />
       </View>
-      <Text style={styles.globalActionText}>{label}</Text>
+      <Text style={[styles.globalActionText, { color: colors.muted }]}>{label}</Text>
     </Pressable>
   );
 }
 
 // ── No business type set yet ──
 function NoDashboardPrompt({ onSelectType }: { onSelectType: (t: string) => void }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.noTypeWrap}>
-      <Ionicons name="business-outline" size={48} color={RIHLA.border} />
-      <Text style={styles.noTypeTitle}>Choose Your Business Category</Text>
-      <Text style={styles.noTypeSubtitle}>Select your business type to see a tailored dashboard.</Text>
+    <View style={[styles.noTypeWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Ionicons name="business-outline" size={48} color={colors.border} />
+      <Text style={[styles.noTypeTitle, { color: colors.text }]}>Choose Your Business Category</Text>
+      <Text style={[styles.noTypeSubtitle, { color: colors.muted }]}>Select your business type to see a tailored dashboard.</Text>
       <View style={styles.noTypeGrid}>
         {MARKETPLACE_CATEGORIES.map((cat) => (
-          <Pressable key={cat.key} style={styles.noTypeCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSelectType(cat.key); }}>
+          <Pressable key={cat.key} style={[styles.noTypeCard, { backgroundColor: colors.bg, borderColor: colors.border }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSelectType(cat.key); }}>
             <View style={[styles.noTypeIcon, { backgroundColor: cat.color + '18' }]}>
               <Ionicons name={cat.icon as any} size={22} color={cat.color} />
             </View>
-            <Text style={styles.noTypeCardLabel}>{cat.label}</Text>
+            <Text style={[styles.noTypeCardLabel, { color: colors.text }]}>{cat.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -352,47 +358,47 @@ const styles = StyleSheet.create({
 
   // Zero-state
   zeroRoot: { marginHorizontal: 16, gap: 16, marginTop: 8 },
-  zeroWelcome: { backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center', gap: 12, borderWidth: 1, borderColor: RIHLA.border },
+  zeroWelcome: { borderRadius: 24, padding: 24, alignItems: 'center', gap: 12, borderWidth: 1 },
   zeroIconRing: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   zeroIconCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
-  zeroTitle: { fontSize: 20, fontFamily: 'mon-b', color: RIHLA.dark, textAlign: 'center', letterSpacing: -0.3 },
-  zeroSubtitle: { fontSize: 13, fontFamily: 'mon', color: '#64748B', textAlign: 'center', lineHeight: 20, paddingHorizontal: 8 },
+  zeroTitle: { fontSize: 20, fontFamily: 'mon-b', textAlign: 'center', letterSpacing: -0.3 },
+  zeroSubtitle: { fontSize: 13, fontFamily: 'mon', textAlign: 'center', lineHeight: 20, paddingHorizontal: 8 },
   zeroFeatures: { width: '100%', gap: 10, marginTop: 8 },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   featureIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  featureText: { flex: 1, fontSize: 13, fontFamily: 'mon', color: '#334155' },
+  featureText: { flex: 1, fontSize: 13, fontFamily: 'mon' },
   zeroCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 16 },
   zeroCtaText: { fontSize: 16, fontFamily: 'mon-b', color: '#fff' },
   zeroHelp: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
-  zeroHelpText: { flex: 1, fontSize: 12, fontFamily: 'mon', color: '#64748B', lineHeight: 17 },
+  zeroHelpText: { flex: 1, fontSize: 12, fontFamily: 'mon', lineHeight: 17 },
 
   // Global quick links
   globalActions: { paddingHorizontal: 16, paddingTop: 24, gap: 12 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b' },
   actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   globalAction: { width: '18%', alignItems: 'center', gap: 6 },
   globalActionIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  globalActionText: { fontSize: 10, fontFamily: 'mon-sb', color: RIHLA.mutedText, textAlign: 'center' },
+  globalActionText: { fontSize: 10, fontFamily: 'mon-sb', textAlign: 'center' },
 
   // No type prompt
-  noTypeWrap: { margin: 16, backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', gap: 12, borderWidth: 1, borderColor: RIHLA.border },
-  noTypeTitle: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark, textAlign: 'center' },
-  noTypeSubtitle: { fontSize: 13, fontFamily: 'mon', color: RIHLA.mutedText, textAlign: 'center', lineHeight: 20 },
+  noTypeWrap: { margin: 16, borderRadius: 20, padding: 24, alignItems: 'center', gap: 12, borderWidth: 1 },
+  noTypeTitle: { fontSize: 18, fontFamily: 'mon-b', textAlign: 'center' },
+  noTypeSubtitle: { fontSize: 13, fontFamily: 'mon', textAlign: 'center', lineHeight: 20 },
   noTypeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8, width: '100%' },
-  noTypeCard: { width: '29%', backgroundColor: '#F8FAFC', borderRadius: 14, padding: 12, alignItems: 'center', gap: 6, borderWidth: 1, borderColor: RIHLA.border },
+  noTypeCard: { width: '29%', borderRadius: 14, padding: 12, alignItems: 'center', gap: 6, borderWidth: 1 },
   noTypeIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  noTypeCardLabel: { fontSize: 10, fontFamily: 'mon-sb', color: RIHLA.dark, textAlign: 'center' },
+  noTypeCardLabel: { fontSize: 10, fontFamily: 'mon-sb', textAlign: 'center' },
 
   // Change type modal
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(10,37,64,0.55)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
-  modalKnob: { width: 44, height: 5, backgroundColor: '#E5E7EB', borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontFamily: 'mon-b', color: '#111827', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, fontFamily: 'mon', color: '#6B7280', lineHeight: 18, marginBottom: 16 },
-  typeOption: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#F9FAFB', marginBottom: 10 },
+  modalSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
+  modalKnob: { width: 44, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 20, fontFamily: 'mon-b', marginBottom: 4 },
+  modalSubtitle: { fontSize: 13, fontFamily: 'mon', lineHeight: 18, marginBottom: 16 },
+  typeOption: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, marginBottom: 10 },
   typeOptionIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  typeOptionLabel: { fontSize: 15, fontFamily: 'mon-sb', color: '#1F2937', marginBottom: 2 },
-  typeOptionDesc: { fontSize: 12, fontFamily: 'mon', color: '#6B7280' },
-  modalCancel: { height: 52, borderRadius: 16, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
-  modalCancelText: { fontSize: 15, fontFamily: 'mon-sb', color: '#4B5563' },
+  typeOptionLabel: { fontSize: 15, fontFamily: 'mon-sb', marginBottom: 2 },
+  typeOptionDesc: { fontSize: 12, fontFamily: 'mon' },
+  modalCancel: { height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  modalCancelText: { fontSize: 15, fontFamily: 'mon-sb' },
 });

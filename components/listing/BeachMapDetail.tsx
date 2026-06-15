@@ -16,6 +16,7 @@ import BeachSatelliteMap, {
   type BeachAsset,
   type BeachZoneOverlay,
 } from '@/components/beach/BeachSatelliteMap';
+import { useTheme } from '@/context/ThemeContext';
 
 // ─────────────────────────────────────────────
 // MOCK DATA — Sidi Fredj Beach, Tipaza
@@ -99,6 +100,70 @@ export default function BeachMapScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? insets.top + 20 : insets.top + 8;
+  const { colors } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.bg },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingBottom: 10,
+      gap: 12,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerCenter: { flex: 1 },
+    headerTitle: { fontSize: 16, fontFamily: 'mon-b', color: colors.text },
+    headerSub: { fontSize: 12, fontFamily: 'mon', color: colors.muted },
+    infoBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    legendContainer: { padding: 16, gap: 14 },
+    legendTitle: { fontSize: 14, fontFamily: 'mon-b', color: colors.text },
+    legendGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    legendItem: {
+      width: '31%',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      gap: 4,
+    },
+    legendEmoji: { fontSize: 22 },
+    legendLabel: { fontSize: 11, fontFamily: 'mon-b', color: colors.text },
+    legendDesc: { fontSize: 9, fontFamily: 'mon', color: colors.muted, textAlign: 'center' },
+    infoCard: {
+      flexDirection: 'row',
+      gap: 10,
+      backgroundColor: '#EFF6FF',
+      borderRadius: 12,
+      padding: 14,
+      marginTop: 4,
+    },
+    infoCardText: { flex: 1, fontSize: 12, fontFamily: 'mon', color: '#3B82F6', lineHeight: 17 },
+  }), [colors]);
 
   const handleSelectAsset = (asset: BeachAsset) => {
     // TODO: Navigate to booking flow with asset details
@@ -111,7 +176,7 @@ export default function BeachMapScreen() {
       {/* ── HEADER ── */}
       <View style={[styles.header, { paddingTop: topPad }]}>
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={RIHLA.dark} />
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Sidi Fredj Beach</Text>
@@ -166,70 +231,3 @@ export default function BeachMapScreen() {
     </View>
   );
 }
-
-// ─────────────────────────────────────────────
-// STYLES
-// ─────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: RIHLA.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    gap: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: RIHLA.card,
-    borderWidth: 1,
-    borderColor: RIHLA.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerCenter: { flex: 1 },
-  headerTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  headerSub: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText },
-  infoBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: RIHLA.card,
-    borderWidth: 1,
-    borderColor: RIHLA.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  legendContainer: { padding: 16, gap: 14 },
-  legendTitle: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.dark },
-  legendGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  legendItem: {
-    width: '31%',
-    backgroundColor: RIHLA.card,
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: RIHLA.border,
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendEmoji: { fontSize: 22 },
-  legendLabel: { fontSize: 11, fontFamily: 'mon-b', color: RIHLA.dark },
-  legendDesc: { fontSize: 9, fontFamily: 'mon', color: RIHLA.mutedText, textAlign: 'center' },
-  infoCard: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 4,
-  },
-  infoCardText: { flex: 1, fontSize: 12, fontFamily: 'mon', color: '#3B82F6', lineHeight: 17 },
-});

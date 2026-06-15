@@ -21,7 +21,7 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import MapWithDirections from './MapWithDirections';
 import type { ServiceMarker } from '@/store/useLocationStore';
 
@@ -53,6 +53,7 @@ export default function MapBottomSheetLayout({
 }: MapBottomSheetLayoutProps) {
   const insets = useSafeAreaInsets();
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const { colors, isDark } = useTheme();
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -72,14 +73,8 @@ export default function MapBottomSheetLayout({
           showDirections={showDirections}
           showUserLocation={true}
           onMarkerPress={onMarkerPress}
-          autoCalculateTimes={false}
-          initialRegion={markers && markers.length > 0 ? {
-            latitude: markers[0].latitude,
-            longitude: markers[0].longitude,
-            latitudeDelta: 0.08,
-            longitudeDelta: 0.08,
-          } : undefined}
-          customMapStyle={undefined}
+          initialCenter={markers && markers.length > 0 ? [markers[0].longitude, markers[0].latitude] : undefined}
+          initialZoom={14}
         />
 
         {/* Back button overlay */}
@@ -87,15 +82,15 @@ export default function MapBottomSheetLayout({
           onPress={handleBack}
           style={[
             styles.backBtn,
-            { top: Platform.OS === 'ios' ? insets.top + 12 : insets.top + 8 },
+            { top: Platform.OS === 'ios' ? insets.top + 12 : insets.top + 8, backgroundColor: colors.card },
           ]}
         >
-          <Ionicons name="arrow-back" size={20} color={RIHLA.dark} />
+          <Ionicons name="arrow-back" size={20} color={colors.icon} />
         </Pressable>
 
         {/* Title overlay */}
         <View style={[styles.titleContainer, { top: Platform.OS === 'ios' ? insets.top + 12 : insets.top + 8 }]}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: colors.text, backgroundColor: colors.card }]}>{title}</Text>
         </View>
       </View>
 
@@ -105,8 +100,8 @@ export default function MapBottomSheetLayout({
         snapPoints={snapPoints || ['40%', '85%']}
         index={0}
         enablePanDownToClose={false}
-        backgroundStyle={styles.sheetBg}
-        handleIndicatorStyle={styles.sheetHandle}
+        backgroundStyle={[styles.sheetBg, { backgroundColor: colors.card }]}
+        handleIndicatorStyle={[styles.sheetHandle, { backgroundColor: colors.muted }]}
       >
         <ContentWrapper style={styles.sheetContent}>
           {children}
@@ -129,7 +124,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
@@ -148,8 +142,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontFamily: 'mon-b',
-    color: RIHLA.dark,
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
@@ -161,12 +153,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   sheetBg: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },
   sheetHandle: {
-    backgroundColor: '#CBD5E1',
     width: 36,
     height: 4,
     borderRadius: 2,

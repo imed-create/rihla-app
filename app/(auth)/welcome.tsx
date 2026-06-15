@@ -22,7 +22,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Video, ResizeMode } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { RIHLA } from '@/constants/theme';
 import { useApp, UserRole } from '@/context/AppContext';
 import * as Haptics from 'expo-haptics';
@@ -187,19 +187,21 @@ export default function WelcomeScreen() {
   const currentSlide = SLIDES[currentIndex];
   const isLast = currentIndex === SLIDES.length - 1;
 
+  const player = useVideoPlayer(ONBOARDING_VIDEO, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
       {/* ── LOOPING VIDEO BACKGROUND ── */}
-      <Video
-        source={ONBOARDING_VIDEO}
+      <VideoView
+        player={player}
         style={StyleSheet.absoluteFill}
-        rate={1.0}
-        isMuted={true}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay
-        isLooping
+        contentFit="cover"
       />
 
       {/* ── SLIDES ── */}

@@ -15,6 +15,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/context/ThemeContext';
 
 interface InputFieldProps {
   label: string;
@@ -46,32 +47,34 @@ export default function InputField({
   value,
   onChangeText,
   placeholder,
-  placeholderTextColor = '#CBD5E1',
+  placeholderTextColor,
   keyboardType = 'default',
   autoCapitalize = 'none',
   editable = true,
   multiline = false,
   rightIcon,
 }: InputFieldProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.wrapper}>
-      <Text style={[styles.label, labelStyle]}>{label}</Text>
-      <View style={[styles.inputContainer, containerStyle]}>
+      <Text style={[styles.label, { color: colors.text }, labelStyle]}>{label}</Text>
+      <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }, containerStyle]}>
         {icon && (
           <Ionicons
             name={icon}
             size={18}
-            color="#94A3B8"
+            color={colors.muted}
             style={[styles.icon, iconStyle]}
           />
         )}
         <TextInput
-          style={[styles.input, inputStyle]}
+          style={[styles.input, { color: colors.text }, inputStyle]}
           secureTextEntry={secureTextEntry}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={placeholderTextColor}
+          placeholderTextColor={placeholderTextColor || colors.muted}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           editable={editable}
@@ -93,16 +96,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontFamily: 'mon-sb',
-    color: '#374151',
     marginBottom: 6,
     letterSpacing: 0.3,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 54,
@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontFamily: 'mon',
-    color: '#1F2937',
     paddingVertical: 0,
   },
   rightIconWrap: {

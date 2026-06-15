@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+import { useApp } from '@/context/AppContext';
+import { showToast } from '@/components/Toast';
 
-type RentalBooking = { id: string; guest: string; property: string; checkIn: string; checkOut: string; totalDZD: number; status: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled'; guests: number };
+type RentalReservation = { id: string; guest: string; property: string; checkIn: string; checkOut: string; totalDZD: number; status: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled'; guests: number };
 
-const MOCK_RENTALS: RentalBooking[] = [
+const MOCK_RENTALS: RentalReservation[] = [
   { id: 'r1', guest: 'Pierre Dubois', property: 'Villa Oran Seafront', checkIn: '2026-06-15', checkOut: '2026-06-20', totalDZD: 125000, status: 'confirmed', guests: 6 },
   { id: 'r2', guest: 'Amina Said', property: 'Constantine Riad', checkIn: '2026-06-10', checkOut: '2026-06-12', totalDZD: 36000, status: 'active', guests: 4 },
   { id: 'r3', guest: 'John Smith', property: 'Algiers City Apt', checkIn: '2026-06-18', checkOut: '2026-06-25', totalDZD: 63000, status: 'pending', guests: 2 },
@@ -15,21 +17,81 @@ const MOCK_RENTALS: RentalBooking[] = [
 ];
 
 export default function RentalBookings() {
-  const [bookings] = useState(MOCK_RENTALS);
+  const { bookings, updateBookingStatus } = useApp();
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'active'>('all');
 
-  const filtered = filter === 'all' ? bookings : bookings.filter(b => b.status === filter);
+  const dynamicRentals = useMemo(() => {
+    const rentalBookings = bookings.filter(b => b.type === 'rental');
+    return rentalBookings.map(b => {
+      let rStatus: RentalReservation['status'] = 'confirmed';
+      if (b.status === 'pending') rStatus = 'pending';
+      else if (b.status === 'active') rStatus = 'active';
+      else if (b.status === 'completed') rStatus = 'completed';
+      else if (b.status === 'cancelled') rStatus = 'cancelled';
+      else if (b.status === 'confirmed') rStatus = 'confirmed';
+
+      return {
+        id: b.id,
+        guest: String(b.details.contact_name || 'Guest'),
+        property: b.title,
+        checkIn: String(b.details.check_in || b.createdAt.split('T')[0]),
+        checkOut: String(b.details.check_out || new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0]),
+        totalDZD: b.price,
+        status: rStatus,
+        guests: Number(b.details.max_guests || b.details.guests || 2),
+      };
+    });
+  }, [bookings]);
+
+  const allRentals = useMemo(() => {
+    return [...dynamicRentals, ...MOCK_RENTALS];
+  }, [dynamicRentals]);
+
+  const handleConfirm = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'confirmed');
+      showToast('Reservation confirmed!', 'success');
+    } else {
+      showToast('Reservation confirmed.', 'success');
+    }
+  };
+
+  const handleCheckIn = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'active');
+      showToast('Guest checked in!', 'success');
+    } else {
+      showToast('Check-in recorded.', 'success');
+    }
+  };
+
+  const handleCheckOut = (id: string) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const exists = bookings.some(b => b.id === id);
+    if (exists) {
+      updateBookingStatus(id, 'completed');
+      showToast('Guest checked out. Cleaning team notified.', 'success');
+    } else {
+      showToast('Check-out recorded.', 'success');
+    }
+  };
+
+  const filtered = filter === 'all' ? allRentals : allRentals.filter(b => b.status === filter);
 
   return (
     <View style={styles.container}>
       <View style={styles.statsRow}>
-        <View style={styles.statItem}><Text style={styles.statValue}>{bookings.length}</Text><Text style={styles.statLabel}>Total</Text></View>
+        <View style={styles.statItem}><Text style={styles.statValue}>{allRentals.length}</Text><Text style={styles.statLabel}>Total</Text></View>
         <View style={styles.statDiv} />
-        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#6366F1' }]}>{bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').length}</Text><Text style={styles.statLabel}>Upcoming</Text></View>
+        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#6366F1' }]}>{allRentals.filter(b => b.status === 'confirmed' || b.status === 'pending').length}</Text><Text style={styles.statLabel}>Upcoming</Text></View>
         <View style={styles.statDiv} />
-        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#10B981' }]}>{bookings.filter(b => b.status === 'active').length}</Text><Text style={styles.statLabel}>Active</Text></View>
+        <View style={styles.statItem}><Text style={[styles.statValue, { color: '#10B981' }]}>{allRentals.filter(b => b.status === 'active').length}</Text><Text style={styles.statLabel}>Active</Text></View>
         <View style={styles.statDiv} />
-        <View style={styles.statItem}><Text style={styles.statValue}>{bookings.reduce((s, b) => s + b.totalDZD, 0).toLocaleString()}</Text><Text style={styles.statLabel}>Total DZD</Text></View>
+        <View style={styles.statItem}><Text style={styles.statValue}>{allRentals.reduce((s, b) => s + b.totalDZD, 0).toLocaleString()}</Text><Text style={styles.statLabel}>Total DZD</Text></View>
       </View>
 
       <View style={styles.filterRow}>
@@ -65,8 +127,30 @@ export default function RentalBookings() {
               <Text style={styles.dateLabel}>{new Date(item.checkIn).toLocaleDateString('en', { month: 'short', day: 'numeric' })} → {new Date(item.checkOut).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</Text>
             </View>
             <View style={styles.cardFooter}>
-              <Text style={styles.nightsText}>{Math.round((new Date(item.checkOut).getTime() - new Date(item.checkIn).getTime()) / (1000*60*60*24))} nights</Text>
-              <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+              <View>
+                <Text style={styles.nightsText}>{Math.round((new Date(item.checkOut).getTime() - new Date(item.checkIn).getTime()) / (1000*60*60*24))} nights</Text>
+                <Text style={styles.priceText}>{item.totalDZD.toLocaleString()} DZD</Text>
+              </View>
+              <View style={styles.actionRow}>
+                {item.status === 'pending' && (
+                  <TouchableOpacity style={styles.confirmBtn} onPress={() => handleConfirm(item.id)}>
+                    <Ionicons name="checkmark-circle-outline" size={14} color="#fff" />
+                    <Text style={styles.actionBtnText}>Confirm</Text>
+                  </TouchableOpacity>
+                )}
+                {item.status === 'confirmed' && (
+                  <TouchableOpacity style={styles.checkInBtn} onPress={() => handleCheckIn(item.id)}>
+                    <Ionicons name="enter-outline" size={14} color="#fff" />
+                    <Text style={styles.actionBtnText}>Check In</Text>
+                  </TouchableOpacity>
+                )}
+                {item.status === 'active' && (
+                  <TouchableOpacity style={styles.checkOutBtn} onPress={() => handleCheckOut(item.id)}>
+                    <Ionicons name="exit-outline" size={14} color="#fff" />
+                    <Text style={styles.actionBtnText}>Check Out</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -97,7 +181,12 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 10, fontFamily: 'mon-b', textTransform: 'capitalize' },
   dateRow: { marginTop: 8 },
   dateLabel: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.mutedText },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIHLA.border },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: RIHLA.border },
   nightsText: { fontSize: 11, fontFamily: 'mon', color: RIHLA.mutedText },
   priceText: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.primary },
+  actionRow: { flexDirection: 'row', gap: 6 },
+  confirmBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#6366F1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  checkInBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: RIHLA.accent, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  checkOutBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F59E0B', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  actionBtnText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
 });

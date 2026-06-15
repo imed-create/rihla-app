@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { ProRole, PRO_THEME } from '@/constants/proNavigation';
 import { useProNav } from './NavProvider';
 import { safeGoBack } from '@/utils/safeNavigation';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function ProTopBar({
   role,
@@ -27,6 +28,7 @@ export default function ProTopBar({
   const insets = useSafeAreaInsets();
   const { openMenu } = useProNav();
   const theme = PRO_THEME[role];
+  const { colors } = useTheme();
 
   const onMenu = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -39,16 +41,16 @@ export default function ProTopBar({
   };
 
   return (
-    <View style={[styles.wrap, { paddingTop: insets.top + 8 }, style]}>
+    <View style={[styles.wrap, { paddingTop: insets.top + 8, backgroundColor: colors.card, borderBottomColor: colors.border }, style]}>
       <View style={styles.row}>
         {showBack ? (
-          <Pressable onPress={onBack} style={styles.iconBtn} accessibilityLabel="Go back">
-            <Ionicons name="chevron-back" size={22} color="#0F172A" />
+          <Pressable onPress={onBack} style={[styles.iconBtn, { backgroundColor: colors.bg, borderColor: colors.border }]} accessibilityLabel="Go back">
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </Pressable>
         ) : showMenu ? (
           <Pressable
             onPress={onMenu}
-            style={[styles.iconBtn, styles.menuBtn, { borderColor: theme.accent + '30' }]}
+            style={[styles.iconBtn, styles.menuBtn, { backgroundColor: colors.card, borderColor: theme.accent + '30' }]}
             accessibilityLabel="Open menu"
           >
             <Ionicons name="menu" size={22} color={theme.accent} />
@@ -58,11 +60,11 @@ export default function ProTopBar({
         )}
 
         <View style={styles.center}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
-            <Text style={styles.subtitle} numberOfLines={1}>
+            <Text style={[styles.subtitle, { color: colors.muted }]} numberOfLines={1}>
               {subtitle}
             </Text>
           ) : null}
@@ -76,9 +78,7 @@ export default function ProTopBar({
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e2e8f0',
     paddingBottom: 12,
     paddingHorizontal: 16,
   },
@@ -91,18 +91,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#fafbfc',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
-  menuBtn: {
-    backgroundColor: '#FFFFFF',
-  },
+  menuBtn: {},
   iconPlaceholder: { width: 40 },
   center: { flex: 1, gap: 2, minWidth: 0 },
-  title: { fontSize: 18, fontFamily: 'mon-b', color: '#0F172A' },
-  subtitle: { fontSize: 12, fontFamily: 'mon', color: '#64748B' },
+  title: { fontSize: 18, fontFamily: 'mon-b' },
+  subtitle: { fontSize: 12, fontFamily: 'mon' },
   rightSlot: { minWidth: 40, alignItems: 'flex-end', justifyContent: 'center' },
 });

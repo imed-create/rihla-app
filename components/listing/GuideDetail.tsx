@@ -17,6 +17,7 @@ import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import { showToast } from '@/components/Toast';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '@/context/ThemeContext';
 
 const LANG_FLAGS: Record<string, string> = {
   Arabic: '🇸🇦', French: '🇫🇷', English: '🇬🇧', Spanish: '🇪🇸', Tamazight: 'ⵣ', German: '🇩🇪',
@@ -37,17 +38,75 @@ export default function GuideDetailScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { colors } = useTheme();
   const listing = useMemo(() => getListingById(id ?? ''), [id]);
   const isFavorite = favoriteIds.includes(id ?? '');
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [groupSize, setGroupSize] = useState(2);
 
+  const styles = useMemo(() => StyleSheet.create({
+    root: { flex: 1 },
+    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: colors.muted },
+    heroWrap: { overflow: 'hidden' },
+    hero: { paddingHorizontal: 20, paddingBottom: 28, gap: 8 },
+    heroNav: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+    backCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
+    heroActions: { flexDirection: 'row', gap: 10 },
+    actionCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+    heroContent: { gap: 4, alignItems: 'center' },
+    avatarCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+    avatarText: { fontSize: 28, fontFamily: 'mon-b', color: '#fff' },
+    heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.5, textAlign: 'center' },
+    heroLocation: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
+    heroRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+    heroRatingText: { fontSize: 14, fontFamily: 'mon-b', color: '#fff' },
+    heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+    heroExp: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+    section: { paddingHorizontal: 20, paddingTop: 20 },
+    sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: colors.text, marginBottom: 12 },
+    description: { fontSize: 14, fontFamily: 'mon', color: colors.muted, lineHeight: 22 },
+    reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    langPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
+    langFlag: { fontSize: 16 },
+    langText: { fontSize: 13, fontFamily: 'mon-sb', color: colors.text },
+    specCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 14 },
+    specText: { fontSize: 14, fontFamily: 'mon-sb', color: colors.text },
+    certList: { gap: 8 },
+    certItem: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F0FDFA', borderRadius: 10, padding: 12 },
+    certText: { fontSize: 13, fontFamily: 'mon-sb', color: colors.text },
+    statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 },
+    statItem: { flex: 1, alignItems: 'center', gap: 4 },
+    statValue: { fontSize: 16, fontFamily: 'mon-b', color: colors.text },
+    statLabel: { fontSize: 11, fontFamily: 'mon', color: colors.muted },
+    guestRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 },
+    guestLabel: { fontSize: 14, fontFamily: 'mon-sb', color: colors.text },
+    guestControls: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    guestBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    guestCount: { fontSize: 18, fontFamily: 'mon-b', color: colors.text, minWidth: 24, textAlign: 'center' },
+    dayTabs: { flexDirection: 'row', gap: 6 },
+    dayTab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
+    dayTabActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
+    dayTabText: { fontSize: 11, fontFamily: 'mon-sb', color: colors.muted },
+    slotRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+    noSlots: { fontSize: 13, fontFamily: 'mon', color: colors.muted },
+    slotChip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card },
+    slotSelected: { backgroundColor: RIHLA.accent, borderColor: RIHLA.accent },
+    slotText: { fontSize: 13, fontFamily: 'mon-sb', color: colors.text },
+    bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
+    bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+    bottomUnit: { fontSize: 11, fontFamily: 'mon', color: colors.muted },
+    bookBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14 },
+    bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
+  }), [colors]);
+
   if (!listing || listing.category !== 'guide') {
     return (
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <View style={styles.notFound}>
-          <Ionicons name="person-outline" size={48} color="#94A3B8" />
+          <Ionicons name="person-outline" size={48} color={colors.muted} />
           <Text style={styles.notFoundText}>Guide not found</Text>
           <Pressable onPress={() => safeGoBack()}><Text style={{ fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent }}>← Go back</Text></Pressable>
         </View>
@@ -58,7 +117,7 @@ export default function GuideDetailScreen() {
   const m = listing.metadata as GuideMetadata;
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}>
         <View style={[styles.heroWrap, { paddingTop: topPad }]}>
           <LinearGradient colors={['#10B981', RIHLA.primary]} style={styles.hero}>
@@ -204,60 +263,3 @@ export default function GuideDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
-  heroWrap: { overflow: 'hidden' },
-  hero: { paddingHorizontal: 20, paddingBottom: 28, gap: 8 },
-  heroNav: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  backCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
-  heroActions: { flexDirection: 'row', gap: 10 },
-  actionCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  heroContent: { gap: 4, alignItems: 'center' },
-  avatarCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  avatarText: { fontSize: 28, fontFamily: 'mon-b', color: '#fff' },
-  heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.5, textAlign: 'center' },
-  heroLocation: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
-  heroRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  heroRatingText: { fontSize: 14, fontFamily: 'mon-b', color: '#fff' },
-  heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
-  heroExp: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
-  section: { paddingHorizontal: 20, paddingTop: 20 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 12 },
-  description: { fontSize: 14, fontFamily: 'mon', color: '#64748B', lineHeight: 22 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  langPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: RIHLA.border },
-  langFlag: { fontSize: 16 },
-  langText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
-  specCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },
-  specText: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
-  certList: { gap: 8 },
-  certItem: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F0FDFA', borderRadius: 10, padding: 12 },
-  certText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
-  statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },
-  statItem: { flex: 1, alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  statLabel: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  guestRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 16 },
-  guestLabel: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
-  guestControls: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  guestBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: RIHLA.border, alignItems: 'center', justifyContent: 'center' },
-  guestCount: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark, minWidth: 24, textAlign: 'center' },
-  dayTabs: { flexDirection: 'row', gap: 6 },
-  dayTab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: RIHLA.border, alignItems: 'center' },
-  dayTabActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
-  dayTabText: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText },
-  slotRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  noSlots: { fontSize: 13, fontFamily: 'mon', color: '#94A3B8' },
-  slotChip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff' },
-  slotSelected: { backgroundColor: RIHLA.accent, borderColor: RIHLA.accent },
-  slotText: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
-  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: RIHLA.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
-  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
-  bottomUnit: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  bookBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14 },
-  bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
-});

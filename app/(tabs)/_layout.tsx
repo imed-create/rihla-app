@@ -4,37 +4,43 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useApp } from '@/context/AppContext';
 import { useFavorites } from '@/store/useFavorites';
+import { useTheme } from '@/context/ThemeContext';
 import { RIHLA } from '@/constants/theme';
 
 export default function TabLayout() {
   const { activeBookings } = useApp();
   const { favoriteIds } = useFavorites();
+  const { colors, isDark } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: RIHLA.accent,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
-        tabBarLabelStyle: { fontFamily: 'mon-sb', fontSize: 10, marginTop: 2 },
+        tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: { fontFamily: 'mon-sb', fontSize: 10, marginTop: 3 },
         tabBarStyle: {
-          backgroundColor: '#0d0d0d',
+          backgroundColor: isDark ? '#121212' : '#FFFFFF',
           borderRadius: 28,
           paddingBottom: Platform.OS === 'ios' ? 4 : 8,
-          paddingTop: 8,
+          paddingTop: 10,
           overflow: 'hidden',
           marginHorizontal: 16,
           marginBottom: 16,
-          height: 64,
+          height: 68,
           position: 'absolute',
           left: 0,
           right: 0,
           bottom: 0,
-          elevation: 16,
-          shadowColor: '#000',
-          shadowOpacity: 0.3,
-          shadowRadius: 20,
+          elevation: 20,
+          shadowColor: isDark ? RIHLA.accent : '#000',
+          shadowOpacity: isDark ? 0.15 : 0.2,
+          shadowRadius: 24,
           shadowOffset: { width: 0, height: 8 },
+          borderTopWidth: 1,
+          borderTopColor: isDark ? RIHLA.accent + '15' : '#E2E8F010',
+          borderWidth: 1,
+          borderColor: isDark ? '#222222' : '#E2E8F0',
         },
       }}
     >
@@ -111,13 +117,19 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   badge: {
-    position: 'absolute', top: -4, right: -6,
-    minWidth: 16, height: 16, borderRadius: 8,
+    position: 'absolute', top: -5, right: -7,
+    minWidth: 17, height: 17, borderRadius: 9,
     alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 3,
     backgroundColor: '#EF4444',
-    borderWidth: 1.5,
-    borderColor: '#0d0d0d',
+    borderWidth: 2,
+    borderColor: '#121212',
+    shadowColor: '#EF4444',
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 3,
   },
   badgeText: { fontSize: 9, fontFamily: 'mon-b', color: '#FFFFFF' },
 });
+

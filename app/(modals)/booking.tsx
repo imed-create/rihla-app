@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import UberButton from '@/components/shared/UberButton';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 
@@ -66,6 +67,7 @@ function AnimatedCard({
   onToggle: () => void;
   children: React.ReactNode;
 }) {
+  const { colors } = useTheme();
   const animHeight = useRef(new Animated.Value(0)).current;
   const animOpacity = useRef(new Animated.Value(0)).current;
   const animRotate = useRef(new Animated.Value(0)).current;
@@ -128,25 +130,25 @@ function AnimatedCard({
   });
 
   return (
-    <View style={[styles.card, isOpen && styles.cardOpen]}>
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, isOpen && styles.cardOpen]}>
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onToggle}
         style={styles.cardPreview}
       >
         <View style={styles.cardPreviewLeft}>
-          <View style={[styles.stepDot, isOpen && { backgroundColor: RIHLA.primary }]}>
-            <Text style={[styles.stepDotText, isOpen && { color: '#FFFFFF' }]}>{stepNumber}</Text>
+          <View style={[styles.stepDot, { backgroundColor: colors.bg }, isOpen && { backgroundColor: RIHLA.primary }]}>
+            <Text style={[styles.stepDotText, { color: colors.muted }, isOpen && { color: '#FFFFFF' }]}>{stepNumber}</Text>
           </View>
           <View>
-            <Text style={styles.previewLabel}>{label}</Text>
-            <Text style={[styles.previewValue, !value && { color: '#94A3B8' }]}>
+            <Text style={[styles.previewLabel, { color: colors.muted }]}>{label}</Text>
+            <Text style={[styles.previewValue, { color: colors.text }, !value && { color: colors.muted }]}>
               {value || `Select ${label.toLowerCase()}`}
             </Text>
           </View>
         </View>
         <Animated.View style={{ transform: [{ rotate: chevronRotation }] }}>
-          <Ionicons name="chevron-down" size={18} color="#94A3B8" />
+          <Ionicons name="chevron-down" size={18} color={colors.muted} />
         </Animated.View>
       </TouchableOpacity>
 
@@ -172,6 +174,7 @@ function CalendarPicker({
   checkOut: string | null;
   onSelectDate: (date: string) => void;
 }) {
+  const { colors } = useTheme();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -217,20 +220,20 @@ function CalendarPicker({
       {/* Month navigator */}
       <View style={styles.calHeader}>
         <TouchableOpacity onPress={prevMonth} style={styles.calNavBtn}>
-          <Ionicons name="chevron-back" size={20} color="#475569" />
+          <Ionicons name="chevron-back" size={20} color={colors.muted} />
         </TouchableOpacity>
-        <Text style={styles.calMonthLabel}>
+        <Text style={[styles.calMonthLabel, { color: colors.text }]}>
           {MONTHS[month]} {year}
         </Text>
         <TouchableOpacity onPress={nextMonth} style={styles.calNavBtn}>
-          <Ionicons name="chevron-forward" size={20} color="#475569" />
+          <Ionicons name="chevron-forward" size={20} color={colors.muted} />
         </TouchableOpacity>
       </View>
 
       {/* Day-of-week labels */}
       <View style={styles.calWeekRow}>
         {DAYS_OF_WEEK.map(d => (
-          <Text key={d} style={styles.calWeekLabel}>{d}</Text>
+          <Text key={d} style={[styles.calWeekLabel, { color: colors.muted }]}>{d}</Text>
         ))}
       </View>
 
@@ -267,7 +270,8 @@ function CalendarPicker({
               ]}>
                 <Text style={[
                   styles.calDayText,
-                  past && styles.calDayPast,
+                  { color: colors.text },
+                  past && [styles.calDayPast, { color: colors.muted }],
                   selected && styles.calDayTextSelected,
                 ]}>
                   {d}
@@ -281,8 +285,8 @@ function CalendarPicker({
       {/* Quick presets */}
       <View style={styles.calPresets}>
         {['This weekend', 'Next week', 'This month', 'Flexible'].map(preset => (
-          <TouchableOpacity key={preset} style={styles.calPreset}>
-            <Text style={styles.calPresetText}>{preset}</Text>
+          <TouchableOpacity key={preset} style={[styles.calPreset, { backgroundColor: colors.bg, borderColor: colors.border }]}>
+            <Text style={[styles.calPresetText, { color: colors.muted }]}>{preset}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -294,6 +298,7 @@ function CalendarPicker({
 export default function BookingModalScreen() {
   const insets = useSafeAreaInsets();
   const { addBooking } = useApp();
+  const { colors } = useTheme();
   const [activeCard, setActiveCard] = useState<StepCard | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [guestGroups, setGuestGroups] = useState(GUEST_GROUPS);
@@ -377,9 +382,9 @@ export default function BookingModalScreen() {
     : 'Add guests';
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {/* Uber-style dark header */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.header, { paddingTop: insets.top, backgroundColor: colors.bg }]}>
         <View style={styles.headerInner}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="close" size={22} color="#FFFFFF" />
@@ -403,22 +408,22 @@ export default function BookingModalScreen() {
           isOpen={isCardOpen('where')}
           onToggle={() => toggleCard('where')}
         >
-          <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={18} color="#94A3B8" />
+          <View style={[styles.searchBar, { backgroundColor: colors.bg }]}>
+            <Ionicons name="search-outline" size={18} color={colors.muted} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search destinations, wilayas..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.muted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color="#CBD5E1" />
+                <Ionicons name="close-circle" size={18} color={colors.border} />
               </Pressable>
             )}
           </View>
-          <Text style={styles.popularLabel}>Popular destinations</Text>
+          <Text style={[styles.popularLabel, { color: colors.muted }]}>Popular destinations</Text>
           <View style={styles.popularGrid}>
             {[
               { name: 'Algiers', icon: '🏛️' },
@@ -430,11 +435,11 @@ export default function BookingModalScreen() {
             ].map((dest) => (
               <TouchableOpacity
                 key={dest.name}
-                style={[styles.destChip, searchQuery === dest.name && styles.destChipActive]}
+                style={[styles.destChip, { backgroundColor: colors.bg, borderColor: colors.border }, searchQuery === dest.name && styles.destChipActive]}
                 onPress={() => setSearchQuery(dest.name)}
               >
                 <Text style={styles.destEmoji}>{dest.icon}</Text>
-                <Text style={[styles.destName, searchQuery === dest.name && { color: RIHLA.primary }]}>
+                <Text style={[styles.destName, { color: colors.text }, searchQuery === dest.name && { color: RIHLA.primary }]}>
                   {dest.name}
                 </Text>
               </TouchableOpacity>
@@ -474,20 +479,20 @@ export default function BookingModalScreen() {
               ]}
             >
               <View>
-                <Text style={styles.guestName}>{group.name}</Text>
-                <Text style={styles.guestDesc}>{group.desc}</Text>
+                <Text style={[styles.guestName, { color: colors.text }]}>{group.name}</Text>
+                <Text style={[styles.guestDesc, { color: colors.muted }]}>{group.desc}</Text>
               </View>
               <View style={styles.guestControls}>
                 <TouchableOpacity onPress={() => updateGuestCount(index, -1)} style={styles.guestBtn}>
                   <Ionicons
                     name="remove-circle-outline"
                     size={28}
-                    color={group.count > 0 ? '#64748B' : '#E2E8F0'}
+                    color={group.count > 0 ? colors.muted : colors.border}
                   />
                 </TouchableOpacity>
-                <Text style={styles.guestCount}>{group.count}</Text>
+                <Text style={[styles.guestCount, { color: colors.text }]}>{group.count}</Text>
                 <TouchableOpacity onPress={() => updateGuestCount(index, 1)} style={styles.guestBtn}>
-                  <Ionicons name="add-circle-outline" size={28} color="#64748B" />
+                  <Ionicons name="add-circle-outline" size={28} color={colors.muted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -496,9 +501,9 @@ export default function BookingModalScreen() {
       </ScrollView>
 
       {/* ── Sticky Footer ── */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12, backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <TouchableOpacity onPress={handleClear}>
-          <Text style={styles.footerClear}>Clear all</Text>
+          <Text style={[styles.footerClear, { color: colors.muted }]}>Clear all</Text>
         </TouchableOpacity>
         <UberButton
           title={totalGuests > 0
@@ -515,10 +520,10 @@ export default function BookingModalScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  root: { flex: 1 },
 
-  // Header (Uber dark solid)
-  header: { backgroundColor: '#1a1a1a' },
+  // Header
+  header: {},
   headerInner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 14,
@@ -536,8 +541,8 @@ const styles = StyleSheet.create({
 
   // Cards
   card: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1,
-    borderColor: '#E2E8F0', overflow: 'hidden',
+    borderRadius: 16, borderWidth: 1,
+    overflow: 'hidden',
   },
   cardOpen: {
     borderColor: RIHLA.primary + '40',
@@ -555,29 +560,29 @@ const styles = StyleSheet.create({
   // Step dot
   stepDot: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  stepDotText: { fontSize: 13, fontFamily: 'mon-b', color: '#64748B' },
-  previewLabel: { fontSize: 11, fontFamily: 'mon-sb', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 },
-  previewValue: { fontSize: 15, fontFamily: 'mon', color: '#0F172A', marginTop: 1 },
+  stepDotText: { fontSize: 13, fontFamily: 'mon-b' },
+  previewLabel: { fontSize: 11, fontFamily: 'mon-sb', textTransform: 'uppercase', letterSpacing: 0.5 },
+  previewValue: { fontSize: 15, fontFamily: 'mon', marginTop: 1 },
 
   // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#F1F5F9', borderRadius: 12,
+    borderRadius: 12,
     paddingHorizontal: 14, height: 48,
   },
-  searchInput: { flex: 1, fontSize: 15, fontFamily: 'mon', color: '#0F172A' },
-  popularLabel: { fontSize: 13, fontFamily: 'mon-sb', color: '#64748B' },
+  searchInput: { flex: 1, fontSize: 15, fontFamily: 'mon' },
+  popularLabel: { fontSize: 13, fontFamily: 'mon-sb' },
   popularGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   destChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
-    backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0',
+    borderWidth: 1,
   },
   destChipActive: { borderColor: RIHLA.primary, backgroundColor: RIHLA.primary + '08' },
   destEmoji: { fontSize: 16 },
-  destName: { fontSize: 13, fontFamily: 'mon-sb', color: '#334155' },
+  destName: { fontSize: 13, fontFamily: 'mon-sb' },
 
   // Calendar
   calendar: { gap: 12 },
@@ -585,11 +590,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   calNavBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  calMonthLabel: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+  calMonthLabel: { fontSize: 16, fontFamily: 'mon-b' },
   calWeekRow: { flexDirection: 'row' },
   calWeekLabel: {
     flex: 1, textAlign: 'center', fontSize: 11, fontFamily: 'mon-sb',
-    color: '#94A3B8', paddingVertical: 6,
+    paddingVertical: 6,
   },
   calGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   calDayCell: { width: '14.28%', alignItems: 'center', paddingVertical: 2 },
@@ -603,35 +608,35 @@ const styles = StyleSheet.create({
   calDaySelected: { backgroundColor: RIHLA.primary },
   calDayStartInner: { backgroundColor: RIHLA.primary, borderRadius: 17 },
   calDayEndInner: { backgroundColor: RIHLA.primary, borderRadius: 17 },
-  calDayText: { fontSize: 14, fontFamily: 'mon', color: '#1E293B' },
-  calDayPast: { color: '#CBD5E1' },
+  calDayText: { fontSize: 14, fontFamily: 'mon' },
+  calDayPast: {},
   calDayTextSelected: { color: '#FFFFFF', fontFamily: 'mon-b' },
   calPresets: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   calPreset: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
-    backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0',
+    borderWidth: 1,
   },
-  calPresetText: { fontSize: 12, fontFamily: 'mon-sb', color: '#475569' },
+  calPresetText: { fontSize: 12, fontFamily: 'mon-sb' },
 
   // Guests
   guestRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14,
   },
-  guestRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F1F5F9' },
-  guestName: { fontSize: 15, fontFamily: 'mon-sb', color: '#0F172A' },
-  guestDesc: { fontSize: 13, fontFamily: 'mon', color: '#64748B', marginTop: 2 },
+  guestRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth },
+  guestName: { fontSize: 15, fontFamily: 'mon-sb' },
+  guestDesc: { fontSize: 13, fontFamily: 'mon', marginTop: 2 },
   guestControls: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   guestBtn: { padding: 2 },
-  guestCount: { fontSize: 17, fontFamily: 'mon-b', color: '#0F172A', minWidth: 22, textAlign: 'center' },
+  guestCount: { fontSize: 17, fontFamily: 'mon-b', minWidth: 22, textAlign: 'center' },
 
   // Footer
   footer: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 14,
-    backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E2E8F0',
+    borderTopWidth: 1,
     shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12,
     shadowOffset: { width: 0, height: -4 }, elevation: 12,
   },
-  footerClear: { fontSize: 15, fontFamily: 'mon-sb', color: '#64748B', textDecorationLine: 'underline' },
+  footerClear: { fontSize: 15, fontFamily: 'mon-sb', textDecorationLine: 'underline' },
 });

@@ -7,7 +7,9 @@ import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppProvider, useApp } from '@/context/AppContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import LocationInitializer from '@/components/shared/LocationInitializer';
+import FloatingAIBubble from '@/components/FloatingAIBubble';
 import { I18nProvider } from '@/context/I18nContext';
 import { ToastProvider } from '@/components/Toast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -46,9 +48,11 @@ export default function RootLayout() {
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY!} tokenCache={tokenCache}>
         <I18nProvider>
           <AppProvider>
-            <ToastProvider>
-              <RootLayoutNav />
-            </ToastProvider>
+            <ThemeProvider>
+              <ToastProvider>
+                <RootLayoutNav />
+              </ToastProvider>
+            </ThemeProvider>
           </AppProvider>
         </I18nProvider>
       </ClerkProvider>
@@ -141,7 +145,6 @@ function RootLayoutNav() {
         <Stack.Screen name="listing/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="listing/[category]/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="provider/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="ai-assistant" options={{ headerShown: false }} />
         <Stack.Screen name="services" options={{ headerShown: false }} />
         <Stack.Screen name="marketplace/[category]" options={{ headerShown: false }} />
         <Stack.Screen name="wilaya" options={{ headerShown: false }} />
@@ -151,6 +154,7 @@ function RootLayoutNav() {
         />
       </Stack>
       </GluestackUIProvider>
+      <FloatingAIBubble />
     </>
   );
 }

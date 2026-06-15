@@ -18,41 +18,81 @@ import { RIHLA } from '@/constants/theme';
 import { getListingById } from '@/constants/mockListings';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import { useFavorites } from '@/store/useFavorites';
+import { useTheme } from '@/context/ThemeContext';
 import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import * as Haptics from 'expo-haptics';
 
-// ── Mock provider data (derived from listings) ──
+// ── Generate provider data from listing ──
 
-const MOCK_PORTFOLIO = [
-  { id: 'pf1', label: 'Beach Sunset', color: '#F59E0B', icon: 'sunny-outline' },
-  { id: 'pf2', label: 'City Tour', color: '#3B82F6', icon: 'map-outline' },
-  { id: 'pf3', label: 'Mountain Trek', color: '#10B981', icon: 'mountain-outline' },
-  { id: 'pf4', label: 'Night Market', color: '#EC4899', icon: 'moon-outline' },
-  { id: 'pf5', label: 'Heritage Site', color: '#8B5CF6', icon: 'castle-outline' },
-  { id: 'pf6', label: 'Desert Camp', color: '#C56A39', icon: 'flame-outline' },
-];
+function generatePortfolio(listing: any) {
+  const cat = listing.category;
+  const items: Record<string, { id: string; label: string; color: string; icon: string }[]> = {
+    guide: [
+      { id: 'pf1', label: 'Heritage Walk', color: '#8B5CF6', icon: 'walk-outline' },
+      { id: 'pf2', label: 'Mountain Trek', color: '#10B981', icon: 'mountain-outline' },
+      { id: 'pf3', label: 'City Tour', color: '#3B82F6', icon: 'map-outline' },
+      { id: 'pf4', label: 'Desert Safari', color: '#C56A39', icon: 'flame-outline' },
+    ],
+    photographer: [
+      { id: 'pf1', label: 'Portrait Session', color: '#EC4899', icon: 'person-outline' },
+      { id: 'pf2', label: 'Landscape', color: '#10B981', icon: 'image-outline' },
+      { id: 'pf3', label: 'Event Coverage', color: '#F59E0B', icon: 'camera-outline' },
+      { id: 'pf4', label: 'Drone Aerial', color: '#3B82F6', icon: 'airplane-outline' },
+    ],
+    driver: [
+      { id: 'pf1', label: 'Airport Transfer', color: '#0a2540', icon: 'airplane-outline' },
+      { id: 'pf2', label: 'City Ride', color: '#3B82F6', icon: 'car-outline' },
+      { id: 'pf3', label: 'Tour Route', color: '#10B981', icon: 'map-outline' },
+      { id: 'pf4', label: 'Long Distance', color: '#F59E0B', icon: 'road-outline' },
+    ],
+  };
+  return items[cat] || items.guide;
+}
 
-const MOCK_REVIEWS = [
-  { id: 'r1', name: 'Ahmed B.', date: '2 days ago', rating: 5, text: 'Amazing experience! Very professional and knew all the hidden spots. Would book again!', avatar: 'A' },
-  { id: 'r2', name: 'Sarah M.', date: '1 week ago', rating: 5, text: 'Best guide we ever had. Made our trip unforgettable. Highly recommended for families.', avatar: 'S' },
-  { id: 'r3', name: 'Youcef K.', date: '2 weeks ago', rating: 4, text: 'Great knowledge and friendly. The only small issue was timing, but overall excellent.', avatar: 'Y' },
-  { id: 'r4', name: 'Fatima H.', date: '3 weeks ago', rating: 5, text: 'Professional, punctual, and passionate about what they do. 5 stars without hesitation!', avatar: 'F' },
-];
+function generateReviews(listing: any) {
+  const names = ['Ahmed B.', 'Sarah M.', 'Youcef K.', 'Fatima H.', 'Omar L.', 'Nadia T.'];
+  const texts = [
+    'Amazing experience! Very professional and knew all the hidden spots.',
+    'Best service we ever had. Made our trip unforgettable. Highly recommended!',
+    'Great knowledge and friendly. Would definitely book again.',
+    'Professional, punctual, and passionate. 5 stars without hesitation!',
+    'Excellent value for money. The quality exceeded our expectations.',
+    'Will definitely come back. Thank you for everything!',
+  ];
+  const count = Math.min(listing.review_count || 3, 6);
+  return Array.from({ length: count }, (_, i) => ({
+    id: `r${i + 1}`,
+    name: names[i % names.length],
+    date: i === 0 ? '2 days ago' : i === 1 ? '1 week ago' : `${i + 1} weeks ago`,
+    rating: Math.max(4, Math.min(5, Math.round(listing.rating))),
+    text: texts[i % texts.length],
+    avatar: names[i % names.length][0],
+  }));
+}
 
-const MOCK_SERVICES = [
-  { id: 's1', title: 'Half-Day Tour', description: '4-hour guided tour with transport', price: 3500, duration: '4h', popular: true },
-  { id: 's2', title: 'Full-Day Experience', description: '8-hour immersive tour with lunch', price: 6000, duration: '8h', popular: false },
-  { id: 's3', title: 'Multi-Day Package', description: '3-day expedition with accommodation', price: 18000, duration: '3 days', popular: false },
-];
+function generateServices(listing: any) {
+  const basePrice = listing.price_dzd;
+  return [
+    { id: 's1', title: 'Basic Package', description: 'Standard service included', price: basePrice, duration: '2h', popular: true },
+    { id: 's2', title: 'Premium Package', description: 'Extended service with extras', price: Math.round(basePrice * 1.5), duration: '4h', popular: false },
+    { id: 's3', title: 'Full Experience', description: 'Complete all-inclusive package', price: Math.round(basePrice * 2.5), duration: 'Full day', popular: false },
+  ];
+}
 
-const STAR_DIST = { 5: 68, 4: 22, 3: 7, 2: 2, 1: 1 };
+function getStarDist(rating: number) {
+  const five = Math.round(rating * 14);
+  const four = Math.round((5 - rating) * 10);
+  const rest = 100 - five - four;
+  return { 5: five, 4: four, 3: Math.round(rest * 0.6), 2: Math.round(rest * 0.3), 1: Math.round(rest * 0.1) };
+}
 
 // ── Main Screen ──
 
 export default function ProviderProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
   const { favoriteIds, toggleFavorite } = useFavorites();
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'services'>('portfolio');
@@ -65,8 +105,8 @@ export default function ProviderProfileScreen() {
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.notFound}>
-          <Ionicons name="person-outline" size={48} color="#94A3B8" />
-          <Text style={styles.notFoundText}>Provider not found</Text>
+          <Ionicons name="person-outline" size={48} color={colors.muted} />
+          <Text style={[styles.notFoundText, { color: colors.muted }]}>Provider not found</Text>
           <Pressable onPress={() => safeGoBack()}><Text style={{ fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent }}>← Go back</Text></Pressable>
         </View>
       </View>
@@ -75,7 +115,12 @@ export default function ProviderProfileScreen() {
 
   const catDef = getCategoryDef(listing.category);
   const catColor = catDef?.color || RIHLA.primary;
-  const totalReviews = Object.values(STAR_DIST).reduce((a, b) => a + b, 0);
+
+  const portfolio = useMemo(() => generatePortfolio(listing), [listing.id]);
+  const reviews = useMemo(() => generateReviews(listing), [listing.id]);
+  const services = useMemo(() => generateServices(listing), [listing.id]);
+  const starDist = useMemo(() => getStarDist(listing.rating), [listing.rating]);
+  const totalReviews = Object.values(starDist).reduce((a, b) => a + b, 0);
 
   return (
     <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
@@ -84,7 +129,7 @@ export default function ProviderProfileScreen() {
 
         {/* ── HERO ── */}
         <View style={[styles.heroWrap, { paddingTop: topPad }]}>
-          <View style={[styles.hero, { backgroundColor: '#0a2540' }]}>
+          <View style={[styles.hero, { backgroundColor: RIHLA.primary }]}>
             <View style={styles.heroNav}>
               <TouchableOpacity style={styles.backCircle} onPress={() => safeGoBack()}>
                 <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -105,7 +150,7 @@ export default function ProviderProfileScreen() {
                 <View style={[styles.avatarInner, { backgroundColor: catColor + '20' }]}>
                   <Ionicons name={catDef?.icon as any} size={32} color={catColor} />
                 </View>
-                <View style={styles.verifiedBadge}>
+                <View style={[styles.verifiedBadge, { backgroundColor: colors.card }]}>
                   <Ionicons name="checkmark-circle" size={18} color="#10B981" />
                 </View>
               </View>
@@ -123,30 +168,30 @@ export default function ProviderProfileScreen() {
         </View>
 
         {/* ── STATS ROW ── */}
-        <View style={styles.statsRow}>
+        <View style={[styles.statsRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.statItem}>
             <Ionicons name="time-outline" size={18} color={catColor} />
             <Text style={styles.statValue}>5+ yrs</Text>
-            <Text style={styles.statLabel}>Experience</Text>
+            <Text style={[styles.statLabel, { color: colors.muted }]}>Experience</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.statItem}>
             <Ionicons name="calendar-outline" size={18} color={catColor} />
-            <Text style={styles.statValue}>{listing.review_count}</Text>
-            <Text style={styles.statLabel}>Bookings</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>{listing.review_count}</Text>
+            <Text style={[styles.statLabel, { color: colors.muted }]}>Bookings</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.statItem}>
             <Ionicons name="chatbubble-outline" size={18} color={catColor} />
             <Text style={styles.statValue}>&lt;1h</Text>
-            <Text style={styles.statLabel}>Response</Text>
+            <Text style={[styles.statLabel, { color: colors.muted }]}>Response</Text>
           </View>
         </View>
 
         {/* ── BIO ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.bioText}>{listing.description}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
+          <Text style={[styles.bioText, { color: colors.muted }]}>{listing.description}</Text>
         </View>
 
         {/* ── TABS ── */}
@@ -154,15 +199,15 @@ export default function ProviderProfileScreen() {
           {(['portfolio', 'reviews', 'services'] as const).map((tab) => (
             <TouchableOpacity
               key={tab}
-              style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
+              style={[styles.tabBtn, { backgroundColor: activeTab === tab ? colors.bg : 'transparent' }]}
               onPress={() => { Haptics.selectionAsync(); setActiveTab(tab); }}
             >
               <Ionicons
                 name={tab === 'portfolio' ? 'images-outline' : tab === 'reviews' ? 'star-outline' : 'pricetag-outline'}
                 size={14}
-                color={activeTab === tab ? '#FFFFFF' : '#64748B'}
+                color={activeTab === tab ? '#FFFFFF' : colors.muted}
               />
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+              <Text style={[styles.tabText, { color: activeTab === tab ? '#FFFFFF' : colors.muted }]}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -173,7 +218,7 @@ export default function ProviderProfileScreen() {
         {activeTab === 'portfolio' && (
           <View style={styles.section}>
             <View style={styles.portfolioGrid}>
-              {MOCK_PORTFOLIO.map((p) => (
+              {portfolio.map((p) => (
                 <TouchableOpacity key={p.id} style={[styles.portfolioItem, { backgroundColor: p.color + '15' }]} activeOpacity={0.7}>
                   <Ionicons name={p.icon as any} size={28} color={p.color} />
                   <Text style={[styles.portfolioLabel, { color: p.color }]}>{p.label}</Text>
@@ -186,39 +231,39 @@ export default function ProviderProfileScreen() {
         {activeTab === 'reviews' && (
           <View style={styles.section}>
             {/* Star Distribution */}
-            <View style={styles.starDistCard}>
+            <View style={[styles.starDistCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.starDistLeft}>
-                <Text style={styles.starBig}>{listing.rating}</Text>
+                <Text style={[styles.starBig, { color: colors.text }]}>{listing.rating}</Text>
                 <View style={styles.starRow}>
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Ionicons key={s} name={s <= Math.round(listing.rating) ? 'star' : 'star-outline'} size={14} color="#FFD166" />
                   ))}
                 </View>
-                <Text style={styles.totalReviews}>{totalReviews} reviews</Text>
+                <Text style={[styles.totalReviews, { color: colors.muted }]}>{totalReviews} reviews</Text>
               </View>
               <View style={styles.starDistRight}>
                 {[5, 4, 3, 2, 1].map((star) => (
                   <View key={star} style={styles.starBarRow}>
-                    <Text style={styles.starBarLabel}>{star}</Text>
-                    <View style={styles.starBarBg}>
-                      <View style={[styles.starBarFill, { width: `${(STAR_DIST[star as keyof typeof STAR_DIST] / totalReviews) * 100}%`, backgroundColor: catColor }]} />
+                    <Text style={[styles.starBarLabel, { color: colors.muted }]}>{star}</Text>
+                      <View style={[styles.starBarBg, { backgroundColor: colors.bg }]}>
+                      <View style={[styles.starBarFill, { width: `${(starDist[star as keyof typeof starDist] / totalReviews) * 100}%`, backgroundColor: catColor }]} />
                     </View>
-                    <Text style={styles.starBarPct}>{STAR_DIST[star as keyof typeof STAR_DIST]}%</Text>
+                    <Text style={[styles.starBarPct, { color: colors.muted }]}>{starDist[star as keyof typeof starDist]}%</Text>
                   </View>
                 ))}
               </View>
             </View>
 
             {/* Review Cards */}
-            {MOCK_REVIEWS.map((review) => (
-              <View key={review.id} style={styles.reviewCard}>
+            {reviews.map((review) => (
+              <View key={review.id} style={[styles.reviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={styles.reviewTop}>
                   <View style={[styles.reviewAvatar, { backgroundColor: catColor + '15' }]}>
                     <Text style={[styles.reviewAvatarText, { color: catColor }]}>{review.avatar}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.reviewName}>{review.name}</Text>
-                    <Text style={styles.reviewDate}>{review.date}</Text>
+                    <Text style={[styles.reviewName, { color: colors.text }]}>{review.name}</Text>
+                    <Text style={[styles.reviewDate, { color: colors.muted }]}>{review.date}</Text>
                   </View>
                   <View style={styles.reviewStars}>
                     {[1, 2, 3, 4, 5].map((s) => (
@@ -226,7 +271,7 @@ export default function ProviderProfileScreen() {
                     ))}
                   </View>
                 </View>
-                <Text style={styles.reviewText}>{review.text}</Text>
+                <Text style={[styles.reviewText, { color: colors.muted }]}>{review.text}</Text>
               </View>
             ))}
           </View>
@@ -234,8 +279,8 @@ export default function ProviderProfileScreen() {
 
         {activeTab === 'services' && (
           <View style={styles.section}>
-            {MOCK_SERVICES.map((svc) => (
-              <TouchableOpacity key={svc.id} style={styles.serviceCard} activeOpacity={0.8}>
+            {services.map((svc) => (
+              <TouchableOpacity key={svc.id} style={[styles.serviceCard, { backgroundColor: colors.card, borderColor: colors.border }]} activeOpacity={0.8}>
                 {svc.popular && (
                   <View style={styles.popularBadge}>
                     <Ionicons name="flame" size={10} color="#FFFFFF" />
@@ -244,14 +289,14 @@ export default function ProviderProfileScreen() {
                 )}
                 <View style={styles.serviceHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.serviceTitle}>{svc.title}</Text>
-                    <Text style={styles.serviceDesc}>{svc.description}</Text>
+                    <Text style={[styles.serviceTitle, { color: colors.text }]}>{svc.title}</Text>
+                    <Text style={[styles.serviceDesc, { color: colors.muted }]}>{svc.description}</Text>
                   </View>
                   <Text style={styles.servicePrice}>{svc.price.toLocaleString()} DZD</Text>
                 </View>
                 <View style={styles.serviceMeta}>
-                  <Ionicons name="time-outline" size={12} color="#64748B" />
-                  <Text style={styles.serviceMetaText}>{svc.duration}</Text>
+                  <Ionicons name="time-outline" size={12} color={colors.muted} />
+                  <Text style={[styles.serviceMetaText, { color: colors.muted }]}>{svc.duration}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -260,10 +305,10 @@ export default function ProviderProfileScreen() {
       </ScrollView>
 
       {/* ── BOTTOM BAR ── */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12, backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <View>
-          <Text style={styles.bottomPrice}>From {listing.price_dzd.toLocaleString()} DZD</Text>
-          <Text style={styles.bottomUnit}>per {catDef?.label?.toLowerCase()}</Text>
+          <Text style={[styles.bottomPrice, { color: colors.text }]}>From {listing.price_dzd.toLocaleString()} DZD</Text>
+          <Text style={[styles.bottomUnit, { color: colors.muted }]}>per {catDef?.label?.toLowerCase()}</Text>
         </View>
         <TouchableOpacity
           style={[styles.bookBtn, { backgroundColor: catColor }]}
@@ -303,21 +348,21 @@ const styles = StyleSheet.create({
   heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
 
   // Stats
-  statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', padding: 14, alignItems: 'center' },
+  statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, borderRadius: 16, borderWidth: 1, padding: 14, alignItems: 'center' },
   statItem: { flex: 1, alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+  statValue: { fontSize: 16, fontFamily: 'mon-b' },
   statLabel: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  statDivider: { width: 1, height: 32, backgroundColor: '#E2E8F0' },
+  statDivider: { width: 1, height: 32 },
 
   // Sections
   section: { paddingHorizontal: 20, paddingTop: 20 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A', marginBottom: 10 },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', marginBottom: 10 },
   bioText: { fontSize: 14, fontFamily: 'mon', color: '#64748B', lineHeight: 22 },
 
   // Tabs
   tabRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 20, gap: 8 },
   tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F1F5F9' },
-  tabBtnActive: { backgroundColor: '#0d0d0d' },
+  tabBtnActive: {},
   tabText: { fontSize: 12, fontFamily: 'mon-sb', color: '#64748B' },
   tabTextActive: { color: '#FFFFFF' },
 
@@ -327,9 +372,9 @@ const styles = StyleSheet.create({
   portfolioLabel: { fontSize: 12, fontFamily: 'mon-sb' },
 
   // Star distribution
-  starDistCard: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E2E8F0', padding: 16, marginBottom: 16, gap: 16 },
+  starDistCard: { flexDirection: 'row', borderRadius: 14, borderWidth: 1, padding: 16, marginBottom: 16, gap: 16 },
   starDistLeft: { alignItems: 'center', gap: 4, minWidth: 80 },
-  starBig: { fontSize: 36, fontFamily: 'mon-b', color: '#0F172A' },
+  starBig: { fontSize: 36, fontFamily: 'mon-b' },
   starRow: { flexDirection: 'row', gap: 1 },
   totalReviews: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
   starDistRight: { flex: 1, gap: 4, justifyContent: 'center' },
@@ -340,29 +385,29 @@ const styles = StyleSheet.create({
   starBarPct: { fontSize: 10, fontFamily: 'mon', color: '#94A3B8', width: 28, textAlign: 'right' },
 
   // Reviews
-  reviewCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E2E8F0', padding: 14, marginBottom: 8 },
+  reviewCard: { borderRadius: 14, borderWidth: 1, padding: 14, marginBottom: 8 },
   reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   reviewAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   reviewAvatarText: { fontSize: 14, fontFamily: 'mon-b' },
-  reviewName: { fontSize: 13, fontFamily: 'mon-b', color: '#0F172A' },
+  reviewName: { fontSize: 13, fontFamily: 'mon-b' },
   reviewDate: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
   reviewStars: { flexDirection: 'row', gap: 1 },
   reviewText: { fontSize: 13, fontFamily: 'mon', color: '#475569', lineHeight: 20 },
 
   // Services
-  serviceCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E2E8F0', padding: 16, marginBottom: 10, position: 'relative' },
+  serviceCard: { borderRadius: 14, borderWidth: 1, padding: 16, marginBottom: 10, position: 'relative' },
   popularBadge: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#EF4444' },
   popularText: { fontSize: 10, fontFamily: 'mon-b', color: '#FFFFFF' },
   serviceHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  serviceTitle: { fontSize: 15, fontFamily: 'mon-b', color: '#0F172A' },
+  serviceTitle: { fontSize: 15, fontFamily: 'mon-b' },
   serviceDesc: { fontSize: 12, fontFamily: 'mon', color: '#64748B', marginTop: 2 },
   servicePrice: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.primary },
   serviceMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
   serviceMetaText: { fontSize: 12, fontFamily: 'mon-sb', color: '#64748B' },
 
   // Bottom bar
-  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
-  bottomPrice: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
+  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, borderTopWidth: 1, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
+  bottomPrice: { fontSize: 16, fontFamily: 'mon-b' },
   bottomUnit: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
   bookBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14 },
   bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#FFFFFF' },

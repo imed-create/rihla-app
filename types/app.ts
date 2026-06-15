@@ -84,4 +84,4 @@ export type UserProfile = {
   };
 };
 
-export type { AppBooking, AppBookingStatus, IconFamily, KycFieldProps } from './booking';
+export type { AppBooking, AppBookingStatus, BookingLane, IconFamily, KycFieldProps } from './booking';

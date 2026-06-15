@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/context/I18nContext';
 import { AppLocale, LOCALES } from '@/lib/i18n';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useTheme } from '@/context/ThemeContext';
 import SettingsGroup from '@/components/settings/SettingsGroup';
 import { SettingsNavRow, SettingsToggleRow } from '@/components/settings/SettingsRow';
 import { scheduleLocalNotification } from '@/hooks/useNotifications';
@@ -30,6 +31,7 @@ const LANGUAGE_FLAGS: Record<AppLocale, string> = {
 
 export default function SettingsScreen() {
   const { t, locale, setLocale } = useTranslation();
+  const { mode: themeMode, toggleMode: toggleTheme, colors } = useTheme();
   const pushNotifications = useSettingsStore((s) => s.pushNotifications);
   const hapticsEnabled = useSettingsStore((s) => s.hapticsEnabled);
   const setPushNotifications = useSettingsStore((s) => s.setPushNotifications);
@@ -81,14 +83,14 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.bg }]} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.bg, borderBottomColor: colors.border }]}>
         <Pressable onPress={() => safeGoBack('/(tabs)/profile')} style={styles.backBtn}>
-          <Ionicons name="close" size={22} color="#0F172A" />
+          <Ionicons name="close" size={22} color={colors.icon} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('settings.title')}</Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -116,6 +118,13 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <SettingsGroup title={t('settings.preferences')}>
+          <SettingsToggleRow
+            icon="moon-outline"
+            label="Dark Mode"
+            subtitle="Switch between dark and light theme"
+            value={themeMode === 'dark'}
+            onValueChange={toggleTheme}
+          />
           <SettingsToggleRow
             icon="notifications-outline"
             label={t('settings.notifications')}
@@ -151,13 +160,13 @@ export default function SettingsScreen() {
           />
           <SettingsNavRow
             icon="document-text-outline"
-            iconColor="#64748B"
+            iconColor={colors.muted}
             label={t('settings.terms')}
             onPress={() => Linking.openURL('https://saheel.dz/terms')}
           />
           <SettingsNavRow
             icon="shield-checkmark-outline"
-            iconColor="#64748B"
+            iconColor={colors.muted}
             label={t('settings.privacyPolicy')}
             onPress={() => Linking.openURL('https://saheel.dz/privacy')}
           />
@@ -182,20 +191,20 @@ export default function SettingsScreen() {
               subtitle={t('settings.testNotificationSub')}
               onPress={handleTestNotification}
             />
-            <Pressable onPress={handleSignOut} style={styles.signOutBtn}>
+            <Pressable onPress={handleSignOut} style={[styles.signOutBtn, { borderTopColor: colors.border }]}>
               <Ionicons name="log-out-outline" size={20} color="#EF4444" />
               <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
             </Pressable>
           </SettingsGroup>
         )}
 
-        <Text style={styles.version}>{t('profile.version', { version: '1.0' })}</Text>
+        <Text style={[styles.version, { color: colors.muted }]}>{t('profile.version', { version: '1.0' })}</Text>
       </ScrollView>
 
       <Modal visible={langOpen} transparent animationType="fade" onRequestClose={() => setLangOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setLangOpen(false)}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>{t('settings.chooseLanguage')}</Text>
+          <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t('settings.chooseLanguage')}</Text>
             {LOCALES.map((code) => (
               <Pressable
                 key={code}
@@ -203,7 +212,7 @@ export default function SettingsScreen() {
                 style={[styles.langRow, locale === code && styles.langRowActive]}
               >
                 <Text style={styles.langFlag}>{LANGUAGE_FLAGS[code]}</Text>
-                <Text style={[styles.langLabel, locale === code && styles.langLabelActive]}>
+                <Text style={[styles.langLabel, { color: colors.text }, locale === code && styles.langLabelActive]}>
                   {t(`settings.languages.${code}`)}
                 </Text>
                 {locale === code ? (
@@ -219,14 +228,13 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#fafbfc' },
+  root: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#0d0d0d',
   },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 17, fontFamily: 'mon-b', color: '#FFFFFF' },
@@ -238,24 +246,22 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#F1F5F9',
   },
   signOutText: { fontSize: 15, fontFamily: 'mon-sb', color: '#EF4444' },
-  version: { textAlign: 'center', fontSize: 12, fontFamily: 'mon', color: '#CBD5E1' },
+  version: { textAlign: 'center', fontSize: 12, fontFamily: 'mon' },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(15,23,42,0.45)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     paddingBottom: 36,
     gap: 4,
   },
-  modalTitle: { fontSize: 18, fontFamily: 'mon-b', color: '#0F172A', marginBottom: 12 },
+  modalTitle: { fontSize: 18, fontFamily: 'mon-b', marginBottom: 12 },
   langRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -266,6 +272,6 @@ const styles = StyleSheet.create({
   },
   langRowActive: { backgroundColor: '#FFF1F2' },
   langFlag: { fontSize: 22 },
-  langLabel: { flex: 1, fontSize: 16, fontFamily: 'mon-sb', color: '#0F172A' },
+  langLabel: { flex: 1, fontSize: 16, fontFamily: 'mon-sb' },
   langLabelActive: { color: '#0a2540' },
 });

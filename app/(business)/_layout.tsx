@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ProNavProvider } from '@/components/dashboard/NavProvider';
 import { PRO_THEME } from '@/constants/proNavigation';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 // ── Per-business-type tab config ─────────────────────────────
 type TabSlot = {
   title: string;
@@ -100,6 +101,7 @@ export default function BusinessLayout() {
   const businessType = (user.kycData?.businessType ?? '').toLowerCase();
   const cfg = TAB_CONFIG[businessType] ?? DEFAULT_CONFIG;
   const accent = cfg.index.accent;
+  const { colors } = useTheme();
 
   return (
     <ProNavProvider role="business">
@@ -107,12 +109,12 @@ export default function BusinessLayout() {
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: accent,
-          tabBarInactiveTintColor: '#94A3B8',
+          tabBarInactiveTintColor: colors.muted,
           tabBarLabelStyle: { fontFamily: 'mon-sb', fontSize: 10, marginTop: -2 },
           tabBarStyle: {
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.card,
             borderTopWidth: 0.5,
-            borderTopColor: '#e2e8f0',
+            borderTopColor: colors.border,
             height: 72,
             paddingBottom: 12,
             paddingTop: 8,

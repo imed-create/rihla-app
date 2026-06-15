@@ -19,6 +19,7 @@ import { showToast } from '@/components/Toast';
 import * as Haptics from 'expo-haptics';
 import PhotoCarousel from '@/components/shared/PhotoCarousel';
 import { getListingGallery } from '@/utils/listingPhotos';
+import { useTheme } from '@/context/ThemeContext';
 
 const AMENITY_ICONS: Record<string, string> = {
   pool: '🏊', wifi: '📶', parking: '🅿️', ac: '❄️', kitchen: '🍳', bbq: '🍖',
@@ -40,6 +41,7 @@ export default function RentalDetailScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { colors } = useTheme();
   const listing = useMemo(() => getListingById(id ?? ''), [id]);
   const isFavorite = favoriteIds.includes(id ?? '');
   const [checkIn, setCheckIn] = useState<string | null>(null);
@@ -47,11 +49,68 @@ export default function RentalDetailScreen() {
   const [guests, setGuests] = useState(2);
   const calendarDays = useMemo(() => generateDays(), []);
 
+  const styles = useMemo(() => StyleSheet.create({
+    root: { flex: 1 },
+    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: colors.muted },
+    heroWrap: { position: 'relative' },
+    heroNav: { position: 'absolute', left: 16, right: 16, zIndex: 10, flexDirection: 'row', justifyContent: 'space-between' },
+    navCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+    heroActions: { flexDirection: 'row', gap: 8 },
+    heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 160, justifyContent: 'flex-end' },
+    heroOverlay: { paddingHorizontal: 20, paddingBottom: 14, gap: 3 },
+    typePill: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+    typePillText: { fontSize: 11, fontFamily: 'mon-sb', color: '#fff', textTransform: 'capitalize' },
+    heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
+    heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    heroLocation: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
+    heroRating: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 },
+    ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
+    ratingBadgeText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
+    heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+    statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 },
+    statItem: { flex: 1, alignItems: 'center', gap: 4 },
+    statValue: { fontSize: 16, fontFamily: 'mon-b', color: colors.text },
+    statLabel: { fontSize: 11, fontFamily: 'mon', color: colors.muted },
+    section: { paddingHorizontal: 20, paddingTop: 20 },
+    sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: colors.text, marginBottom: 12 },
+    description: { fontSize: 14, fontFamily: 'mon', color: colors.muted, lineHeight: 22 },
+    reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    amenityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    amenityItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
+    amenityEmoji: { fontSize: 14 },
+    amenityLabel: { fontSize: 12, fontFamily: 'mon-sb', color: colors.muted, textTransform: 'capitalize' },
+    monthlyPill: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, backgroundColor: '#F0FDFA', borderWidth: 1, borderColor: '#D1FAE5' },
+    monthlyText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.accent },
+    calendarRow: { flexDirection: 'row', gap: 6 },
+    dayCell: { width: 60, height: 72, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', gap: 2 },
+    daySelected: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
+    dayInRange: { backgroundColor: '#EFF6FF', borderColor: 'transparent' },
+    dayToday: { borderColor: RIHLA.accent, borderWidth: 2 },
+    dayName: { fontSize: 10, fontFamily: 'mon-sb', color: colors.muted },
+    dayNum: { fontSize: 18, fontFamily: 'mon-b', color: colors.text },
+    dayMonth: { fontSize: 10, fontFamily: 'mon', color: colors.muted },
+    dateSelected: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary, marginTop: 8 },
+    guestRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 },
+    guestLabel: { fontSize: 14, fontFamily: 'mon-sb', color: colors.text },
+    guestControls: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    guestBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    guestCount: { fontSize: 18, fontFamily: 'mon-b', color: colors.text, minWidth: 24, textAlign: 'center' },
+    rulesCard: { backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14, gap: 10 },
+    ruleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    ruleText: { fontSize: 13, fontFamily: 'mon', color: colors.muted },
+    bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
+    bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+    bottomUnit: { fontSize: 11, fontFamily: 'mon', color: colors.muted },
+    bookBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14 },
+    bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
+  }), [colors]);
+
   if (!listing || listing.category !== 'rental') {
     return (
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <View style={styles.notFound}>
-          <Ionicons name="home-outline" size={48} color="#94A3B8" />
+          <Ionicons name="home-outline" size={48} color={colors.muted} />
           <Text style={styles.notFoundText}>Rental not found</Text>
           <Pressable onPress={() => safeGoBack()}><Text style={{ fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent }}>← Go back</Text></Pressable>
         </View>
@@ -64,7 +123,7 @@ export default function RentalDetailScreen() {
   const total = m.price_per_night_dzd * totalNights;
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}>
         {/* ── HERO PHOTO CAROUSEL ── */}
         <View style={[styles.heroWrap, { paddingTop: topPad }]}>
@@ -154,9 +213,9 @@ export default function RentalDetailScreen() {
                       else { if (day.date > checkIn) setCheckOut(day.date); else { setCheckIn(day.date); setCheckOut(null); } }
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }}>
-                    <Text style={[styles.dayName, !day.available && { color: '#CBD5E1' }]}>{day.dayName}</Text>
-                    <Text style={[styles.dayNum, !day.available && { color: '#CBD5E1' }, sel && { color: '#fff' }]}>{day.dayNum}</Text>
-                    <Text style={[styles.dayMonth, !day.available && { color: '#CBD5E1' }]}>{day.month}</Text>
+                    <Text style={[styles.dayName, !day.available && { color: colors.muted }]}>{day.dayName}</Text>
+                    <Text style={[styles.dayNum, !day.available && { color: colors.muted }, sel && { color: '#fff' }]}>{day.dayNum}</Text>
+                    <Text style={[styles.dayMonth, !day.available && { color: colors.muted }]}>{day.month}</Text>
                   </Pressable>
                 );
               })}
@@ -221,60 +280,3 @@ export default function RentalDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
-  heroWrap: { position: 'relative' },
-  heroNav: { position: 'absolute', left: 16, right: 16, zIndex: 10, flexDirection: 'row', justifyContent: 'space-between' },
-  navCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
-  heroActions: { flexDirection: 'row', gap: 8 },
-  heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 160, justifyContent: 'flex-end' },
-  heroOverlay: { paddingHorizontal: 20, paddingBottom: 14, gap: 3 },
-  typePill: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  typePillText: { fontSize: 11, fontFamily: 'mon-sb', color: '#fff', textTransform: 'capitalize' },
-  heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.3 },
-  heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroLocation: { fontSize: 13, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
-  heroRating: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 },
-  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
-  ratingBadgeText: { fontSize: 12, fontFamily: 'mon-b', color: '#fff' },
-  heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
-  statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },
-  statItem: { flex: 1, alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  statLabel: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  section: { paddingHorizontal: 20, paddingTop: 20 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 12 },
-  description: { fontSize: 14, fontFamily: 'mon', color: '#64748B', lineHeight: 22 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  amenityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  amenityItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: RIHLA.border },
-  amenityEmoji: { fontSize: 14 },
-  amenityLabel: { fontSize: 12, fontFamily: 'mon-sb', color: '#334155', textTransform: 'capitalize' },
-  monthlyPill: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, backgroundColor: '#F0FDFA', borderWidth: 1, borderColor: '#D1FAE5' },
-  monthlyText: { fontSize: 12, fontFamily: 'mon-sb', color: RIHLA.accent },
-  calendarRow: { flexDirection: 'row', gap: 6 },
-  dayCell: { width: 60, height: 72, borderRadius: 12, borderWidth: 1, borderColor: RIHLA.border, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 2 },
-  daySelected: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
-  dayInRange: { backgroundColor: '#EFF6FF', borderColor: 'transparent' },
-  dayToday: { borderColor: RIHLA.accent, borderWidth: 2 },
-  dayName: { fontSize: 10, fontFamily: 'mon-sb', color: '#94A3B8' },
-  dayNum: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark },
-  dayMonth: { fontSize: 10, fontFamily: 'mon', color: '#94A3B8' },
-  dateSelected: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.primary, marginTop: 8 },
-  guestRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 16 },
-  guestLabel: { fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.dark },
-  guestControls: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  guestBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: RIHLA.border, alignItems: 'center', justifyContent: 'center' },
-  guestCount: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.dark, minWidth: 24, textAlign: 'center' },
-  rulesCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14, gap: 10 },
-  ruleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  ruleText: { fontSize: 13, fontFamily: 'mon', color: '#475569' },
-  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: RIHLA.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
-  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
-  bottomUnit: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  bookBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14 },
-  bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
-});

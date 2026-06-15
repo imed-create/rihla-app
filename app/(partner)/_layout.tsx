@@ -2,22 +2,24 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ProNavProvider } from '@/components/dashboard/NavProvider';
 import { PRO_THEME } from '@/constants/proNavigation';
+import { useTheme } from '@/context/ThemeContext';
 
 const theme = PRO_THEME.partner;
 
 export default function PartnerLayout() {
+  const { colors } = useTheme();
   return (
     <ProNavProvider role="partner">
       <Tabs
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: theme.accent,
-          tabBarInactiveTintColor: '#94A3B8',
+          tabBarInactiveTintColor: colors.muted,
           tabBarLabelStyle: { fontFamily: 'mon-sb', fontSize: 10, marginTop: -2 },
           tabBarStyle: {
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.card,
             borderTopWidth: 0.5,
-            borderTopColor: '#e2e8f0',
+            borderTopColor: colors.border,
             height: 72,
             paddingBottom: 12,
             paddingTop: 8,

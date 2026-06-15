@@ -1,10 +1,8 @@
 /**
- * RIHLA — Beach Satellite Map Component
- * --------------------------------------
- * Real Google Maps satellite view with beach assets (umbrellas, tables,
+ * RIHLA — Beach Satellite Map Component (MapLibre / OpenStreetMap)
+ * ----------------------------------------------------------------
+ * Open-source satellite-style map with beach assets (umbrellas, tables,
  * parking spots, VIP zones) overlaid on actual coordinates.
- *
- * Beach owners manage assets with lat/lng, travelers tap to reserve.
  */
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
@@ -18,17 +16,22 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import MapView, {
-  Marker,
-  Polygon,
-  PROVIDER_GOOGLE,
-  Callout,
-  type MapStyleElement,
-} from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RIHLA } from '@/constants/theme';
+
+// Detect Expo Go — MapLibre crashes in Expo Go (TurboModuleRegistry.getEnforcing)
+let isExpoGo = false;
+try {
+  const Constants = require('expo-constants').default;
+  isExpoGo = Constants?.executionEnvironment === 'storeClient';
+} catch { /* not available */ }
+
+let ML: any = null;
+if (!isExpoGo) {
+  try { ML = require('@maplibre/maplibre-react-native'); } catch { /* noop */ }
+}
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -141,7 +144,7 @@ export default function BeachSatelliteMap({
   showZoneFilter = true,
   height = 420,
 }: Props) {
-  const mapRef = useRef<MapView>(null);
+  const cameraRef = useRef<any>(null);
   const [selectedAsset, setSelectedAsset] = useState<BeachAsset | null>(null);
   const [zoneFilter, setZoneFilter] = useState<BeachZone | 'all'>('all');
 
@@ -161,17 +164,11 @@ export default function BeachSatelliteMap({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setSelectedAsset(asset);
       onSelectAsset?.(asset);
-
-      // Zoom to the asset
-      mapRef.current?.animateToRegion(
-        {
-          latitude: asset.lat,
-          longitude: asset.lng,
-          latitudeDelta: 0.003,
-          longitudeDelta: 0.003,
-        },
-        300
-      );
+      cameraRef.current?.easeTo({
+        center: [asset.lng, asset.lat],
+        zoom: 18,
+        duration: 300,
+      });
     },
     [onSelectAsset]
   );
@@ -184,84 +181,125 @@ export default function BeachSatelliteMap({
     [onSelectAsset]
   );
 
+  const zonesGeoJSON = useMemo(() => {
+    if (zones.length === 0) return null;
+    return {
+      type: 'FeatureCollection' as const,
+      features: zones.map((zone) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [
+            zone.coordinates.map((c) => [c.longitude, c.latitude]),
+          ],
+        },
+        properties: { zone: zone.zone, id: zone.id },
+      })),
+    };
+  }, [zones]);
+
+  const SATELLITE_STYLE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+
+  if (!ML) {
+    return (
+      <View style={[styles.container, { height }]}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <Text style={{ fontSize: 14, fontFamily: 'mon-b', color: '#64748B' }}>Map unavailable</Text>
+          <Text style={{ fontSize: 12, fontFamily: 'mon', color: '#94A3B8', textAlign: 'center' }}>
+            Maps require a development build
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  const { Map, Marker, Camera, GeoJSONSource, Layer, Callout } = ML;
+
   return (
     <View style={[styles.container, { height }]}>
       {/* ── MAP ── */}
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
+      <Map
+        mapStyle={SATELLITE_STYLE as any}
         style={styles.map}
-        mapType={Platform.OS === 'android' ? 'satellite' : 'standard'}
-        initialRegion={{
-          latitude: center.latitude,
-          longitude: center.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }}
-        showsUserLocation={false}
-        showsCompass={false}
-        showsScale={false}
-        rotateEnabled={false}
-        pitchEnabled={false}
+        compass={false}
+        scaleBar={false}
+        attribution={false}
+        logo={false}
+        touchRotate={false}
+        touchPitch={false}
       >
+        <Camera
+          ref={cameraRef}
+          center={[center.longitude, center.latitude]}
+          zoom={17}
+          duration={0}
+        />
+
         {/* Zone polygon overlays */}
-        {zones.map((zone) => {
-          const zc = ZONE_COLORS[zone.zone];
-          return (
-            <Polygon
-              key={zone.id}
-              coordinates={zone.coordinates}
-              fillColor={zc.fill}
-              strokeColor={zc.stroke}
-              strokeWidth={2}
+        {zonesGeoJSON && (
+          <GeoJSONSource id="zones-source" data={zonesGeoJSON}>
+            <Layer
+              id="zones-fill"
+              type="fill"
+              source="zones-source"
+              paint={{
+                'fill-color': ['match', ['get', 'zone'],
+                  'vip', 'rgba(244,162,97,0.15)',
+                  'family', 'rgba(0,168,150,0.12)',
+                  'rgba(10,37,64,0.08)'
+                ],
+                'fill-outline-color': ['match', ['get', 'zone'],
+                  'vip', '#f4a261',
+                  'family', '#00a896',
+                  '#0a2540'
+                ],
+              }}
             />
-          );
-        })}
+            <Layer
+              id="zones-line"
+              type="line"
+              source="zones-source"
+              paint={{
+                'line-color': ['match', ['get', 'zone'],
+                  'vip', '#f4a261',
+                  'family', '#00a896',
+                  '#0a2540'
+                ],
+                'line-width': 2,
+              }}
+            />
+          </GeoJSONSource>
+        )}
 
         {/* Asset markers */}
         {filteredAssets.map((asset) => (
           <Marker
             key={asset.id}
-            coordinate={{ latitude: asset.lat, longitude: asset.lng }}
+            id={asset.id}
+            lngLat={[asset.lng, asset.lat]}
             onPress={() => handleAssetPress(asset)}
-            tracksViewChanges={false}
-            anchor={{ x: 0.5, y: 0.5 }}
           >
-            <AssetPin asset={asset} isSelected={selectedAsset?.id === asset.id} />
-            <Callout
-              tooltip
-              onPress={() => handleAssetCalloutPress(asset)}
-              style={styles.callout}
-            >
-              <View style={styles.calloutCard}>
-                <Text style={styles.calloutTitle}>
-                  {ASSET_ICONS[asset.kind]} {asset.id}
-                </Text>
-                <Text style={styles.calloutZone}>{ZONE_COLORS[asset.zone].label}</Text>
-                {asset.distance_to_sea_m != null && (
-                  <Text style={styles.calloutDetail}>🌊 {asset.distance_to_sea_m}m to sea</Text>
-                )}
-                <View style={styles.calloutPriceRow}>
+            <View>
+              <AssetPin asset={asset} isSelected={selectedAsset?.id === asset.id} />
+              <Callout title={`${ASSET_ICONS[asset.kind]} ${asset.id}`}>
+                <View style={styles.calloutContent}>
+                  <Text style={styles.calloutZone}>{ZONE_COLORS[asset.zone].label}</Text>
+                  {asset.distance_to_sea_m != null && (
+                    <Text style={styles.calloutDetail}>{asset.distance_to_sea_m}m to sea</Text>
+                  )}
                   <Text style={styles.calloutPrice}>
                     {asset.price_dzd === 0 ? 'Free' : `${asset.price_dzd.toLocaleString()} DZD`}
                   </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[asset.status].bg }]}>
-                    <Text style={[styles.statusText, { color: STATUS_COLORS[asset.status].text }]}>
-                      {asset.status}
-                    </Text>
-                  </View>
+                  <Text style={styles.calloutStatus}>{asset.status}</Text>
+                  {asset.status === 'available' && (
+                    <Text style={styles.calloutBtn}>Book Now →</Text>
+                  )}
                 </View>
-                {asset.status === 'available' && (
-                  <Pressable style={styles.calloutBtn}>
-                    <Text style={styles.calloutBtnText}>Book Now →</Text>
-                  </Pressable>
-                )}
-              </View>
-              <View style={styles.calloutArrow} />
-            </Callout>
+              </Callout>
+            </View>
           </Marker>
         ))}
-      </MapView>
+      </Map>
 
       {/* ── ZONE FILTER TABS ── */}
       {showZoneFilter && (
@@ -423,10 +461,12 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   calloutTitle: { fontSize: 15, fontFamily: 'mon-b', color: RIHLA.dark },
+  calloutContent: { padding: 4 },
   calloutZone: { fontSize: 11, fontFamily: 'mon-sb', color: RIHLA.mutedText, marginTop: 2 },
   calloutDetail: { fontSize: 12, fontFamily: 'mon', color: RIHLA.mutedText, marginTop: 2 },
   calloutPriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   calloutPrice: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.primary },
+  calloutStatus: { fontSize: 10, fontFamily: 'mon-sb', textTransform: 'capitalize', color: '#64748B', marginTop: 2 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   statusText: { fontSize: 10, fontFamily: 'mon-sb', textTransform: 'capitalize' },
   calloutBtn: {

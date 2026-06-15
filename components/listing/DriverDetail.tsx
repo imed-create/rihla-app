@@ -17,6 +17,7 @@ import { safeGoBack } from '@/utils/safeNavigation';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import { showToast } from '@/components/Toast';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '@/context/ThemeContext';
 
 const VEHICLE_ICONS: Record<string, string> = { sedan: '🚗', suv: '🚙', van: '🚐', bus: '🚌', luxury: '🏎️' };
 
@@ -25,15 +26,64 @@ export default function DriverDetailScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? insets.top + 67 : insets.top;
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { colors } = useTheme();
   const listing = useMemo(() => getListingById(id ?? ''), [id]);
   const isFavorite = favoriteIds.includes(id ?? '');
   const [selectedRoute, setSelectedRoute] = useState<number | null>(null);
+
+  const styles = useMemo(() => StyleSheet.create({
+    root: { flex: 1 },
+    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: colors.muted },
+    heroWrap: { overflow: 'hidden' },
+    hero: { paddingHorizontal: 20, paddingBottom: 28, gap: 8 },
+    heroNav: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+    backCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
+    heroActions: { flexDirection: 'row', gap: 10 },
+    actionCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+    heroContent: { gap: 4, alignItems: 'center' },
+    heroEmoji: { fontSize: 48, marginBottom: 8 },
+    heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.5, textAlign: 'center' },
+    heroLocation: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
+    heroRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+    heroRatingText: { fontSize: 14, fontFamily: 'mon-b', color: '#fff' },
+    heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
+    section: { paddingHorizontal: 20, paddingTop: 20 },
+    sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: colors.text, marginBottom: 12 },
+    description: { fontSize: 14, fontFamily: 'mon', color: colors.muted, lineHeight: 22 },
+    reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    vehicleCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 },
+    vehicleEmoji: { fontSize: 36 },
+    vehicleName: { fontSize: 16, fontFamily: 'mon-b', color: colors.text },
+    vehicleType: { fontSize: 12, fontFamily: 'mon', color: colors.muted, textTransform: 'capitalize' },
+    statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 },
+    statItem: { flex: 1, alignItems: 'center', gap: 4 },
+    statValue: { fontSize: 14, fontFamily: 'mon-b', color: colors.text },
+    statLabel: { fontSize: 11, fontFamily: 'mon', color: colors.muted },
+    routeList: { gap: 10 },
+    routeCard: { backgroundColor: colors.card, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, padding: 16, position: 'relative' },
+    routeSelected: { borderColor: RIHLA.accent, backgroundColor: colors.card },
+    routeInfo: { flex: 1 },
+    routeEndpoints: { gap: 0 },
+    routePoint: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    routeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: RIHLA.primary },
+    routeLine: { width: 2, height: 20, backgroundColor: colors.border, marginLeft: 4 },
+    routeFrom: { fontSize: 13, fontFamily: 'mon-sb', color: colors.text },
+    routeTo: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
+    routePriceWrap: { position: 'absolute', bottom: 14, right: 16 },
+    routePrice: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.primary },
+    bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
+    bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
+    bottomUnit: { fontSize: 11, fontFamily: 'mon', color: colors.muted },
+    bookBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14 },
+    bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
+  }), [colors]);
 
   if (!listing || listing.category !== 'driver') {
     return (
       <View style={[styles.root, { paddingTop: topPad + 40 }]}>
         <View style={styles.notFound}>
-          <Ionicons name="car-outline" size={48} color="#94A3B8" />
+          <Ionicons name="car-outline" size={48} color={colors.muted} />
           <Text style={styles.notFoundText}>Driver not found</Text>
           <Pressable onPress={() => safeGoBack()}><Text style={{ fontSize: 14, fontFamily: 'mon-sb', color: RIHLA.accent }}>← Go back</Text></Pressable>
         </View>
@@ -44,7 +94,7 @@ export default function DriverDetailScreen() {
   const m = listing.metadata as DriverMetadata;
 
   return (
-    <View style={[styles.root, { backgroundColor: RIHLA.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}>
         <View style={[styles.heroWrap, { paddingTop: topPad }]}>
           <LinearGradient colors={['#F59E0B', RIHLA.primary]} style={styles.hero}>
@@ -90,12 +140,12 @@ export default function DriverDetailScreen() {
             <Text style={styles.statLabel}>Per km</Text>
           </View>
           <View style={styles.statItem}>
-            <Ionicons name="airplane-outline" size={18} color={m.airport_transfer ? RIHLA.accent : '#CBD5E1'} />
+            <Ionicons name="airplane-outline" size={18} color={m.airport_transfer ? RIHLA.accent : colors.muted} />
             <Text style={styles.statValue}>{m.airport_transfer ? 'Available' : 'No'}</Text>
             <Text style={styles.statLabel}>Airport</Text>
           </View>
           <View style={styles.statItem}>
-            <Ionicons name="calendar-outline" size={18} color={m.multi_day_hire ? RIHLA.accent : '#CBD5E1'} />
+            <Ionicons name="calendar-outline" size={18} color={m.multi_day_hire ? RIHLA.accent : colors.muted} />
             <Text style={styles.statValue}>{m.multi_day_hire ? 'Yes' : 'No'}</Text>
             <Text style={styles.statLabel}>Multi-day</Text>
           </View>
@@ -154,51 +204,3 @@ export default function DriverDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText: { fontSize: 16, fontFamily: 'mon-sb', color: '#64748B' },
-  heroWrap: { overflow: 'hidden' },
-  hero: { paddingHorizontal: 20, paddingBottom: 28, gap: 8 },
-  heroNav: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  backCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
-  heroActions: { flexDirection: 'row', gap: 10 },
-  actionCircle: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  heroContent: { gap: 4, alignItems: 'center' },
-  heroEmoji: { fontSize: 48, marginBottom: 8 },
-  heroTitle: { fontSize: 26, fontFamily: 'mon-b', color: '#fff', letterSpacing: -0.5, textAlign: 'center' },
-  heroLocation: { fontSize: 14, fontFamily: 'mon', color: 'rgba(255,255,255,0.85)' },
-  heroRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  heroRatingText: { fontSize: 14, fontFamily: 'mon-b', color: '#fff' },
-  heroReviewCount: { fontSize: 12, fontFamily: 'mon', color: 'rgba(255,255,255,0.7)' },
-  section: { paddingHorizontal: 20, paddingTop: 20 },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark, marginBottom: 12 },
-  description: { fontSize: 14, fontFamily: 'mon', color: '#64748B', lineHeight: 22 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  vehicleCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 16 },
-  vehicleEmoji: { fontSize: 36 },
-  vehicleName: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.dark },
-  vehicleType: { fontSize: 12, fontFamily: 'mon', color: '#64748B', textTransform: 'capitalize' },
-  statsRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: RIHLA.border, padding: 14 },
-  statItem: { flex: 1, alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 14, fontFamily: 'mon-b', color: RIHLA.dark },
-  statLabel: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  routeList: { gap: 10 },
-  routeCard: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1.5, borderColor: RIHLA.border, padding: 16, position: 'relative' },
-  routeSelected: { borderColor: RIHLA.accent, backgroundColor: '#F0FDFA' },
-  routeInfo: { flex: 1 },
-  routeEndpoints: { gap: 0 },
-  routePoint: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  routeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: RIHLA.primary },
-  routeLine: { width: 2, height: 20, backgroundColor: RIHLA.border, marginLeft: 4 },
-  routeFrom: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.dark },
-  routeTo: { fontSize: 13, fontFamily: 'mon-sb', color: RIHLA.accent },
-  routePriceWrap: { position: 'absolute', bottom: 14, right: 16 },
-  routePrice: { fontSize: 16, fontFamily: 'mon-b', color: RIHLA.primary },
-  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingHorizontal: 20, paddingTop: 14, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: RIHLA.border, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
-  bottomPrice: { fontSize: 18, fontFamily: 'mon-b', color: RIHLA.primary },
-  bottomUnit: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8' },
-  bookBtn: { backgroundColor: RIHLA.primary, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14 },
-  bookBtnText: { fontSize: 15, fontFamily: 'mon-b', color: '#fff' },
-});

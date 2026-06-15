@@ -1,54 +1,68 @@
 /**
- * RIHLA — Trips Tab (Uber Premium Style)
- * ────────────────────────────────────────
- * 4 segments: Upcoming, Active, Completed, Cancelled
- * Stats summary, category filter, pull-to-refresh, re-book CTA
+ * RIHLA — Trips Tab (Premium Dual-Lane)
+ * ──────────────────────────────────────
+ * Two lanes: Bookings (service reservations) & Orders (transactional)
+ * Features: Hero active card, animated lane tabs, status filters,
+ *           enhanced trip cards with progress bars, stats dashboard
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
+  Dimensions,
   FlatList,
-  Platform,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import Svg, { Rect } from 'react-native-svg';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import { RIHLA } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import type { AppBooking } from '@/types/app';
+import type { MarketplaceCategory } from '@/types/service';
+import type { BookingLane } from '@/types/booking';
 
-// ── Types ──
-type SegmentKey = 'upcoming' | 'active' | 'completed' | 'cancelled';
+const { width: SCREEN_W } = Dimensions.get('window');
 
-const SEGMENTS: { key: SegmentKey; label: string; icon: string }[] = [
-  { key: 'upcoming', label: 'Upcoming', icon: 'time-outline' },
+// ── Lane classification ──
+const ORDER_TYPES = new Set(['driver', 'ride', 'food', 'restaurant', 'beach', 'spots']);
+
+function getLane(booking: AppBooking): BookingLane {
+  if (booking.lane) return booking.lane;
+  return ORDER_TYPES.has(booking.type) ? 'order' : 'booking';
+}
+
+function mapBookingTypeToCategory(type: string): MarketplaceCategory {
+  if (type === 'spots') return 'beach';
+  if (type === 'food') return 'restaurant';
+  if (type === 'ride') return 'driver';
+  return type as MarketplaceCategory;
+}
+
+// ── Status types ──
+type StatusFilter = 'all' | 'active' | 'upcoming' | 'completed' | 'cancelled';
+
+const STATUS_FILTERS: { key: StatusFilter; label: string; icon: string }[] = [
+  { key: 'all', label: 'All', icon: 'apps-outline' },
   { key: 'active', label: 'Active', icon: 'radio-outline' },
+  { key: 'upcoming', label: 'Upcoming', icon: 'time-outline' },
   { key: 'completed', label: 'Done', icon: 'checkmark-circle-outline' },
   { key: 'cancelled', label: 'Cancelled', icon: 'close-circle-outline' },
 ];
 
-const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
-  active: { color: '#10B981', bg: '#DCFCE7' },
-  confirmed: { color: '#F59E0B', bg: '#FEF3C7' },
-  pending: { color: '#F59E0B', bg: '#FEF3C7' },
-  completed: { color: '#64748B', bg: '#F1F5F9' },
-  cancelled: { color: '#EF4444', bg: '#FEE2E2' },
-};
-
-const CATEGORIES = [
-  'all', 'hotel', 'restaurant', 'beach', 'driver', 'activity',
-  'event', 'guide', 'photographer', 'rental', 'experience',
-];
-
 // ── Main Screen ──
 export default function TripsScreen() {
+  const { colors, isDark } = useTheme();
   const {
     bookings,
     activeBookings,
@@ -56,53 +70,91 @@ export default function TripsScreen() {
     completedBookings,
     cancelledBookings,
     completeBooking,
+    user,
   } = useApp();
 
-  const [activeSegment, setActiveSegment] = useState<SegmentKey>('active');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [activeLane, setActiveLane] = useState<BookingLane>('booking');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [ticketBooking, setTicketBooking] = useState<AppBooking | null>(null);
+
+  // Animated underline for lane tabs
+  const laneAnim = useRef(new Animated.Value(0)).current;
+
+  const switchLane = (lane: BookingLane) => {
+    Haptics.selectionAsync();
+    setActiveLane(lane);
+    setStatusFilter('all');
+    Animated.spring(laneAnim, {
+      toValue: lane === 'booking' ? 0 : 1,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 80,
+    }).start();
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 800);
   }, []);
 
-  // ── Filtered bookings per segment ──
-  const segmentBookings = useMemo(() => {
-    const base =
-      activeSegment === 'upcoming' ? upcomingBookings
-      : activeSegment === 'active' ? activeBookings.filter((b) => b.status === 'active')
-      : activeSegment === 'completed' ? completedBookings
-      : cancelledBookings;
+  // ── Filter by lane then status ──
+  const laneBookings = useMemo(() => {
+    return bookings.filter((b) => getLane(b) === activeLane);
+  }, [bookings, activeLane]);
 
-    if (categoryFilter === 'all') return base;
-    return base.filter((b) => b.type === categoryFilter);
-  }, [activeSegment, categoryFilter, upcomingBookings, activeBookings, completedBookings, cancelledBookings]);
+  const filteredBookings = useMemo(() => {
+    if (statusFilter === 'all') return laneBookings;
+    if (statusFilter === 'active')
+      return laneBookings.filter((b) => b.status === 'active');
+    if (statusFilter === 'upcoming')
+      return laneBookings.filter((b) => b.status === 'confirmed' || b.status === 'pending');
+    if (statusFilter === 'completed')
+      return laneBookings.filter((b) => b.status === 'completed');
+    return laneBookings.filter((b) => b.status === 'cancelled');
+  }, [laneBookings, statusFilter]);
 
-  // ── Stats ──
+  // ── Hero: first active trip in the current lane ──
+  const heroBooking = useMemo(() => {
+    return laneBookings.find((b) => b.status === 'active') || null;
+  }, [laneBookings]);
+
+  // ── Stats (per lane) ──
   const stats = useMemo(() => {
-    const totalSpent = completedBookings.reduce((s, b) => s + b.price, 0);
-    const topCategory = bookings.reduce<Record<string, number>>((acc, b) => {
-      acc[b.type] = (acc[b.type] || 0) + 1;
-      return acc;
-    }, {});
-    const topCat = Object.entries(topCategory).sort((a, b) => b[1] - a[1])[0];
-    return {
-      totalTrips: bookings.length,
-      totalSpent,
-      topCategory: topCat ? getCategoryDef(topCat[0] as any)?.label || topCat[0] : '—',
-      topCategoryIcon: topCat ? getCategoryDef(topCat[0] as any)?.icon || 'star' : 'star',
-      topCategoryColor: topCat ? getCategoryDef(topCat[0] as any)?.color || RIHLA.accent : RIHLA.accent,
-    };
-  }, [bookings, completedBookings]);
+    const totalSpent = laneBookings
+      .filter((b) => b.status === 'completed')
+      .reduce((s, b) => s + b.price, 0);
+    const activeCount = laneBookings.filter((b) => b.status === 'active').length;
+    const completedCount = laneBookings.filter((b) => b.status === 'completed').length;
+    return { total: laneBookings.length, activeCount, completedCount, totalSpent };
+  }, [laneBookings]);
+
+  // ── Lane counts for badges ──
+  const bookingCount = useMemo(
+    () => bookings.filter((b) => getLane(b) === 'booking').length,
+    [bookings],
+  );
+  const orderCount = useMemo(
+    () => bookings.filter((b) => getLane(b) === 'order').length,
+    [bookings],
+  );
+
+  // Status filter counts
+  const statusCounts = useMemo(() => {
+    const active = laneBookings.filter((b) => b.status === 'active').length;
+    const upcoming = laneBookings.filter((b) => b.status === 'confirmed' || b.status === 'pending').length;
+    const completed = laneBookings.filter((b) => b.status === 'completed').length;
+    const cancelled = laneBookings.filter((b) => b.status === 'cancelled').length;
+    return { all: laneBookings.length, active, upcoming, completed, cancelled };
+  }, [laneBookings]);
+
+  // Underline translation
+  const underlineTranslate = laneAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, (SCREEN_W - 40) / 2],
+  });
 
   // ── Handlers ──
-  const handleSegmentChange = (key: SegmentKey) => {
-    Haptics.selectionAsync();
-    setActiveSegment(key);
-    setCategoryFilter('all');
-  };
-
   const handleBookingPress = (booking: AppBooking) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push(`/booking/${booking.id}` as any);
@@ -113,20 +165,19 @@ export default function TripsScreen() {
     completeBooking(id);
   };
 
-  const segmentCount = (key: SegmentKey) => {
-    if (key === 'upcoming') return upcomingBookings.length;
-    if (key === 'active') return activeBookings.filter((b) => b.status === 'active').length;
-    if (key === 'completed') return completedBookings.length;
-    return cancelledBookings.length;
-  };
+  // ── Non-hero items (exclude hero from list) ──
+  const listData = useMemo(() => {
+    if (!heroBooking) return filteredBookings;
+    return filteredBookings.filter((b) => b.id !== heroBooking.id);
+  }, [filteredBookings, heroBooking]);
 
   // ── Render ──
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.bg }]} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <FlatList
-        data={segmentBookings}
+        data={listData}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -134,94 +185,176 @@ export default function TripsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={RIHLA.primary}
-            colors={[RIHLA.primary]}
+            tintColor={RIHLA.accent}
+            colors={[RIHLA.accent]}
           />
         }
         ListHeaderComponent={
           <>
-            {/* ── Header ── */}
-            <Text style={styles.headerTitle}>Your Trips</Text>
-
-            {/* ── Stats Row ── */}
-            <View style={styles.statsRow}>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats.totalTrips}</Text>
-                <Text style={styles.statLabel}>Total</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>
-                  {stats.totalSpent > 0 ? `${(stats.totalSpent / 1000).toFixed(0)}k` : '0'}
-                </Text>
-                <Text style={styles.statLabel}>Spent (DA)</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statCard}>
-                <Ionicons name={stats.topCategoryIcon as any} size={16} color={stats.topCategoryColor} />
-                <Text style={[styles.statValue, { fontSize: 13, marginTop: 2 }]}>{stats.topCategory}</Text>
-                <Text style={styles.statLabel}>Top Category</Text>
+            {/* ── Page Title ── */}
+            <View style={styles.titleRow}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Your Trips</Text>
+              <View style={[styles.tripsBadge, { backgroundColor: RIHLA.accent + '18' }]}>
+                <Text style={styles.tripsBadgeText}>{bookings.length} total</Text>
               </View>
             </View>
 
-            {/* ── Segment Tabs ── */}
-            <View style={styles.segmentRow}>
-              {SEGMENTS.map((seg) => {
-                const count = segmentCount(seg.key);
-                const isActive = activeSegment === seg.key;
+            {/* ── Lane Tabs ── */}
+            <View style={[styles.laneTabs, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <TouchableOpacity
+                style={styles.laneTab}
+                onPress={() => switchLane('booking')}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="briefcase-outline"
+                  size={16}
+                  color={activeLane === 'booking' ? RIHLA.accent : colors.muted}
+                />
+                <Text
+                  style={[
+                    styles.laneTabText,
+                    { color: activeLane === 'booking' ? colors.text : colors.muted },
+                  ]}
+                >
+                  Bookings
+                </Text>
+                {bookingCount > 0 && (
+                  <View style={[styles.laneCount, activeLane === 'booking' && styles.laneCountActive]}>
+                    <Text style={[styles.laneCountText, activeLane === 'booking' && styles.laneCountTextActive]}>
+                      {bookingCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.laneTab}
+                onPress={() => switchLane('order')}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="cart-outline"
+                  size={16}
+                  color={activeLane === 'order' ? RIHLA.accent : colors.muted}
+                />
+                <Text
+                  style={[
+                    styles.laneTabText,
+                    { color: activeLane === 'order' ? colors.text : colors.muted },
+                  ]}
+                >
+                  Orders
+                </Text>
+                {orderCount > 0 && (
+                  <View style={[styles.laneCount, activeLane === 'order' && styles.laneCountActive]}>
+                    <Text style={[styles.laneCountText, activeLane === 'order' && styles.laneCountTextActive]}>
+                      {orderCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Animated underline */}
+              <Animated.View
+                style={[
+                  styles.laneUnderline,
+                  { transform: [{ translateX: underlineTranslate }] },
+                ]}
+              />
+            </View>
+
+            {/* ── Stats Dashboard ── */}
+            <View style={styles.statsRow}>
+              <View style={[styles.statBox, { backgroundColor: isDark ? '#0A1F1C' : '#F0FDFA' }]}>
+                <Ionicons name="layers-outline" size={18} color={RIHLA.accent} />
+                <Text style={[styles.statValue, { color: colors.text }]}>{stats.total}</Text>
+                <Text style={[styles.statLabel, { color: colors.muted }]}>Total</Text>
+              </View>
+              <View style={[styles.statBox, { backgroundColor: isDark ? '#0D1A0F' : '#F0FDF4' }]}>
+                <Ionicons name="radio-outline" size={18} color="#10B981" />
+                <Text style={[styles.statValue, { color: colors.text }]}>{stats.activeCount}</Text>
+                <Text style={[styles.statLabel, { color: colors.muted }]}>Active</Text>
+              </View>
+              <View style={[styles.statBox, { backgroundColor: isDark ? '#1A1507' : '#FFFBEB' }]}>
+                <Ionicons name="wallet-outline" size={18} color="#F59E0B" />
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {stats.totalSpent > 0 ? `${(stats.totalSpent / 1000).toFixed(0)}k` : '0'}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.muted }]}>DA Spent</Text>
+              </View>
+            </View>
+
+            {/* ── Hero Active Card ── */}
+            {heroBooking && statusFilter !== 'completed' && statusFilter !== 'cancelled' && (
+              <HeroCard
+                booking={heroBooking}
+                onPress={() => handleBookingPress(heroBooking)}
+                onComplete={() => handleComplete(heroBooking.id)}
+              />
+            )}
+
+            {/* ── Status Filters ── */}
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={STATUS_FILTERS}
+              keyExtractor={(f) => f.key}
+              contentContainerStyle={styles.filterScroll}
+              renderItem={({ item: filter }) => {
+                const isActive = statusFilter === filter.key;
+                const count = statusCounts[filter.key];
                 return (
                   <TouchableOpacity
-                    key={seg.key}
                     activeOpacity={0.8}
-                    onPress={() => handleSegmentChange(seg.key)}
-                    style={[styles.segmentBtn, isActive && styles.segmentBtnActive]}
+                    onPress={() => {
+                      Haptics.selectionAsync();
+                      setStatusFilter(filter.key);
+                    }}
+                    style={[
+                      styles.filterChip,
+                      { backgroundColor: colors.card, borderColor: colors.border },
+                      isActive && {
+                        backgroundColor: RIHLA.accent,
+                        borderColor: RIHLA.accent,
+                      },
+                    ]}
                   >
                     <Ionicons
-                      name={seg.icon as any}
-                      size={14}
-                      color={isActive ? '#FFFFFF' : '#94A3B8'}
+                      name={filter.icon as any}
+                      size={12}
+                      color={isActive ? '#FFFFFF' : colors.muted}
                     />
-                    <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
-                      {seg.label}
+                    <Text
+                      style={[
+                        styles.filterText,
+                        { color: colors.muted },
+                        isActive && { color: '#FFFFFF' },
+                      ]}
+                    >
+                      {filter.label}
                     </Text>
                     {count > 0 && (
-                      <View style={[styles.countBadge, isActive && styles.countBadgeActive]}>
-                        <Text style={[styles.countText, isActive && styles.countTextActive]}>
+                      <View
+                        style={[
+                          styles.filterBadge,
+                          {
+                            backgroundColor: isActive
+                              ? 'rgba(255,255,255,0.25)'
+                              : colors.bg,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.filterBadgeText,
+                            { color: isActive ? '#FFFFFF' : colors.muted },
+                          ]}
+                        >
                           {count}
                         </Text>
                       </View>
                     )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* ── Category Filter ── */}
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={CATEGORIES}
-              keyExtractor={(c) => c}
-              contentContainerStyle={styles.categoryRow}
-              renderItem={({ item: cat }) => {
-                const catDef = getCategoryDef(cat === 'all' ? 'hotel' : cat as any);
-                const isActive = categoryFilter === cat;
-                return (
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => { Haptics.selectionAsync(); setCategoryFilter(cat); }}
-                    style={[styles.categoryChip, isActive && styles.categoryChipActive]}
-                  >
-                    {cat !== 'all' && (
-                      <Ionicons
-                        name={(catDef?.icon || 'grid') as any}
-                        size={12}
-                        color={isActive ? '#FFFFFF' : '#64748B'}
-                      />
-                    )}
-                    <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
-                      {cat === 'all' ? 'All' : catDef?.label || cat}
-                    </Text>
                   </TouchableOpacity>
                 );
               }}
@@ -230,32 +363,36 @@ export default function TripsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconWrap}>
+            <LinearGradient
+              colors={
+                activeLane === 'booking'
+                  ? ([RIHLA.accent + '20', RIHLA.primary + '20'] as [string, string])
+                  : (['#F59E0B20', '#EF444420'] as [string, string])
+              }
+              style={styles.emptyCircle}
+            >
               <Ionicons
-                name={(SEGMENTS.find((s) => s.key === activeSegment)?.icon || 'calendar-outline') as any}
+                name={activeLane === 'booking' ? 'briefcase-outline' : 'cart-outline'}
                 size={36}
-                color="#CBD5E1"
+                color={activeLane === 'booking' ? RIHLA.accent : '#F59E0B'}
               />
-            </View>
-            <Text style={styles.emptyTitle}>No {activeSegment} trips</Text>
-            <Text style={styles.emptySub}>
-              {activeSegment === 'upcoming'
-                ? 'Book a service to see upcoming trips here.'
-                : activeSegment === 'active'
-                ? 'No active trips right now. Explore services!'
-                : activeSegment === 'completed'
-                ? 'Completed trips will appear here.'
-                : 'Cancelled trips will appear here.'}
+            </LinearGradient>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              No {statusFilter === 'all' ? '' : statusFilter + ' '}
+              {activeLane === 'booking' ? 'bookings' : 'orders'}
             </Text>
-            {(activeSegment === 'upcoming' || activeSegment === 'active') && (
-              <TouchableOpacity
-                style={styles.exploreBtn}
-                onPress={() => router.push('/(tabs)' as any)}
-              >
-                <Ionicons name="compass-outline" size={16} color="#FFFFFF" />
-                <Text style={styles.exploreBtnText}>Explore Services</Text>
-              </TouchableOpacity>
-            )}
+            <Text style={[styles.emptySub, { color: colors.muted }]}>
+              {activeLane === 'booking'
+                ? 'Book hotels, guides, events and more to see them here.'
+                : 'Order rides, food, or reserve beach spots to see them here.'}
+            </Text>
+            <TouchableOpacity
+              style={[styles.exploreBtn, { backgroundColor: RIHLA.accent }]}
+              onPress={() => router.push('/(tabs)' as any)}
+            >
+              <Ionicons name="compass-outline" size={16} color="#FFFFFF" />
+              <Text style={styles.exploreBtnText}>Explore Services</Text>
+            </TouchableOpacity>
           </View>
         }
         renderItem={({ item }) => (
@@ -265,108 +402,384 @@ export default function TripsScreen() {
             onComplete={
               item.status === 'active' ? () => handleComplete(item.id) : undefined
             }
+            onShowTicket={(b) => setTicketBooking(b)}
           />
         )}
       />
+
+      {/* ── TICKET QR MODAL PASS OVERLAY ── */}
+      {ticketBooking && (
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setTicketBooking(null)} />
+          <View style={[styles.modalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Digital Travel Ticket</Text>
+              <TouchableOpacity
+                onPress={() => { Haptics.selectionAsync(); setTicketBooking(null); }}
+                style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+              >
+                <Ionicons name="close" size={18} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.modalTicketCard, { backgroundColor: colors.bg, borderColor: colors.border }]}>
+              <View style={[styles.modalTicketTop, { backgroundColor: catDefColors(ticketBooking) }]}>
+                <Text style={styles.modalTicketTitle}>{ticketBooking.title}</Text>
+                <Text style={styles.modalTicketSubtitle}>{ticketBooking.subtitle}</Text>
+              </View>
+
+              <View style={styles.modalTicketDetails}>
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>PASSENGER</Text>
+                  <Text style={[styles.modalVal, { color: colors.text }]}>{user.name || 'Traveler'}</Text>
+                </View>
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>STATUS</Text>
+                  <Text style={[styles.modalVal, { color: '#10B981' }]}>{ticketBooking.status.toUpperCase()}</Text>
+                </View>
+                <View style={styles.modalRow}>
+                  <Text style={styles.modalLabel}>TOTAL DZD</Text>
+                  <Text style={[styles.modalVal, { color: colors.text }]}>{ticketBooking.price.toLocaleString()} DA</Text>
+                </View>
+                {ticketBooking.details.ticket_tier && (
+                  <View style={styles.modalRow}>
+                    <Text style={styles.modalLabel}>TIER</Text>
+                    <Text style={[styles.modalVal, { color: RIHLA.accent }]}>{String(ticketBooking.details.ticket_tier)}</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={[styles.modalBarcodeSection, { borderTopColor: colors.border }]}>
+                <Svg width="180" height="40" viewBox="0 0 180 40">
+                  <Rect x="0" y="0" width="180" height="40" fill="#FFF" />
+                  <Rect x="10" y="4" width="4" height="32" fill="#000" />
+                  <Rect x="18" y="4" width="2" height="32" fill="#000" />
+                  <Rect x="24" y="4" width="6" height="32" fill="#000" />
+                  <Rect x="34" y="4" width="2" height="32" fill="#000" />
+                  <Rect x="38" y="4" width="4" height="32" fill="#000" />
+                  <Rect x="46" y="4" width="8" height="32" fill="#000" />
+                  <Rect x="58" y="4" width="2" height="32" fill="#000" />
+                  <Rect x="64" y="4" width="4" height="32" fill="#000" />
+                  <Rect x="72" y="4" width="6" height="32" fill="#000" />
+                  <Rect x="82" y="4" width="2" height="32" fill="#000" />
+                  <Rect x="88" y="4" width="8" height="32" fill="#000" />
+                  <Rect x="100" y="4" width="4" height="32" fill="#000" />
+                  <Rect x="108" y="4" width="2" height="32" fill="#000" />
+                  <Rect x="114" y="4" width="6" height="32" fill="#000" />
+                  <Rect x="124" y="4" width="4" height="32" fill="#000" />
+                  <Rect x="132" y="4" width="8" height="32" fill="#000" />
+                  <Rect x="144" y="4" width="2" height="32" fill="#000" />
+                  <Rect x="150" y="4" width="4" height="32" fill="#000" />
+                  <Rect x="158" y="4" width="6" height="32" fill="#000" />
+                  <Rect x="168" y="4" width="2" height="32" fill="#000" />
+                </Svg>
+                <Text style={styles.modalBarcodeText}>{String(ticketBooking.details.ticket_code || 'RL-298319')}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
-// ── Trip Card Component ──
+function catDefColors(booking: AppBooking): string {
+  const catKey = mapBookingTypeToCategory(booking.type);
+  return getCategoryDef(catKey)?.color || RIHLA.accent;
+}
+
+// ── Hero Active Card ──────────────────────────────────────────────────
+function HeroCard({
+  booking,
+  onPress,
+  onComplete,
+  onShowTicket,
+}: {
+  booking: AppBooking;
+  onPress: () => void;
+  onComplete: () => void;
+  onShowTicket?: (booking: AppBooking) => void;
+}) {
+  const { colors, isDark } = useTheme();
+  const catKey = mapBookingTypeToCategory(booking.type);
+  const catDef = getCategoryDef(catKey);
+  const catColor = catDef?.color || RIHLA.accent;
+
+  // Progress: time-based estimation
+  const progress = useMemo(() => {
+    if (!booking.expiresAt || !booking.createdAt) return 0.5;
+    const start = new Date(booking.createdAt).getTime();
+    const end = new Date(booking.expiresAt).getTime();
+    const now = Date.now();
+    if (now >= end) return 1;
+    if (now <= start) return 0;
+    return (now - start) / (end - start);
+  }, [booking.createdAt, booking.expiresAt]);
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onPress}
+      style={styles.heroCard}
+    >
+      <LinearGradient
+        colors={[catColor, catColor + 'CC'] as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.heroGradient}
+      >
+        {/* Live badge */}
+        <View style={styles.heroLiveBadge}>
+          <View style={styles.heroLiveDot} />
+          <Text style={styles.heroLiveText}>LIVE NOW</Text>
+        </View>
+
+        {/* Content */}
+        <View style={styles.heroContent}>
+          <View style={styles.heroIconWrap}>
+            <Ionicons name={catDef?.icon as any} size={24} color="#FFFFFF" />
+          </View>
+          <View style={styles.heroInfo}>
+            <Text style={styles.heroTitle} numberOfLines={1}>
+              {booking.title}
+            </Text>
+            <Text style={styles.heroSubtitle} numberOfLines={1}>
+              {booking.subtitle}
+            </Text>
+          </View>
+          <Text style={styles.heroPrice}>{booking.price.toLocaleString()} DA</Text>
+        </View>
+
+        {/* Progress bar */}
+        <View style={styles.heroProgressTrack}>
+          <View
+            style={[
+              styles.heroProgressFill,
+              { width: `${Math.min(progress * 100, 100)}%` },
+            ]}
+          />
+        </View>
+        <View style={styles.heroProgressLabels}>
+          <Text style={styles.heroProgressText}>
+            {Math.round(progress * 100)}% complete
+          </Text>
+          {booking.expiresAt && (
+            <Text style={styles.heroProgressText}>
+              Ends{' '}
+              {new Date(booking.expiresAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+              })}
+            </Text>
+          )}
+        </View>
+
+        {/* Actions */}
+        <View style={styles.heroActions}>
+          <TouchableOpacity style={styles.heroActionBtn} onPress={onPress}>
+            <Ionicons name="eye-outline" size={14} color="#FFFFFF" />
+            <Text style={styles.heroActionText}>View</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.heroActionBtn, styles.heroCompleteBtn]}
+            onPress={onComplete}
+          >
+            <Ionicons name="checkmark-circle-outline" size={14} color="#10B981" />
+            <Text style={[styles.heroActionText, { color: '#10B981' }]}>Complete</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+}
+
+// ── Trip Card Component ──────────────────────────────────────────────
 function TripCard({
   booking,
   onPress,
   onComplete,
+  onShowTicket,
 }: {
   booking: AppBooking;
   onPress: () => void;
   onComplete?: () => void;
+  onShowTicket?: (booking: AppBooking) => void;
 }) {
-  const catDef = getCategoryDef(booking.type as any);
+  const { colors, isDark } = useTheme();
+  const catKey = mapBookingTypeToCategory(booking.type);
+  const catDef = getCategoryDef(catKey);
   const catColor = catDef?.color || RIHLA.primary;
-  const statusCfg = STATUS_COLORS[booking.status] || STATUS_COLORS.completed;
-  const isActive = booking.status === 'active';
-  const isConfirmed = booking.status === 'confirmed' || booking.status === 'pending';
-  const isCompleted = booking.status === 'completed';
-  const isCancelled = booking.status === 'cancelled';
 
-  const dateStr = new Date(booking.createdAt).toLocaleDateString('en-GB', {
+  const statusCfg = (() => {
+    const map: Record<string, { color: string; bg: string; label: string }> = {
+      active: { color: '#10B981', bg: isDark ? '#0D1A0F' : '#DCFCE7', label: 'Active' },
+      confirmed: { color: '#3B82F6', bg: isDark ? '#0D1520' : '#DBEAFE', label: 'Upcoming' },
+      pending: { color: '#F59E0B', bg: isDark ? '#1A1507' : '#FEF3C7', label: 'Pending' },
+      completed: { color: colors.muted, bg: isDark ? '#1A1A1A' : '#F1F5F9', label: 'Completed' },
+      cancelled: { color: '#EF4444', bg: isDark ? '#1A0D0D' : '#FEE2E2', label: 'Cancelled' },
+    };
+    return map[booking.status] || map.completed;
+  })();
+
+  const isActive = booking.status === 'active';
+  const isCompleted = booking.status === 'completed';
+
+  const rawDate =
+    booking.details.date || booking.details.check_in || booking.details.event_date;
+  const bookingDate =
+    typeof rawDate === 'string' || typeof rawDate === 'number'
+      ? rawDate
+      : booking.createdAt;
+  const dateStr = new Date(bookingDate).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
   });
 
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.card}>
-      {/* Color accent strip */}
-      <View style={[styles.cardAccent, { backgroundColor: catColor }]} />
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+    >
+      {/* Gradient header strip */}
+      <LinearGradient
+        colors={[catColor, catColor + '80'] as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.cardHeader}
+      >
+        <View style={styles.cardHeaderIcon}>
+          <Ionicons name={catDef?.icon as any} size={16} color="#FFFFFF" />
+        </View>
+        <Text style={styles.cardHeaderCategory}>
+          {catDef?.label || booking.type}
+        </Text>
+        <View style={[styles.statusPill, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+          <View style={[styles.statusDot, { backgroundColor: '#FFFFFF' }]} />
+          <Text style={styles.statusLabelWhite}>{statusCfg.label}</Text>
+        </View>
+      </LinearGradient>
 
       <View style={styles.cardBody}>
-        {/* Top row: icon + title + status */}
-        <View style={styles.cardTop}>
-          <View style={[styles.cardIconWrap, { backgroundColor: catColor + '12' }]}>
-            <Ionicons name={catDef?.icon as any} size={20} color={catColor} />
-          </View>
-          <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle} numberOfLines={1}>{booking.title}</Text>
-            <Text style={styles.cardSubtitle} numberOfLines={1}>{booking.subtitle}</Text>
-          </View>
-          <View style={[styles.statusPill, { backgroundColor: statusCfg.bg }]}>
-            <View style={[styles.statusDot, { backgroundColor: statusCfg.color }]} />
-            <Text style={[styles.statusLabel, { color: statusCfg.color }]}>
-              {booking.status === 'confirmed' ? 'Upcoming'
-                : booking.status === 'pending' ? 'Pending'
-                : booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+        {/* Title row */}
+        <View style={styles.cardTitleRow}>
+          <View style={styles.cardTitleArea}>
+            <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
+              {booking.title}
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: colors.muted }]} numberOfLines={1}>
+              {booking.subtitle}
             </Text>
           </View>
         </View>
 
         {/* Detail chips */}
         <View style={styles.detailChips}>
-          <View style={styles.detailChip}>
-            <Ionicons name="calendar-outline" size={11} color="#64748B" />
-            <Text style={styles.detailChipText}>{dateStr}</Text>
+          <View style={[styles.detailChip, { backgroundColor: isDark ? '#1A1A1A' : '#F1F5F9' }]}>
+            <Ionicons name="calendar-outline" size={11} color={colors.muted} />
+            <Text style={[styles.detailChipText, { color: colors.muted }]}>{dateStr}</Text>
           </View>
           {booking.price > 0 && (
-            <View style={styles.detailChip}>
-              <Ionicons name="wallet-outline" size={11} color="#64748B" />
+            <View style={[styles.detailChip, { backgroundColor: isDark ? '#1A1A1A' : '#F1F5F9' }]}>
+              <Ionicons name="wallet-outline" size={11} color={catColor} />
               <Text style={[styles.detailChipText, { color: catColor, fontFamily: 'mon-b' }]}>
                 {booking.price.toLocaleString()} DA
               </Text>
             </View>
           )}
-          {isActive && booking.expiresAt && (
-            <View style={styles.detailChip}>
-              <Ionicons name="time-outline" size={11} color="#10B981" />
+          {isActive && (
+            <View style={[styles.detailChip, { backgroundColor: '#10B98110' }]}>
+              <View style={styles.liveMiniDot} />
               <Text style={[styles.detailChipText, { color: '#10B981' }]}>In Progress</Text>
             </View>
           )}
         </View>
 
         {/* Key details preview */}
-        <View style={styles.detailPreview}>
-          {Object.entries(booking.details).slice(0, 3).map(([key, value]) => (
-            <View key={key} style={styles.detailRow}>
-              <Text style={styles.detailKey}>
-                {key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-              </Text>
-              <Text style={styles.detailVal}>{String(value)}</Text>
-            </View>
-          ))}
+        <View style={[styles.detailPreview, { backgroundColor: isDark ? '#0D0D0D' : '#F8FAFC' }]}>
+          {Object.entries(booking.details)
+            .slice(0, 3)
+            .map(([key, value]) => (
+              <View key={key} style={styles.detailRow}>
+                <Text style={[styles.detailKey, { color: colors.muted }]}>
+                  {key
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
+                </Text>
+                <Text style={[styles.detailVal, { color: colors.text }]}>
+                  {String(value)}
+                </Text>
+              </View>
+            ))}
         </View>
 
         {/* Bottom actions */}
         <View style={styles.cardBottom}>
           <TouchableOpacity
-            style={styles.viewBtn}
+            style={[styles.viewBtn, { backgroundColor: isDark ? '#1A1A1A' : '#F1F5F9' }]}
             onPress={onPress}
           >
-            <Text style={styles.viewBtnText}>View Details</Text>
-            <Ionicons name="chevron-forward" size={14} color={RIHLA.primary} />
+            <Text style={[styles.viewBtnText, { color: RIHLA.accent }]}>Details</Text>
+            <Ionicons name="chevron-forward" size={12} color={RIHLA.accent} />
           </TouchableOpacity>
+
+          {/* Category-Specific Dynamic Action Buttons */}
+          {!isCompleted && booking.status !== 'cancelled' && (
+            <>
+              {(catKey === 'event' || catKey === 'activity' || catKey === 'experience') && onShowTicket && (
+                <TouchableOpacity
+                  style={[styles.actionBadgeBtn, { borderColor: catColor + '50', backgroundColor: catColor + '12' }]}
+                  onPress={() => onShowTicket(booking)}
+                >
+                  <Ionicons name="qr-code-outline" size={13} color={catColor} />
+                  <Text style={[styles.actionBadgeBtnText, { color: catColor }]}>Show Ticket</Text>
+                </TouchableOpacity>
+              )}
+
+              {catKey === 'driver' && (
+                <TouchableOpacity
+                  style={[styles.actionBadgeBtn, { borderColor: '#10B98150', backgroundColor: '#10B98112' }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    alert(`Driver Karim is en route!\nVehicle: Dacia Logan\nLicense: 02849-116-16\nETA: 3 minutes.`);
+                  }}
+                >
+                  <Ionicons name="car-outline" size={13} color="#10B981" />
+                  <Text style={[styles.actionBadgeBtnText, { color: '#10B981' }]}>Track Ride</Text>
+                </TouchableOpacity>
+              )}
+
+              {catKey === 'restaurant' && (
+                <TouchableOpacity
+                  style={[styles.actionBadgeBtn, { borderColor: '#F59E0B50', backgroundColor: '#F59E0B12' }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    alert(`Kitchen Update:\nPreparing your order.\nStatus: Preparing meal... 🍕`);
+                  }}
+                >
+                  <Ionicons name="restaurant-outline" size={13} color="#F59E0B" />
+                  <Text style={[styles.actionBadgeBtnText, { color: '#F59E0B' }]}>Track Food</Text>
+                </TouchableOpacity>
+              )}
+
+              {(catKey === 'hotel' || catKey === 'rental') && (
+                <TouchableOpacity
+                  style={[styles.actionBadgeBtn, { borderColor: RIHLA.primary + '50', backgroundColor: RIHLA.primary + '12' }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    alert(`Directions:\nStandard GPS directions opened to ${booking.title}.`);
+                  }}
+                >
+                  <Ionicons name="map-outline" size={13} color={RIHLA.primary} />
+                  <Text style={[styles.actionBadgeBtnText, { color: RIHLA.primary }]}>Directions</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
 
           {isCompleted && (
             <TouchableOpacity
-              style={styles.rebookBtn}
+              style={[styles.rebookBtn, { borderColor: RIHLA.accent + '40' }]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push('/(tabs)/explore' as any);
@@ -378,7 +791,10 @@ function TripCard({
           )}
 
           {isActive && onComplete && (
-            <TouchableOpacity style={styles.completeBtn} onPress={onComplete}>
+            <TouchableOpacity
+              style={[styles.completeBtn, { borderColor: '#10B98140' }]}
+              onPress={onComplete}
+            >
               <Ionicons name="checkmark-circle-outline" size={14} color="#10B981" />
               <Text style={styles.completeBtnText}>Complete</Text>
             </TouchableOpacity>
@@ -389,197 +805,263 @@ function TripCard({
   );
 }
 
-// ── Styles ──
+// ── Styles ──────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  root: { flex: 1 },
   listContent: { paddingBottom: 120 },
 
-  // Header
-  headerTitle: {
-    fontSize: 28,
-    fontFamily: 'mon-b',
-    color: '#0F172A',
+  // Title
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 4,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontFamily: 'mon-b',
     letterSpacing: -0.3,
+  },
+  tripsBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  tripsBadgeText: {
+    fontSize: 11,
+    fontFamily: 'mon-b',
+    color: RIHLA.accent,
+  },
+
+  // Lane tabs
+  laneTabs: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginTop: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  laneTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+  },
+  laneTabText: {
+    fontSize: 14,
+    fontFamily: 'mon-b',
+  },
+  laneCount: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+    backgroundColor: 'rgba(136,136,136,0.15)',
+  },
+  laneCountActive: {
+    backgroundColor: RIHLA.accent + '25',
+  },
+  laneCountText: {
+    fontSize: 10,
+    fontFamily: 'mon-b',
+    color: '#888888',
+  },
+  laneCountTextActive: {
+    color: RIHLA.accent,
+  },
+  laneUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '50%',
+    height: 3,
+    backgroundColor: RIHLA.accent,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
   },
 
   // Stats
   statsRow: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    marginTop: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
+    marginTop: 14,
+    gap: 8,
   },
-  statCard: {
+  statBox: {
     flex: 1,
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
+    paddingVertical: 14,
+    borderRadius: 14,
   },
   statValue: {
     fontSize: 20,
     fontFamily: 'mon-b',
-    color: '#0F172A',
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'mon',
-    color: '#94A3B8',
-    marginTop: 1,
-  },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#E2E8F0',
   },
 
-  // Segments
-  segmentRow: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginTop: 14,
+  // Status filters
+  filterScroll: {
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     gap: 6,
   },
-  segmentBtn: {
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  filterText: {
+    fontSize: 12,
+    fontFamily: 'mon-sb',
+  },
+  filterBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  filterBadgeText: {
+    fontSize: 9,
+    fontFamily: 'mon-b',
+  },
+
+  // Hero card
+  heroCard: {
+    marginHorizontal: 20,
+    marginTop: 14,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  heroGradient: {
+    padding: 18,
+    gap: 14,
+  },
+  heroLiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  heroLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00FF66',
+  },
+  heroLiveText: {
+    fontSize: 10,
+    fontFamily: 'mon-b',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
+  heroContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  heroIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  heroTitle: {
+    fontSize: 16,
+    fontFamily: 'mon-b',
+    color: '#FFFFFF',
+  },
+  heroSubtitle: {
+    fontSize: 12,
+    fontFamily: 'mon',
+    color: 'rgba(255,255,255,0.75)',
+  },
+  heroPrice: {
+    fontSize: 15,
+    fontFamily: 'mon-b',
+    color: '#FFFFFF',
+  },
+  heroProgressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    overflow: 'hidden',
+  },
+  heroProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: '#FFFFFF',
+  },
+  heroProgressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  heroProgressText: {
+    fontSize: 10,
+    fontFamily: 'mon-sb',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  heroActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  heroActionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 6,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
-  segmentBtnActive: {
-    backgroundColor: '#0d0d0d',
-    borderColor: '#0d0d0d',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
+  heroCompleteBtn: {
+    backgroundColor: 'rgba(16,185,129,0.15)',
   },
-  segmentText: {
+  heroActionText: {
     fontSize: 12,
-    fontFamily: 'mon-sb',
-    color: '#94A3B8',
-  },
-  segmentTextActive: {
-    color: '#FFFFFF',
-  },
-  countBadge: {
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 5,
-  },
-  countBadgeActive: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  countText: {
-    fontSize: 10,
-    fontFamily: 'mon-b',
-    color: '#64748B',
-  },
-  countTextActive: {
-    color: '#FFFFFF',
-  },
-
-  // Category filter
-  categoryRow: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    gap: 6,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  categoryChipActive: {
-    backgroundColor: RIHLA.primary,
-    borderColor: RIHLA.primary,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontFamily: 'mon-sb',
-    color: '#64748B',
-    textTransform: 'capitalize',
-  },
-  categoryTextActive: {
-    color: '#FFFFFF',
-  },
-
-  // Empty state
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingHorizontal: 40,
-    gap: 8,
-  },
-  emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontFamily: 'mon-b',
-    color: '#0F172A',
-  },
-  emptySub: {
-    fontSize: 14,
-    fontFamily: 'mon',
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  exploreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: RIHLA.primary,
-  },
-  exploreBtnText: {
-    fontSize: 14,
     fontFamily: 'mon-b',
     color: '#FFFFFF',
   },
 
-  // ── Trip Card ──
+  // Trip Cards
   card: {
-    flexDirection: 'row',
     marginHorizontal: 20,
     marginBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -587,49 +1069,35 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
-  cardAccent: {
-    width: 4,
-  },
-  cardBody: {
-    flex: 1,
-    padding: 14,
-    gap: 10,
-  },
-
-  // Card top
-  cardTop: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
   },
-  cardIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  cardHeaderIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardInfo: {
+  cardHeaderCategory: {
     flex: 1,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontFamily: 'mon-b',
-    color: '#0F172A',
-    lineHeight: 18,
-  },
-  cardSubtitle: {
     fontSize: 12,
-    fontFamily: 'mon',
-    color: '#64748B',
-    marginTop: 1,
+    fontFamily: 'mon-b',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 12,
   },
   statusDot: {
@@ -637,14 +1105,37 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
   },
-  statusLabel: {
+  statusLabelWhite: {
     fontSize: 10,
     fontFamily: 'mon-b',
+    color: '#FFFFFF',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
 
-  // Detail chips
+  cardBody: {
+    padding: 14,
+    gap: 10,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardTitleArea: {
+    flex: 1,
+    gap: 2,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontFamily: 'mon-b',
+    lineHeight: 20,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    fontFamily: 'mon',
+  },
+
+  // Details
   detailChips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -653,24 +1144,26 @@ const styles = StyleSheet.create({
   detailChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: '#F8FAFC',
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   detailChipText: {
     fontSize: 11,
     fontFamily: 'mon-sb',
-    color: '#64748B',
+  },
+  liveMiniDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
   },
 
-  // Detail preview
   detailPreview: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    padding: 10,
-    gap: 6,
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
   },
   detailRow: {
     flexDirection: 'row',
@@ -680,18 +1173,16 @@ const styles = StyleSheet.create({
   detailKey: {
     fontSize: 11,
     fontFamily: 'mon',
-    color: '#94A3B8',
     flex: 1,
   },
   detailVal: {
     fontSize: 11,
     fontFamily: 'mon-sb',
-    color: '#475569',
     textAlign: 'right',
     flex: 1,
   },
 
-  // Card bottom actions
+  // Bottom actions
   cardBottom: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -703,24 +1194,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 9,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   viewBtnText: {
     fontSize: 12,
     fontFamily: 'mon-b',
-    color: RIHLA.primary,
   },
   rebookBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 9,
+    paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: RIHLA.accent + '40',
     backgroundColor: RIHLA.accent + '08',
   },
   rebookBtnText: {
@@ -732,16 +1220,167 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 9,
+    paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#10B981' + '40',
-    backgroundColor: '#10B981' + '08',
+    backgroundColor: '#10B98108',
   },
   completeBtnText: {
     fontSize: 12,
     fontFamily: 'mon-sb',
     color: '#10B981',
+  },
+
+  // Empty state
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingHorizontal: 40,
+    gap: 10,
+  },
+  emptyCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontFamily: 'mon-b',
+  },
+  emptySub: {
+    fontSize: 14,
+    fontFamily: 'mon',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  exploreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  exploreBtnText: {
+    fontSize: 14,
+    fontFamily: 'mon-b',
+    color: '#FFFFFF',
+  },
+
+  // Category Actions
+  actionBadgeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  actionBadgeBtnText: {
+    fontSize: 11,
+    fontFamily: 'mon-b',
+  },
+
+  // Ticket Modal Styles
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  modalContent: {
+    width: '85%',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontFamily: 'mon-b',
+  },
+  closeModalBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTicketCard: {
+    width: '100%',
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  modalTicketTop: {
+    padding: 16,
+    alignItems: 'center',
+    gap: 2,
+  },
+  modalTicketTitle: {
+    fontSize: 16,
+    fontFamily: 'mon-b',
+    color: '#FFF',
+    textAlign: 'center',
+  },
+  modalTicketSubtitle: {
+    fontSize: 11,
+    fontFamily: 'mon',
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+  },
+  modalTicketDetails: {
+    padding: 16,
+    gap: 8,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalLabel: {
+    fontSize: 9,
+    fontFamily: 'mon-b',
+    color: '#64748B',
+  },
+  modalVal: {
+    fontSize: 12,
+    fontFamily: 'mon-sb',
+  },
+  modalBarcodeSection: {
+    padding: 16,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+    backgroundColor: '#FAFAFA',
+  },
+  modalBarcodeText: {
+    fontSize: 9,
+    fontFamily: 'mon',
+    letterSpacing: 2,
+    color: '#334155',
+    marginTop: 4,
   },
 });

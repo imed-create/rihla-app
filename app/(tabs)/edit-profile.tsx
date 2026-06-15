@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import { RIHLA } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import type { TravelPreferences, EmergencyContact } from '@/types/app';
 
@@ -60,14 +61,15 @@ const RELATIONSHIP_OPTIONS = ['Spouse', 'Parent', 'Sibling', 'Child', 'Friend', 
 
 // ── Section Header ──
 function SectionHeader({ icon, title, subtitle }: { icon: string; title: string; subtitle?: string }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.sectionHeader}>
       <View style={[styles.sectionIcon, { backgroundColor: RIHLA.primary + '10' }]}>
         <Ionicons name={icon as any} size={18} color={RIHLA.primary} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {subtitle && <Text style={styles.sectionSub}>{subtitle}</Text>}
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
+        {subtitle && <Text style={[styles.sectionSub, { color: colors.muted }]}>{subtitle}</Text>}
       </View>
     </View>
   );
@@ -80,13 +82,14 @@ function InputRow({
   label: string; value: string; onChangeText: (v: string) => void;
   placeholder?: string; keyboardType?: any; icon?: string; multiline?: boolean;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={[styles.inputWrap, multiline && { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
-        {icon && <Ionicons name={icon as any} size={18} color="#94A3B8" style={{ marginTop: multiline ? 2 : 0 }} />}
+      <Text style={[styles.inputLabel, { color: colors.muted }]}>{label}</Text>
+      <View style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }, multiline && { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
+        {icon && <Ionicons name={icon as any} size={18} color={colors.muted} style={{ marginTop: multiline ? 2 : 0 }} />}
         <TextInput
-          style={[styles.input, multiline && { height: 60 }]}
+          style={[styles.input, { color: colors.text }, multiline && { height: 60 }]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -107,30 +110,31 @@ function ChipSelector<T extends string>({
   label: string; options: readonly { key: T; label: string; icon?: string; desc?: string }[];
   selected: T | T[] | undefined; onSelect: (v: T) => void; multi?: boolean;
 }) {
+  const { colors } = useTheme();
   const isActive = (key: T) => multi
     ? Array.isArray(selected) && selected.includes(key)
     : selected === key;
 
   return (
     <View style={styles.chipSection}>
-      <Text style={styles.chipLabel}>{label}</Text>
+      <Text style={[styles.chipLabel, { color: colors.muted }]}>{label}</Text>
       <View style={styles.chipGrid}>
         {options.map((opt) => {
           const active = isActive(opt.key);
           return (
             <Pressable
               key={opt.key}
-              style={[styles.chip, active && styles.chipActive]}
+              style={[styles.chip, { backgroundColor: colors.card, borderColor: colors.border }, active && styles.chipActive]}
               onPress={() => { hapticLight(); onSelect(opt.key); }}
             >
               {opt.icon && (
                 <Ionicons
                   name={opt.icon as any}
                   size={14}
-                  color={active ? '#FFFFFF' : '#64748B'}
+                  color={active ? colors.text : colors.muted}
                 />
               )}
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
+              <Text style={[styles.chipText, { color: colors.muted }, active && { color: colors.text }]}>
                 {opt.label}
               </Text>
             </Pressable>
@@ -145,18 +149,19 @@ function ChipSelector<T extends string>({
 function ToggleRow({ label, value, onValueChange, subtitle }: {
   label: string; value: boolean; onValueChange: (v: boolean) => void; subtitle?: string;
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.toggleRow}>
+    <View style={[styles.toggleRow, { borderBottomColor: colors.border }]}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.toggleLabel}>{label}</Text>
-        {subtitle && <Text style={styles.toggleSub}>{subtitle}</Text>}
+        <Text style={[styles.toggleLabel, { color: colors.text }]}>{label}</Text>
+        {subtitle && <Text style={[styles.toggleSub, { color: colors.muted }]}>{subtitle}</Text>}
       </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: '#E2E8F0', true: RIHLA.accent + '60' }}
-        thumbColor={value ? RIHLA.accent : '#F1F5F9'}
-        ios_backgroundColor="#E2E8F0"
+        trackColor={{ false: colors.border, true: RIHLA.accent + '60' }}
+        thumbColor={value ? RIHLA.accent : colors.border}
+        ios_backgroundColor={colors.border}
       />
     </View>
   );
@@ -166,13 +171,14 @@ function ToggleRow({ label, value, onValueChange, subtitle }: {
 function SectionCard({ icon, title, subtitle, children }: {
   icon: string; title: string; subtitle?: string; children: React.ReactNode;
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
       <View style={styles.sectionCardHeader}>
         <Ionicons name={icon as any} size={18} color={RIHLA.primary} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{title}</Text>
-          {subtitle && <Text style={styles.cardSub}>{subtitle}</Text>}
+          <Text style={[styles.cardTitle, { color: colors.text }]}>{title}</Text>
+          {subtitle && <Text style={[styles.cardSub, { color: colors.muted }]}>{subtitle}</Text>}
         </View>
       </View>
       {children}
@@ -184,6 +190,7 @@ function SectionCard({ icon, title, subtitle, children }: {
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useApp();
+  const { colors } = useTheme();
   const topPad = Platform.OS === 'web' ? insets.top + 20 : insets.top;
 
   // Personal Info
@@ -270,17 +277,17 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: '#F8FAFC' }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Uber Dark Header */}
-      <View style={[styles.header, { paddingTop: topPad + 10 }]}>
+      <View style={[styles.header, { backgroundColor: colors.bg, paddingTop: topPad + 10 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={20} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
         <Pressable onPress={handleSave} style={styles.saveBtn}>
-          <Text style={styles.saveText}>Save</Text>
+          <Text style={[styles.saveText, { color: colors.text }]}>Save</Text>
         </Pressable>
       </View>
 
@@ -296,15 +303,15 @@ export default function EditProfileScreen() {
           <InputRow label="Email" value={email} onChangeText={setEmail} placeholder="email@example.com" keyboardType="email-address" icon="mail-outline" />
           <InputRow label="Date of Birth" value={dob} onChangeText={setDob} placeholder="YYYY-MM-DD" icon="calendar-outline" />
 
-          <Text style={styles.chipLabel}>Gender</Text>
+          <Text style={[styles.chipLabel, { color: colors.muted }]}>Gender</Text>
           <View style={styles.chipGrid}>
             {(['male', 'female', 'other', 'prefer-not-to-say'] as const).map((g) => (
               <Pressable
                 key={g}
-                style={[styles.chip, gender === g && styles.chipActive]}
+                style={[styles.chip, { backgroundColor: colors.card }, gender === g && styles.chipActive]}
                 onPress={() => { hapticLight(); setGender(g); }}
               >
-                <Text style={[styles.chipText, gender === g && styles.chipTextActive]}>
+                <Text style={[styles.chipText, { color: colors.muted }, gender === g && { color: colors.text }]}>
                   {g === 'prefer-not-to-say' ? 'Prefer not to say' : g.charAt(0).toUpperCase() + g.slice(1)}
                 </Text>
               </Pressable>
@@ -335,15 +342,15 @@ export default function EditProfileScreen() {
           <SectionCard icon="alert-circle-outline" title="Emergency Contact" subtitle="Someone we can reach in case of emergency">
             <InputRow label="Contact Name" value={emergencyName} onChangeText={setEmergencyName} placeholder="Full name" icon="person-outline" />
             <InputRow label="Contact Phone" value={emergencyPhone} onChangeText={setEmergencyPhone} placeholder="+213 5XX XXX XXX" keyboardType="phone-pad" icon="call-outline" />
-            <Text style={styles.chipLabel}>Relationship</Text>
+            <Text style={[styles.chipLabel, { color: colors.muted }]}>Relationship</Text>
             <View style={styles.chipGrid}>
               {RELATIONSHIP_OPTIONS.map((r) => (
                 <Pressable
                   key={r}
-                  style={[styles.chip, emergencyRelation === r && styles.chipActive]}
+                  style={[styles.chip, { backgroundColor: colors.card }, emergencyRelation === r && styles.chipActive]}
                   onPress={() => { hapticLight(); setEmergencyRelation(r); }}
                 >
-                  <Text style={[styles.chipText, emergencyRelation === r && styles.chipTextActive]}>{r}</Text>
+                  <Text style={[styles.chipText, { color: colors.muted }, emergencyRelation === r && { color: colors.text }]}>{r}</Text>
                 </Pressable>
               ))}
             </View>
@@ -376,34 +383,34 @@ export default function EditProfileScreen() {
           />
 
           {/* Interests */}
-          <Text style={styles.chipLabel}>Interests</Text>
+          <Text style={[styles.chipLabel, { color: colors.muted }]}>Interests</Text>
           <View style={styles.chipGrid}>
             {INTEREST_OPTIONS.map((interest) => {
               const active = interests.includes(interest);
               return (
                 <Pressable
                   key={interest}
-                  style={[styles.chip, active && { backgroundColor: RIHLA.accent, borderColor: RIHLA.accent }]}
+                  style={[styles.chip, { backgroundColor: colors.card, borderColor: colors.border }, active && { backgroundColor: RIHLA.accent, borderColor: RIHLA.accent }]}
                   onPress={() => { hapticLight(); toggleInterest(interest); }}
                 >
-                  <Text style={[styles.chipText, active && { color: '#FFFFFF' }]}>{interest}</Text>
+                  <Text style={[styles.chipText, { color: colors.muted }, active && { color: colors.text }]}>{interest}</Text>
                 </Pressable>
               );
             })}
           </View>
 
           {/* Dietary */}
-          <Text style={[styles.chipLabel, { marginTop: 12 }]}>Dietary Restrictions</Text>
+          <Text style={[styles.chipLabel, { color: colors.muted, marginTop: 12 }]}>Dietary Restrictions</Text>
           <View style={styles.chipGrid}>
             {DIETARY_OPTIONS.map((item) => {
               const active = dietary.includes(item);
               return (
                 <Pressable
                   key={item}
-                  style={[styles.chip, active && { backgroundColor: RIHLA.highlight, borderColor: RIHLA.highlight }]}
+                  style={[styles.chip, { backgroundColor: colors.card, borderColor: colors.border }, active && { backgroundColor: RIHLA.highlight, borderColor: RIHLA.highlight }]}
                   onPress={() => { hapticLight(); toggleDietary(item); }}
                 >
-                  <Text style={[styles.chipText, active && { color: '#FFFFFF' }]}>{item}</Text>
+                  <Text style={[styles.chipText, { color: colors.muted }, active && { color: colors.text }]}>{item}</Text>
                 </Pressable>
               );
             })}
@@ -413,7 +420,7 @@ export default function EditProfileScreen() {
         {/* ── NOTIFICATIONS ── */}
         <View style={styles.section}>
           <SectionHeader icon="notifications-outline" title="Notifications" subtitle="Choose what you want to hear about" />
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <ToggleRow label="Push Notifications" value={pushEnabled} onValueChange={setPushEnabled} subtitle="Get alerts on your device" />
             <ToggleRow label="Email Notifications" value={emailEnabled} onValueChange={setEmailEnabled} subtitle="Receive updates via email" />
             <ToggleRow label="Booking Updates" value={bookingUpdates} onValueChange={setBookingUpdates} subtitle="Status changes for your bookings" />
@@ -433,67 +440,65 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingBottom: 14,
-    backgroundColor: '#0d0d0d',
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { flex: 1, fontSize: 17, fontFamily: 'mon-b', color: '#FFFFFF', textAlign: 'center' },
+  headerTitle: { flex: 1, fontSize: 17, fontFamily: 'mon-b', textAlign: 'center' },
   saveBtn: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8,
     backgroundColor: RIHLA.accent,
   },
-  saveText: { fontSize: 14, fontFamily: 'mon-b', color: '#FFFFFF' },
+  saveText: { fontSize: 14, fontFamily: 'mon-b' },
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 16 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   sectionIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  sectionTitle: { fontSize: 16, fontFamily: 'mon-b', color: '#0F172A' },
-  sectionSub: { fontSize: 12, fontFamily: 'mon', color: '#94A3B8', marginTop: 1 },
+  sectionTitle: { fontSize: 16, fontFamily: 'mon-b' },
+  sectionSub: { fontSize: 12, fontFamily: 'mon', marginTop: 1 },
 
   // Inputs
   inputGroup: { marginBottom: 12 },
-  inputLabel: { fontSize: 12, fontFamily: 'mon-sb', color: '#64748B', marginBottom: 6, marginLeft: 2 },
+  inputLabel: { fontSize: 12, fontFamily: 'mon-sb', marginBottom: 6, marginLeft: 2 },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#FFFFFF', borderRadius: 12,
-    borderWidth: 1, borderColor: '#E2E8F0',
+    borderRadius: 12,
+    borderWidth: 1,
     paddingHorizontal: 14, height: 48,
   },
-  input: { flex: 1, fontSize: 15, fontFamily: 'mon', color: '#0F172A' },
+  input: { flex: 1, fontSize: 15, fontFamily: 'mon' },
 
   // Chips
   chipSection: { marginBottom: 12 },
-  chipLabel: { fontSize: 12, fontFamily: 'mon-sb', color: '#64748B', marginBottom: 8, marginLeft: 2 },
+  chipLabel: { fontSize: 12, fontFamily: 'mon-sb', marginBottom: 8, marginLeft: 2 },
   chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999,
-    backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0',
+    borderWidth: 1,
     shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 3,
     shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   chipActive: { backgroundColor: RIHLA.primary, borderColor: RIHLA.primary },
-  chipText: { fontSize: 13, fontFamily: 'mon-sb', color: '#475569' },
-  chipTextActive: { color: '#FFFFFF' },
+  chipText: { fontSize: 13, fontFamily: 'mon-sb' },
 
   // Card
   card: {
-    backgroundColor: '#FFFFFF', borderRadius: 14,
-    borderWidth: 1, borderColor: '#E2E8F0', padding: 16,
+    borderRadius: 14,
+    borderWidth: 1, padding: 16,
   },
   sectionCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
-  cardTitle: { fontSize: 14, fontFamily: 'mon-b', color: '#0F172A' },
-  cardSub: { fontSize: 11, fontFamily: 'mon', color: '#94A3B8', marginTop: 1 },
+  cardTitle: { fontSize: 14, fontFamily: 'mon-b' },
+  cardSub: { fontSize: 11, fontFamily: 'mon', marginTop: 1 },
 
   // Toggle
   toggleRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F1F5F9',
+    paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  toggleLabel: { fontSize: 14, fontFamily: 'mon-sb', color: '#0F172A' },
-  toggleSub: { fontSize: 12, fontFamily: 'mon', color: '#94A3B8', marginTop: 1 },
+  toggleLabel: { fontSize: 14, fontFamily: 'mon-sb' },
+  toggleSub: { fontSize: 12, fontFamily: 'mon', marginTop: 1 },
 });
