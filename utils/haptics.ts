@@ -24,3 +24,7 @@ export function hapticSuccess() {
 export function hapticError() {
   if (enabled()) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 }
+
+export function hapticSelection() {
+  if (enabled()) void Haptics.selectionAsync();
+}
