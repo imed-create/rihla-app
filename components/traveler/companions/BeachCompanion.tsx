@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
 import type { AppBooking } from '@/types/app';
-import CountdownTimer from '../shared/CountdownTimer';
+import CountdownTimer from '@/components/shared/CountdownTimer';
 
 interface CompanionProps {
   booking: AppBooking;
@@ -103,7 +103,7 @@ export default function BeachCompanion({ booking, onBack }: CompanionProps) {
           style={[styles.bentoCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={() => handleBentoPress('massage')}
         >
-          <Ionicons name="hand-heart-outline" size={24} color="#00a896" />
+          <Ionicons name="hand-left-outline" size={24} color="#00a896" />
           <Text style={[styles.bentoLabel, { color: colors.text }]}>Massage Zone</Text>
         </TouchableOpacity>
       </View>

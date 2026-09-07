@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
 import type { AppBooking } from '@/types/app';
-import MapWithDirections from '../shared/MapWithDirections';
+import MapWithDirections from '@/components/shared/MapWithDirections';
 
 interface CompanionProps {
   booking: AppBooking;
