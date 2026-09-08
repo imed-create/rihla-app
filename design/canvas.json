@@ -1,76 +1,54 @@
 {
   "artboards": [
-    {
-      "file": "Current.dc.html",
-      "x": 0,
-      "y": 0,
-      "w": 390,
-      "h": 1660,
-      "title": "Today — 9 sections"
-    },
-    {
-      "file": "Main.dc.html",
-      "x": 510,
-      "y": 0,
-      "w": 390,
-      "h": 1330,
-      "title": "Redesign — light"
-    },
-    {
-      "file": "Dark.dc.html",
-      "x": 1020,
-      "y": 0,
-      "w": 390,
-      "h": 1330,
-      "title": "Redesign — dark"
-    },
-    {
-      "file": "Arabic.dc.html",
-      "x": 1530,
-      "y": 0,
-      "w": 390,
-      "h": 1370,
-      "title": "Redesign — العربية (RTL)"
-    }
+    { "file": "Current.dc.html", "x": 0, "y": 0, "w": 390, "h": 1660, "title": "Today — 9 sections" },
+    { "file": "Main.dc.html", "x": 510, "y": 0, "w": 390, "h": 1700, "title": "Redesign — light" },
+    { "file": "Dark.dc.html", "x": 1020, "y": 0, "w": 390, "h": 1700, "title": "Redesign — dark" },
+    { "file": "Arabic.dc.html", "x": 1530, "y": 0, "w": 390, "h": 1740, "title": "Redesign — العربية (RTL)" },
+    { "file": "Destination.dc.html", "x": 2040, "y": 0, "w": 390, "h": 1010, "title": "Destination Hub — Constantine" }
   ],
   "annotations": [
     {
       "id": "note-current",
       "x": 0,
-      "y": -196,
+      "y": -212,
       "w": 390,
-      "text": "TODAY\n\nNine sections, all the same visual weight. Nothing leads, so the eye has nowhere to land. The active booking — the one thing you care about when you have one — is section 4, below a greeting and a search bar."
+      "text": "TODAY\n\nNine sections, all the same visual weight. Nothing leads, so the eye has nowhere to land. The active booking — the one thing that matters when you have one — sits fourth, below a greeting and a search bar."
     },
     {
       "id": "note-redesign",
       "x": 510,
-      "y": -196,
+      "y": -212,
       "w": 390,
-      "text": "REDESIGN\n\nFive sections instead of nine, in priority order:\n1. Live booking, full width, dark — the loudest thing on screen when it exists\n2. \"Where to?\" — the product thesis gets the hero\n3. Beach map promoted to the front page with a live free-spot count\n4. One 8-tile discovery grid, replacing 4 bento groups + wilaya bubbles\n5. One editorial row"
+      "text": "REDESIGN\n\nFive sections, in priority order:\n1. Live booking — full width, with the hold timer and a progress bar, one tap from food or ticket\n2. \"Where to?\" — the thesis gets the hero, with four wilayas drawn as themselves rather than grey circles\n3. The beach map on the front page: real umbrellas, teal free / grey taken / gold VIP, a tethered callout\n4. An ASYMMETRIC bento, not a uniform grid — Beaches spans tall as the flagship, experiences run wide in gold, the rest fall into rhythm\n5. One editorial row"
     },
     {
       "id": "note-dark",
       "x": 1020,
-      "y": -196,
+      "y": -212,
       "w": 390,
-      "text": "DARK\n\nUsing the app's real dark tokens — bg #0D0D0D, card #121212, border #222222. 34 screens currently hardcode light values and would break here; this is what they should resolve to."
+      "text": "DARK\n\nOn the app's real tokens: bg #0D0D0D, card #121212, border #222222.\n\nOne rule worth keeping: the map callout and the rating badge stay LIGHT. They float over imagery, and imagery never themes — darkening them was wrong twice over."
     },
     {
       "id": "note-arabic",
       "x": 1530,
-      "y": -196,
+      "y": -212,
       "w": 390,
-      "text": "ARABIC — REAL RTL\n\nNot just translated strings: the layout mirrors. Avatar right, bell left; arrows and the search glyph flip; the LIVE badge moves to the right edge; carousels scroll right-to-left. Tajawal for Arabic, Western digits and دج as Algeria writes them.\n\nThe map itself is NOT mirrored — geography stays put, only the chrome flips."
+      "text": "ARABIC — REAL RTL\n\nThe whole bento mirrors, not just the text. Arrows and the search glyph flip; edge-anchored overlays swap sides; the carousel runs right-to-left. Tajawal, with more line-height than Montserrat needs at hero size.\n\nBUG FOUND HERE, worth knowing before we build it: bidi reorders space-separated digits inside an RTL run — \"4 500\" painted as \"500 4\". Every numeral run needs direction:ltr + unicode-bidi:isolate. This would have shipped."
+    },
+    {
+      "id": "note-destination",
+      "x": 2040,
+      "y": -212,
+      "w": 390,
+      "text": "DESTINATION HUB — the screen AGENT.md calls the key one\n\nThis is where destination-first actually pays off: pick Constantine, get its hotels, food and guides in one list rather than three apps. Category tabs always visible with live counts; every row carries its category badge, rating and verified state.\n\nThe bottom card is the idea taken to its conclusion — book the hotel, the dinner and the guide together as one trip."
     },
     {
       "id": "note-open",
-      "x": 1530,
-      "y": 1370,
+      "x": 2040,
+      "y": 1050,
       "w": 390,
-      "text": "OPEN QUESTIONS\n\n· Photography is the big missing piece — these use drawn placeholders. Real Algerian imagery is what will make it feel like yours.\n· Does the beach map deserve the front page year-round, or only in season?"
+      "text": "STILL OPEN\n\n· Photography. These are hand-drawn scenes — Algiers' white terraces, Tipaza's Roman columns, Constantine's gorge, the Djanet dunes. They carry more character than generic stock, but real photos of these places are what would finish it.\n· Does the beach map hold the front page out of season, or swap for something else?"
     }
   ],
-  "launch": {
-    "view": "canvas"
-  }
+  "launch": { "view": "canvas" }
 }
