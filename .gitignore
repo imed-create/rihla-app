@@ -42,3 +42,6 @@ expo-env.d.ts
 # @end expo-cli
 
 .env
+# Seeded design canvas output (2.5MB build artifact — sources are the .dc.html files)
+design/*.html
+!design/*.dc.html

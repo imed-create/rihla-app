@@ -1,0 +1,257 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; }
+    a { color: #00a896; } a:hover { color: #008f7a; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #F8FAFC; color: #0F172A; padding-bottom: 30px;">
+
+  <!-- ── TOP BAR: compact, gets out of the way ── -->
+  <div style="display: flex; align-items: center; gap: 12px; padding: 24px 20px 0;">
+    <div style="width: 38px; height: 38px; border-radius: 19px; background: #0a2540; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700;">IK</div>
+    <div style="flex-grow: 1;">
+      <div style="font-size: 14px; font-weight: 600; color: #64748B; letter-spacing: 0.2px;">Good evening, Imed</div>
+    </div>
+    <div style="width: 38px; height: 38px; border-radius: 12px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; position: relative;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <div style="position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 4px; background: #f4a261; border: 1.5px solid #FFFFFF;"></div>
+    </div>
+  </div>
+
+  <!-- ── 1. ACTIVE TRIP — the only thing that matters when you have one ── -->
+  <div style="margin: 18px 20px 0; border-radius: 20px; background: #0a2540; overflow: hidden;">
+    <div style="padding: 16px 16px 14px;">
+      <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 12px;">
+        <div style="width: 7px; height: 7px; border-radius: 4px; background: #00FF66;"></div>
+        <div style="font-size: 10px; font-weight: 700; color: #00FF66; letter-spacing: 0.8px;">HAPPENING NOW</div>
+        <div style="flex-grow: 1;"></div>
+        <div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.55);">Spot A3</div>
+      </div>
+      <div style="font-size: 20px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.4px; margin-bottom: 4px;">Sidi Fredj Family Zone</div>
+      <div style="font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6);">Tipaza · your umbrella is held</div>
+
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 16px;">
+        <div style="flex-grow: 1; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 12px;">
+          <div style="font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); letter-spacing: 0.4px; margin-bottom: 2px;">HOLD EXPIRES IN</div>
+          <div style="font-size: 17px; font-weight: 700; color: #f4a261;">1:47:05</div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 7px; height: 46px; padding: 0 18px; border-radius: 12px; background: #00a896;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Open</div>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; border-top: 1px solid rgba(255,255,255,0.09);">
+      <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f4a261" stroke-width="1.8" stroke-linecap="round"><path d="M4 3v18M9 3v7a3 3 0 0 1-5 0V3M15 3c-1 4-1 6 0 8v10"/></svg>
+        <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85);">Order food</div>
+      </div>
+      <div style="width: 1px; background: rgba(255,255,255,0.09);"></div>
+      <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f4a261" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h6v6h-6z"/></svg>
+        <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85);">My ticket</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. THE PRODUCT THESIS: pick a place ── -->
+  <div style="padding: 26px 20px 0;">
+    <div style="font-size: 30px; font-weight: 700; line-height: 38px; letter-spacing: -0.5px; margin-bottom: 14px;">Where to?</div>
+    <div style="display: flex; align-items: center; gap: 11px; height: 58px; border-radius: 18px; border: 1px solid #E2E8F0; background: #FFFFFF; padding: 0 16px;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#00a896" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <div style="flex-grow: 1; font-size: 14px; font-weight: 600; color: #64748B;">Any of 58 wilayas…</div>
+    </div>
+
+    <!-- wilaya row: discovery folded into the same surface -->
+    <div style="display: flex; gap: 8px; margin-top: 12px;">
+      <div style="padding: 9px 14px; border-radius: 999px; background: #0F172A;">
+        <div style="font-size: 12px; font-weight: 600; color: #FFFFFF;">Near me</div>
+      </div>
+      <div style="padding: 9px 14px; border-radius: 999px; border: 1px solid #E2E8F0; background: #FFFFFF;">
+        <div style="font-size: 12px; font-weight: 600; color: #0F172A;">Alger</div>
+      </div>
+      <div style="padding: 9px 14px; border-radius: 999px; border: 1px solid #E2E8F0; background: #FFFFFF;">
+        <div style="font-size: 12px; font-weight: 600; color: #0F172A;">Tipaza</div>
+      </div>
+      <div style="padding: 9px 14px; border-radius: 999px; border: 1px solid #E2E8F0; background: #FFFFFF;">
+        <div style="font-size: 12px; font-weight: 600; color: #0F172A;">Oran</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. THE DIFFERENTIATOR, ON THE FRONT PAGE ── -->
+  <div style="margin: 26px 20px 0; border-radius: 20px; border: 1px solid #E2E8F0; background: #FFFFFF; overflow: hidden;">
+    <div style="height: 168px; background: #0d3b40; position: relative;">
+
+      <!-- satellite-ish shoreline -->
+      <svg width="390" height="168" viewBox="0 0 390 168" style="position: absolute; inset: 0;">
+        <rect width="390" height="168" fill="#0e4c52"/>
+        <path d="M0 96 C60 84 108 108 168 100 C228 92 282 116 390 104 L390 168 L0 168 Z" fill="#c9b489"/>
+        <path d="M0 96 C60 84 108 108 168 100 C228 92 282 116 390 104" stroke="#dfe9ea" stroke-width="2" fill="none" opacity="0.5"/>
+        <path d="M0 118 C70 108 130 130 200 122 C270 114 320 134 390 126" stroke="#b8a077" stroke-width="1" fill="none" opacity="0.6"/>
+        <circle cx="46" cy="34" r="26" fill="#0b4147" opacity="0.55"/>
+        <circle cx="322" cy="48" r="34" fill="#0b4147" opacity="0.45"/>
+      </svg>
+
+      <!-- umbrella pins: booked vs free -->
+      <div style="position: absolute; left: 34px; top: 118px; width: 20px; height: 20px; border-radius: 10px; background: #00a896; border: 2px solid #FFFFFF;"></div>
+      <div style="position: absolute; left: 74px; top: 126px; width: 20px; height: 20px; border-radius: 10px; background: #00a896; border: 2px solid #FFFFFF;"></div>
+      <div style="position: absolute; left: 114px; top: 122px; width: 20px; height: 20px; border-radius: 10px; background: #64748B; border: 2px solid #FFFFFF; opacity: 0.75;"></div>
+      <div style="position: absolute; left: 154px; top: 130px; width: 20px; height: 20px; border-radius: 10px; background: #00a896; border: 2px solid #FFFFFF;"></div>
+      <div style="position: absolute; left: 196px; top: 124px; width: 20px; height: 20px; border-radius: 10px; background: #64748B; border: 2px solid #FFFFFF; opacity: 0.75;"></div>
+      <div style="position: absolute; left: 238px; top: 132px; width: 20px; height: 20px; border-radius: 10px; background: #00a896; border: 2px solid #FFFFFF;"></div>
+      <div style="position: absolute; left: 280px; top: 128px; width: 20px; height: 20px; border-radius: 10px; background: #00a896; border: 2px solid #FFFFFF;"></div>
+
+      <!-- selected spot callout -->
+      <div style="position: absolute; left: 122px; top: 78px; background: #FFFFFF; border-radius: 11px; padding: 7px 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.22);">
+        <div style="font-size: 11px; font-weight: 700; color: #0F172A;">A3 · Free</div>
+        <div style="font-size: 10px; font-weight: 600; color: #00a896;">1 500 DZD / day</div>
+      </div>
+
+      <div style="position: absolute; left: 14px; top: 14px; display: flex; align-items: center; gap: 6px; background: rgba(13,13,13,0.6); border-radius: 999px; padding: 6px 11px;">
+        <div style="width: 6px; height: 6px; border-radius: 3px; background: #00FF66;"></div>
+        <div style="font-size: 10px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.4px;">LIVE</div>
+      </div>
+    </div>
+
+    <div style="padding: 14px 16px;">
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <div style="flex-grow: 1;">
+          <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 3px;">23 umbrellas free right now</div>
+          <div style="font-size: 12px; font-weight: 500; color: #64748B;">Sidi Fredj, Tipaza · 4 beaches near you</div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; height: 38px; padding: 0 16px; border-radius: 12px; background: #00a896;">
+          <div style="font-size: 12px; font-weight: 700; color: #FFFFFF;">Pick a spot</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4. ONE discovery surface, not four ── -->
+  <div style="padding: 26px 20px 0;">
+    <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px;">
+      <div style="font-size: 18px; font-weight: 700; letter-spacing: -0.2px;">Browse everything</div>
+      <div style="flex-grow: 1;"></div>
+      <div style="font-size: 12px; font-weight: 600; color: #00a896;">See all</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;">
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#1A6B3A" stroke-width="1.7" stroke-linecap="round"><path d="M3 18v-6h18v6M3 12V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Hotels</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C56A39" stroke-width="1.7" stroke-linecap="round"><path d="M4 3v18M9 3v7a3 3 0 0 1-5 0V3M15 3c-1 4-1 6 0 8v10"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Food</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0a2540" stroke-width="1.7" stroke-linecap="round"><path d="M5 13h14l-1.5-5h-11L5 13Z"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Rides</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="1.7" stroke-linecap="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Rentals</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#E76F51" stroke-width="1.7" stroke-linecap="round"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="m6 17 4-8h5"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Activities</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.7" stroke-linecap="round"><circle cx="8" cy="18" r="3"/><path d="M11 18V5l9-2v13"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Events</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8B5E3C" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-2 5-5 2 2-5Z"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Guides</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+        <div style="width: 100%; height: 62px; border-radius: 16px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#f4a261" stroke-width="1.7" stroke-linecap="round"><path d="m12 3 2.2 5.6L20 10l-4.4 3.6L17 20l-5-3-5 3 1.4-6.4L4 10l5.8-1.4Z"/></svg>
+        </div>
+        <div style="font-size: 11px; font-weight: 600;">Trips</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 5. one editorial row, not a grid of everything ── -->
+  <div style="padding: 26px 0 0 20px;">
+    <div style="font-size: 18px; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 14px;">Popular in Tipaza</div>
+    <div style="display: flex; gap: 12px;">
+
+      <div style="width: 210px; border-radius: 18px; border: 1px solid #E2E8F0; background: #FFFFFF; overflow: hidden;">
+        <div style="height: 118px; background: #d9c9a8; position: relative;">
+          <svg width="210" height="118" viewBox="0 0 210 118" style="position: absolute; inset: 0;">
+            <rect width="210" height="118" fill="#cbb994"/>
+            <rect width="210" height="62" fill="#8fbfc4"/>
+            <path d="M0 62 C40 56 76 70 116 64 C156 58 184 72 210 66 L210 118 L0 118 Z" fill="#ded0b0"/>
+            <rect x="24" y="26" width="52" height="30" rx="3" fill="#f0ece2"/>
+            <path d="M20 26h60l-30-14Z" fill="#b8794f"/>
+          </svg>
+          <div style="position: absolute; right: 10px; top: 10px; background: rgba(255,255,255,0.94); border-radius: 999px; padding: 4px 9px; display: flex; align-items: center; gap: 4px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="#f4a261"><path d="m12 3 2.5 6.3 6.5.5-5 4.2 1.6 6.5L12 17l-5.6 3.5L8 14 3 9.8l6.5-.5Z"/></svg>
+            <div style="font-size: 10px; font-weight: 700; color: #0F172A;">4.7</div>
+          </div>
+        </div>
+        <div style="padding: 11px 12px 13px;">
+          <div style="font-size: 13px; font-weight: 700; margin-bottom: 3px;">Le Jardin Tipaza</div>
+          <div style="font-size: 11px; font-weight: 500; color: #64748B; margin-bottom: 8px;">French · Seafood</div>
+          <div style="font-size: 13px; font-weight: 700; color: #0F172A;">3 200 <span style="font-size: 10px; font-weight: 600; color: #64748B;">DZD</span></div>
+        </div>
+      </div>
+
+      <div style="width: 210px; border-radius: 18px; border: 1px solid #E2E8F0; background: #FFFFFF; overflow: hidden;">
+        <div style="height: 118px; background: #c2d6d8; position: relative;">
+          <svg width="210" height="118" viewBox="0 0 210 118" style="position: absolute; inset: 0;">
+            <rect width="210" height="118" fill="#a9c6cc"/>
+            <path d="M0 74 C48 64 92 84 140 76 C176 70 194 82 210 78 L210 118 L0 118 Z" fill="#d8c9a4"/>
+            <path d="M0 40 60 18 116 44" stroke="#7d9ea6" stroke-width="3" fill="none"/>
+            <circle cx="168" cy="26" r="13" fill="#f4d9a0"/>
+          </svg>
+        </div>
+        <div style="padding: 11px 12px 13px;">
+          <div style="font-size: 13px; font-weight: 700; margin-bottom: 3px;">Nadia — Archaeology</div>
+          <div style="font-size: 11px; font-weight: 500; color: #64748B; margin-bottom: 8px;">Roman history · AR/FR/EN</div>
+          <div style="font-size: 13px; font-weight: 700; color: #0F172A;">4 500 <span style="font-size: 10px; font-weight: 600; color: #64748B;">DZD</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

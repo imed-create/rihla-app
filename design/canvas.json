@@ -1,0 +1,46 @@
+{
+  "artboards": [
+    { "file": "Current.dc.html", "x": 0, "y": 0, "w": 390, "h": 1620, "title": "Today — 9 sections" },
+    { "file": "Main.dc.html", "x": 510, "y": 0, "w": 390, "h": 1290, "title": "Redesign — light" },
+    { "file": "Dark.dc.html", "x": 1020, "y": 0, "w": 390, "h": 1290, "title": "Redesign — dark" },
+    { "file": "Arabic.dc.html", "x": 1530, "y": 0, "w": 390, "h": 1330, "title": "Redesign — العربية (RTL)" }
+  ],
+  "annotations": [
+    {
+      "id": "note-current",
+      "x": 0,
+      "y": -196,
+      "w": 390,
+      "text": "TODAY\n\nNine sections, all the same visual weight. Nothing leads, so the eye has nowhere to land. The active booking — the one thing you care about when you have one — is section 4, below a greeting and a search bar."
+    },
+    {
+      "id": "note-redesign",
+      "x": 510,
+      "y": -196,
+      "w": 390,
+      "text": "REDESIGN\n\nFive sections instead of nine, in priority order:\n1. Live booking, full width, dark — the loudest thing on screen when it exists\n2. \"Where to?\" — the product thesis gets the hero\n3. Beach map promoted to the front page with a live free-spot count\n4. One 8-tile discovery grid, replacing 4 bento groups + wilaya bubbles\n5. One editorial row"
+    },
+    {
+      "id": "note-dark",
+      "x": 1020,
+      "y": -196,
+      "w": 390,
+      "text": "DARK\n\nUsing the app's real dark tokens — bg #0D0D0D, card #121212, border #222222. 34 screens currently hardcode light values and would break here; this is what they should resolve to."
+    },
+    {
+      "id": "note-arabic",
+      "x": 1530,
+      "y": -196,
+      "w": 390,
+      "text": "ARABIC — REAL RTL\n\nNot just translated strings: the layout mirrors. Avatar right, bell left; arrows and the search glyph flip; the LIVE badge moves to the right edge; carousels scroll right-to-left. Tajawal for Arabic, Western digits and دج as Algeria writes them.\n\nThe map itself is NOT mirrored — geography stays put, only the chrome flips."
+    },
+    {
+      "id": "note-open",
+      "x": 1530,
+      "y": 1370,
+      "w": 390,
+      "text": "OPEN QUESTIONS\n\n· Photography is the big missing piece — these use drawn placeholders. Real Algerian imagery is what will make it feel like yours.\n· Does the beach map deserve the front page year-round, or only in season?"
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
