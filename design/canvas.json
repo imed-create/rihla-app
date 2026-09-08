@@ -1,9 +1,37 @@
 {
   "artboards": [
-    { "file": "Current.dc.html", "x": 0, "y": 0, "w": 390, "h": 1620, "title": "Today — 9 sections" },
-    { "file": "Main.dc.html", "x": 510, "y": 0, "w": 390, "h": 1290, "title": "Redesign — light" },
-    { "file": "Dark.dc.html", "x": 1020, "y": 0, "w": 390, "h": 1290, "title": "Redesign — dark" },
-    { "file": "Arabic.dc.html", "x": 1530, "y": 0, "w": 390, "h": 1330, "title": "Redesign — العربية (RTL)" }
+    {
+      "file": "Current.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1660,
+      "title": "Today — 9 sections"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 510,
+      "y": 0,
+      "w": 390,
+      "h": 1330,
+      "title": "Redesign — light"
+    },
+    {
+      "file": "Dark.dc.html",
+      "x": 1020,
+      "y": 0,
+      "w": 390,
+      "h": 1330,
+      "title": "Redesign — dark"
+    },
+    {
+      "file": "Arabic.dc.html",
+      "x": 1530,
+      "y": 0,
+      "w": 390,
+      "h": 1370,
+      "title": "Redesign — العربية (RTL)"
+    }
   ],
   "annotations": [
     {
@@ -42,5 +70,7 @@
       "text": "OPEN QUESTIONS\n\n· Photography is the big missing piece — these use drawn placeholders. Real Algerian imagery is what will make it feel like yours.\n· Does the beach map deserve the front page year-round, or only in season?"
     }
   ],
-  "launch": { "view": "canvas" }
+  "launch": {
+    "view": "canvas"
+  }
 }
