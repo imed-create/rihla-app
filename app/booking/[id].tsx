@@ -5,7 +5,7 @@
 
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams, Stack } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Alert, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +13,16 @@ import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/context/ThemeContext";
 import CountdownTimer from '@/components/shared/CountdownTimer';
 import LiveTracker from '@/components/shared/LiveTracker';
+import { getCompanion, getCompanionLabel } from '@/components/traveler/companions';
 import { RIHLA } from '@/constants/theme';
+import { useLocationStore } from '@/store/useLocationStore';
+import {
+  ALGIERS_CENTER,
+  buildRoutePoints,
+  estimateEtaMinutes,
+  resolveBookingLocation,
+} from '@/utils/bookingLocation';
+import { hapticLight } from '@/utils/haptics';
 
 function BookingIcon({ icon, iconFamily, color, size = 22 }: { icon: string; iconFamily: string; color: string; size?: number }) {
   if (iconFamily === "MaterialCommunityIcons")
@@ -39,6 +48,35 @@ export default function BookingDetailScreen() {
   const booking = getBookingById(id ?? "");
 
   const [qrVisible, setQrVisible] = useState(false);
+  const [companionOpen, setCompanionOpen] = useState(false);
+
+  const userLatitude = useLocationStore((s) => s.userLatitude);
+  const userLongitude = useLocationStore((s) => s.userLongitude);
+
+  // Category-specific live companion, when this booking's type has one.
+  const Companion = booking ? getCompanion(booking.type) : null;
+  const companionLabel = booking ? getCompanionLabel(booking.type) : null;
+
+  // Real coordinates for this booking, instead of a hardcoded Algiers pin.
+  const destination = useMemo(
+    () => (booking ? resolveBookingLocation(booking) : null),
+    [booking]
+  );
+  const origin = useMemo(
+    () => ({
+      latitude: userLatitude ?? ALGIERS_CENTER.latitude,
+      longitude: userLongitude ?? ALGIERS_CENTER.longitude,
+    }),
+    [userLatitude, userLongitude]
+  );
+  const routePoints = useMemo(
+    () => (destination ? buildRoutePoints(origin, destination) : []),
+    [origin, destination]
+  );
+  const etaMinutes = useMemo(
+    () => (destination ? estimateEtaMinutes(origin, destination) : 0),
+    [origin, destination]
+  );
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
@@ -62,6 +100,16 @@ export default function BookingDetailScreen() {
           <Ionicons name="alert-circle-outline" size={48} color={colors.muted} />
           <Text style={[styles.notFoundText, { color: colors.muted }]}>Booking not found</Text>
         </View>
+      </View>
+    );
+  }
+
+  // The companion takes over the whole screen; it renders its own back header.
+  if (companionOpen && Companion) {
+    return (
+      <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: topPad }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <Companion booking={booking} onBack={() => setCompanionOpen(false)} />
       </View>
     );
   }
@@ -139,26 +187,30 @@ export default function BookingDetailScreen() {
           </View>
 
           {/* Live Tracker */}
-          {isActive && (
-            <LiveTracker
-              userLatitude={36.7538}
-              userLongitude={3.0588}
-              destinationLatitude={36.7369}
-              destinationLongitude={2.8658}
-              totalEtaMinutes={18}
-              providerName={booking.title}
-              category={booking.type}
-              isActive={true}
-              height={220}
-              color={booking.color || RIHLA.primary}
-              routePoints={[
-                { latitude: 36.7538, longitude: 3.0588 },
-                { latitude: 36.748, longitude: 3.02 },
-                { latitude: 36.743, longitude: 2.98 },
-                { latitude: 36.74, longitude: 2.92 },
-                { latitude: 36.7369, longitude: 2.8658 },
-              ]}
-            />
+          {isActive && destination && (
+            <>
+              <LiveTracker
+                userLatitude={origin.latitude}
+                userLongitude={origin.longitude}
+                destinationLatitude={destination.latitude}
+                destinationLongitude={destination.longitude}
+                totalEtaMinutes={etaMinutes}
+                providerName={booking.title}
+                category={booking.type}
+                isActive={true}
+                height={220}
+                color={booking.color || RIHLA.primary}
+                routePoints={routePoints}
+              />
+              {destination.label ? (
+                <View style={styles.destinationRow}>
+                  <Ionicons name="location-outline" size={14} color={colors.muted} />
+                  <Text style={[styles.destinationText, { color: colors.muted }]} numberOfLines={1}>
+                    {destination.label}
+                  </Text>
+                </View>
+              ) : null}
+            </>
           )}
 
           {/* Countdown */}
@@ -170,6 +222,48 @@ export default function BookingDetailScreen() {
                 <CountdownTimer expiresAt={booking.expiresAt} onExpired={() => {}} />
               </View>
             </View>
+          )}
+
+          {/* Companion entry — category-specific live experience */}
+          {Companion && companionLabel && booking.status !== "cancelled" && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={[
+                styles.companionCard,
+                { backgroundColor: colors.card, borderColor: (booking.color || RIHLA.primary) + "40" },
+              ]}
+              onPress={() => { hapticLight(); setCompanionOpen(true); }}
+            >
+              <View
+                style={[
+                  styles.companionIcon,
+                  { backgroundColor: (booking.color || RIHLA.primary) + "15" },
+                ]}
+              >
+                <Ionicons
+                  name={companionLabel.icon}
+                  size={22}
+                  color={booking.color || RIHLA.primary}
+                />
+              </View>
+              <View style={styles.companionBody}>
+                <View style={styles.companionTitleRow}>
+                  <Text style={[styles.companionTitle, { color: colors.text }]}>
+                    {companionLabel.title}
+                  </Text>
+                  {isActive ? (
+                    <View style={[styles.liveBadge, { backgroundColor: (booking.color || RIHLA.primary) + "18" }]}>
+                      <View style={[styles.liveDot, { backgroundColor: booking.color || RIHLA.primary }]} />
+                      <Text style={[styles.liveText, { color: booking.color || RIHLA.primary }]}>Live</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={[styles.companionSub, { color: colors.muted }]}>
+                  {companionLabel.subtitle}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+            </TouchableOpacity>
           )}
 
           {/* QR Ticket Block */}
@@ -291,6 +385,25 @@ export default function BookingDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  companionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 13,
+    padding: 15,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  companionIcon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  companionBody: { flex: 1, gap: 3 },
+  companionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  companionTitle: { fontSize: 15, fontFamily: 'mon-b', letterSpacing: -0.3 },
+  companionSub: { fontSize: 12, fontFamily: 'mon', lineHeight: 17 },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  liveDot: { width: 5, height: 5, borderRadius: 3 },
+  liveText: { fontSize: 10, fontFamily: 'mon-b' },
+  destinationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 4, marginTop: -4 },
+  destinationText: { flex: 1, fontSize: 12, fontFamily: 'mon' },
+
   root: { flex: 1 },
 
   // Header
