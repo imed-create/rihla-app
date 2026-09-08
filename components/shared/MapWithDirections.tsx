@@ -14,6 +14,7 @@ import { useLocationStore, type ServiceMarker } from '@/store/useLocationStore';
 import { getCategoryDef } from '@/constants/marketplaceCategories';
 import { RIHLA } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
+import ErrorBoundary from './ErrorBoundary';
 
 const MAP_STYLES = {
   dark: 'https://tiles.openfreemap.org/styles/liberty',
@@ -403,20 +404,36 @@ export default function MapWithDirections({
     );
   }
 
+  // MapLibre can throw during render on devices where the native module
+  // loaded but failed to initialise. Degrade to the same fallback the
+  // load-failure path uses rather than taking the whole screen down.
   return (
-    <MapLibreMap
-      height={height}
-      markers={markers}
-      onMarkerPress={onMarkerPress}
-      showUserLocation={showUserLocation}
-      center={center}
-      zoom={initialZoom}
-      darkMode={darkMode}
-      mapStyleType={mapStyleType}
-      destinationLatitude={destinationLatitude}
-      destinationLongitude={destinationLongitude}
-      colors={colors}
-    />
+    <ErrorBoundary
+      fallback={
+        <MapFallback
+          height={height}
+          markers={markers}
+          onMarkerPress={onMarkerPress}
+          showUserLocation={showUserLocation}
+          initialCenter={initialCenter}
+          initialZoom={initialZoom}
+        />
+      }
+    >
+      <MapLibreMap
+        height={height}
+        markers={markers}
+        onMarkerPress={onMarkerPress}
+        showUserLocation={showUserLocation}
+        center={center}
+        zoom={initialZoom}
+        darkMode={darkMode}
+        mapStyleType={mapStyleType}
+        destinationLatitude={destinationLatitude}
+        destinationLongitude={destinationLongitude}
+        colors={colors}
+      />
+    </ErrorBoundary>
   );
 }
 
